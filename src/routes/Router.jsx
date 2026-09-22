@@ -9,6 +9,7 @@ import Profile from "../components/user/Profile";
 import AdminLayout from "../components/admin/AdminLayout";
 import AdminAddProduct from "../components/admin/AdminAddProduct";
 import AdminProducts from "../components/admin/AdminProducts";
+import AdminEditProduct from "../components/admin/AdminEditProduct";
 
 const Shop = () => <div>Shop Page</div>;
 
@@ -55,7 +56,7 @@ const router = createBrowserRouter([
           
           { path: "/admin/add-product", element: <AdminAddProduct /> },
           { path: "/admin/products", element: <AdminProducts/> },
-           { path: "/admin/edit-product/:id", element: <AdminProducts/> },
+           { path: "/admin/edit-product/:id", element: <AdminEditProduct/> },
         ]
       }
     ]
