@@ -6,15 +6,15 @@ import AdminDashboard from "../components/admin/AdminDashboard";
 import Login from "../components/LogReg/Login";
 import Register from "../components/LogReg/Register";
 import Profile from "../components/user/Profile";
+import AdminLayout from "../components/admin/AdminLayout";
 
-
-
-const Shop = () => <div>Shop Page</div>; // Eta pore change korbo
+const Shop = () => <div>Shop Page</div>;
 
 const router = createBrowserRouter([
+  // 1. PUBLIC & CUSTOMER ROUTES (Navbar ebong Footer soho)
   {
     path: "/",
-    element: <MainLayout />, // MainLayout er vitore to Navbar ebong Outlet achei
+    element: <MainLayout />, 
     children: [
       {
         path: "/",
@@ -24,8 +24,6 @@ const router = createBrowserRouter([
       //   path: "/shop",
       //   element: <Shop />,
       // },
-
-      // AUTHENTICATION ROUTES (Public)
       {
         path: "/login",
         element: <Login />,
@@ -38,21 +36,27 @@ const router = createBrowserRouter([
         path: "/profile",
         element: <Profile />,
       },
-      
-      // ADMIN PRIVATE ROUTES
+    ],
+  },
+  
+  // 2. ADMIN PRIVATE ROUTES (Customer Navbar chara, shudhu Admin Sidebar soho)
+  {
+    element: <AdminRoute />, // Ei protector er vitore joto page thakbe sob private hoye jabe
+    children: [ // <-- Ekhane third-bracket [] hobe
       {
-        element: <AdminRoute />, // Ei protector er vitore joto page thakbe sob private hoye jabe
+        element: <AdminLayout />, // Notun Admin Layout (Sidebar soho)
         children: [
           {
             path: "/admin/dashboard",
             element: <AdminDashboard />,
           },
-          // Vobishshote ekhane aro route add kora jabe, jemon:
-          // { path: "/admin/orders", element: <AdminOrders /> }
+          // Vobisshote baki route gulo ekhane add hobe:
+          // { path: "/admin/products", element: <AdminProducts /> },
+          // { path: "/admin/add-product", element: <AdminAddProduct /> },
         ]
       }
-    ],
-  },
+    ]
+  }
 ]);
 
 export default router;
