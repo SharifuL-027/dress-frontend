@@ -5,6 +5,10 @@ import AdminRoute from "../components/AdminRoute";
 import AdminDashboard from "../components/admin/AdminDashboard"; 
 import Login from "../components/LogReg/Login";
 import Register from "../components/LogReg/Register";
+import Profile from "../components/user/Profile";
+
+
+
 const Shop = () => <div>Shop Page</div>; // Eta pore change korbo
 
 const router = createBrowserRouter([
@@ -29,6 +33,10 @@ const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
+      },
+      {
+        path: "/profile",
+        element: <Profile />,
       },
       
       // ADMIN PRIVATE ROUTES

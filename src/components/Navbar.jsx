@@ -184,13 +184,13 @@ const Navbar = () => {
                       </li>
                       
                       {/* Shudhu Admin Hole Ei Link Dekhabe */}
-                      {user.isAdmin && (
-                        <li>
-                          <Link to="/admin/dashboard" className="block px-4 py-2 text-[13px] font-bold text-red-600 hover:bg-red-50 uppercase transition">
-                            Admin Panel
-                          </Link>
-                        </li>
-                      )}
+                     {user.role === 'admin' && (
+  <li>
+    <Link to="/admin/dashboard" className="block px-4 py-2 text-[13px] font-bold text-red-600 hover:bg-red-50 uppercase transition">
+      Admin Panel
+    </Link>
+  </li>
+)}
 
                       <li>
                         <Link to="/profile" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition">
