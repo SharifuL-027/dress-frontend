@@ -1,11 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 import api from "../../api/axios";
+import toast from "react-hot-toast"; // <-- টোস্ট ইম্পোর্ট করা হয়েছে
 
 const AdminAddProduct = () => {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
-
+  
   // ক্লায়েন্টের রিকয়ারমেন্ট অনুযায়ী সম্পূর্ণ স্টেট
   const [formData, setFormData] = useState({
     name: "",
@@ -17,8 +17,8 @@ const AdminAddProduct = () => {
     regularPrice: "",
     discountPrice: "",
     stock: "",
-    sizes: "", // Comma separated (e.g., M, L, XL)
-    colors: "", // Comma separated (e.g., Red, Blue)
+    sizes: "", 
+    colors: "", 
     fabric: "",
     gsm: "",
     fitType: "",
@@ -44,7 +44,7 @@ const AdminAddProduct = () => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 6) {
-      setMessage({ type: "error", text: "You can upload a maximum of 6 images." });
+      toast.error("You can upload a maximum of 6 images."); // <-- টোস্ট ব্যবহার
       return;
     }
     setImages((prev) => [...prev, ...files]);
@@ -62,21 +62,19 @@ const AdminAddProduct = () => {
     if (file) setVideo(file);
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: "", text: "" });
 
     if (images.length < 1) {
-      setMessage({ type: "error", text: "Please upload at least 1 product image." });
+      toast.error("Please upload at least 1 product image."); // <-- টোস্ট ব্যবহার
       return;
     }
 
     setLoading(true);
 
     try {
-      // আপনার ক্লাউডিনারি ক্রেডেনশিয়াল (এখানে আপনার আসল cloud name দিবেন)
-      const cloudName = "wtbwxhmc"; // আপনার দেওয়া ক্লাউড নেম
-      const uploadPreset = "dresstown"; // Cloudinary থেকে একটি Unsigned preset বানাতে হবে
+      const cloudName = "wtbwxhmc"; 
+      const uploadPreset = "dresstown"; 
 
       // ১. ছবিগুলো সরাসরি Cloudinary তে আপলোড করা
       let uploadedImages = [];
@@ -85,7 +83,6 @@ const AdminAddProduct = () => {
         imageFormData.append("file", pic);
         imageFormData.append("upload_preset", uploadPreset);
 
-        // axios ইম্পোর্ট করা না থাকলে ফাইলের উপরে import axios from 'axios'; করে নিবেন
         const res = await axios.post(
           `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
           imageFormData
@@ -121,26 +118,32 @@ const AdminAddProduct = () => {
       const productData = {
         ...formData,
         slug: generatedSlug,
-        images: uploadedImages, // সরাসরি URL এর অ্যারে পাঠিয়ে দিচ্ছি
+        images: uploadedImages, 
         video: uploadedVideo || undefined
       };
 
-      // ৪. ব্যাকএন্ডে সাধারণ JSON ডেটা পাঠানো (কোনো FormData নয়)
+      // ৪. ব্যাকএন্ডে ডেটা পাঠানো
       await api.post('/api/products', productData); 
       
-      setMessage({ type: "success", text: "Product published successfully!" });
-      window.scrollTo(0, 0);
+      toast.success("Product published successfully! 🎉"); // <-- টোস্ট ব্যবহার
+      
+      // অপশনাল: আপলোড সাকসেস হওয়ার পর ফর্ম ক্লিয়ার করতে চাইলে নিচের লাইনগুলো আনকমেন্ট করতে পারেন
+      /*
+      setFormData({...}); // Initial state
+      setImages([]);
+      setImagePreviews([]);
+      setVideo(null);
+      */
 
     } catch (error) {
       console.error(error);
-      setMessage({ type: "error", text: "Failed to add product" });
-      window.scrollTo(0, 0);
+      toast.error(error.response?.data?.message || "Failed to add product 😔"); // <-- টোস্ট ব্যবহার
     } finally {
       setLoading(false);
     }
   };
 
-  // কমন ইনপুট স্টাইল (Zero Rounded, Sharp)
+  // কমন ইনপুট স্টাইল
   const inputClass = "w-full border border-gray-300 p-3 text-sm focus:border-red-500 focus:outline-none transition-colors bg-white";
   const labelClass = "block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2";
   const sectionTitleClass = "text-sm font-extrabold text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-200 pb-2";
@@ -151,12 +154,6 @@ const AdminAddProduct = () => {
         <h2 className="text-2xl font-extrabold text-gray-800 uppercase tracking-widest">Add New Product</h2>
         <p className="text-sm text-gray-500 mt-1">Fill all the required details below to list a new item.</p>
       </div>
-
-      {message.text && (
-        <div className={`p-4 mb-6 border font-bold text-sm uppercase tracking-wider ${message.type === 'success' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
-          {message.text}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-10">
         
