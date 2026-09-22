@@ -7,6 +7,8 @@ import Login from "../components/LogReg/Login";
 import Register from "../components/LogReg/Register";
 import Profile from "../components/user/Profile";
 import AdminLayout from "../components/admin/AdminLayout";
+import AdminAddProduct from "../components/admin/AdminAddProduct";
+import AdminProducts from "../components/admin/AdminProducts";
 
 const Shop = () => <div>Shop Page</div>;
 
@@ -50,9 +52,10 @@ const router = createBrowserRouter([
             path: "/admin/dashboard",
             element: <AdminDashboard />,
           },
-          // Vobisshote baki route gulo ekhane add hobe:
-          // { path: "/admin/products", element: <AdminProducts /> },
-          // { path: "/admin/add-product", element: <AdminAddProduct /> },
+          
+          { path: "/admin/add-product", element: <AdminAddProduct /> },
+          { path: "/admin/products", element: <AdminProducts/> },
+           { path: "/admin/edit-product/:id", element: <AdminProducts/> },
         ]
       }
     ]
