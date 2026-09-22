@@ -62,11 +62,15 @@ const ProductCard = ({ product }) => {
         </Link>
         
         <div className="flex items-center justify-center gap-2 mt-auto">
-          <span className="text-[14px] ubuntu-bold text-red-500">৳{product.price}</span>
-          {product.oldPrice && (
-            <span className="text-[11px] ubuntu-medium text-gray-400 line-through">৳{product.oldPrice}</span>
-          )}
-        </div>
+  <span className="text-[14px] ubuntu-bold text-red-500">
+    ৳{product.regularPrice || product.price || 0}
+  </span>
+  {product.discountPrice && (
+    <span className="text-[11px] ubuntu-medium text-gray-400 line-through">
+      ৳{product.regularPrice}
+    </span>
+  )}
+</div>
       </div>
 
     </div>

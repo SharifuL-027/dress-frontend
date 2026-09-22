@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import api from "../../api/axios";
+import toast from "react-hot-toast"; 
+
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ডাটাবেস থেকে প্রোডাক্ট নিয়ে আসা
+  // ডাটাবেস থেকে প্রোডাক্ট নিয়ে আসা
   const fetchProducts = async () => {
     try {
       const { data } = await api.get("/api/products");
@@ -13,6 +15,7 @@ const AdminProducts = () => {
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch products", error);
+      toast.error("Failed to load products!"); // <-- অপশনাল: ডেটা লোড না হলেও এরর দেখাবে
       setLoading(false);
     }
   };
@@ -26,10 +29,12 @@ const AdminProducts = () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         await api.delete(`/api/products/${id}`);
-        // ডিলিট হওয়ার পর লিস্ট থেকে ওই প্রোডাক্টটি সরিয়ে দেওয়া
+        // ডিলিট হওয়ার পর লিস্ট থেকে ওই প্রোডাক্টটি সরিয়ে দেওয়া
         setProducts(products.filter((product) => product._id !== id));
+        
+        toast.success("Product deleted successfully! 🗑️"); // <-- সাকসেস টোস্ট
       } catch (error) {
-        alert("Failed to delete product!");
+        toast.error("Failed to delete product! 😔"); // <-- এরর টোস্ট
         console.error(error);
       }
     }
