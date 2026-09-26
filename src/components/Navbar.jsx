@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import api from "../api/axios"; 
 import { useAuth } from "../context/AuthContext"; 
+import { useCart } from "../context/CartContext"; // <-- Cart Context Import করা হলো
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { cart, wishlist } = useCart(); // <-- Cart ও Wishlist এর ডেটা নিয়ে আসা হলো
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -108,7 +110,7 @@ const Navbar = () => {
                     {category.name}
                   </Link>
 
-                  {/* FIX: Dropdown Menu - Subcategories (Z-index & Background fixed) */}
+                  {/* Dropdown Menu - Subcategories */}
                   {category.subCategories.length > 0 && (
                     <div className="absolute top-[90px] left-0 w-56 bg-white border border-gray-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-md z-50 overflow-hidden">
                       <ul className="py-2">
@@ -220,24 +222,36 @@ const Navbar = () => {
               </div>
             </div>
 
-            <Link to="/wishlist" className="flex flex-col items-center hover:text-red-500 transition group mt-1">
-              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
+            {/* DYNAMIC WISHLIST ICON */}
+            <Link to="/wishlist" className="relative flex flex-col items-center hover:text-red-500 transition group mt-1">
+              <div className="relative">
+                <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                {/* উইশলিস্টে আইটেম থাকলেই ব্যাজ দেখাবে */}
+                {wishlist?.length > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
+                    {wishlist.length}
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-semibold text-gray-800 group-hover:text-red-500">Wishlist</span>
             </Link>
 
-            <Link to="/cart" className="flex flex-col items-center hover:text-red-500 transition group mt-1">
+            {/* DYNAMIC CART ICON */}
+            <Link to="/cart" className="relative flex flex-col items-center hover:text-red-500 transition group mt-1">
               <div className="relative">
                 <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
+                {/* কার্টের ব্যাজ সবসময় দেখাবে (খালি থাকলে 0 দেখাবে) */}
                 <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
-                  0
+                  {cart?.length || 0}
                 </span>
               </div>
               <span className="text-xs font-semibold text-gray-800 group-hover:text-red-500">Cart</span>
             </Link>
+
           </div>
 
         </div>

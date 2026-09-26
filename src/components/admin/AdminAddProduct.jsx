@@ -5,13 +5,13 @@ import toast from "react-hot-toast";
 
 const AdminAddProduct = () => {
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState([]); // ডাটাবেস থেকে সব ক্যাটাগরি রাখার স্টেট
+  const [categories, setCategories] = useState([]); 
   
   const [formData, setFormData] = useState({
     name: "",
     sku: "",
-    category: "", // Main Category ID
-    subCategory: "", // Sub Category Name (যেমন: Panjabi)
+    category: "", 
+    subCategory: "", 
     gender: "Unisex",
     brand: "",
     regularPrice: "",
@@ -37,7 +37,6 @@ const AdminAddProduct = () => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [video, setVideo] = useState(null);
 
-  // ১. কম্পোনেন্ট লোড হলে ডাটাবেস থেকে ক্যাটাগরিগুলো নিয়ে আসা
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -50,25 +49,27 @@ const AdminAddProduct = () => {
     fetchCategories();
   }, []);
 
-  // ২. ফিল্টার লজিক (Main এবং Sub ক্যাটাগরির জন্য)
-  // মেইন ক্যাটাগরিগুলো (যাদের parent নেই)
+  // ১. Main Category Filter (yader parent nai)
   const mainCategories = categories.filter(cat => !cat.parent);
   
-  // বর্তমানে সিলেক্ট করা মেইন ক্যাটাগরির উপর ভিত্তি করে সাব-ক্যাটাগরিগুলো ফিল্টার করা (String কনভার্ট করে ম্যাচ করানো হয়েছে)
+  // ২. Sub Category Filter (Backend er populate kora data dhore bulletproof matching)
   const availableSubCategories = categories.filter(cat => {
-    if (!cat.parent) return false;
-    const parentId = typeof cat.parent === 'object' ? cat.parent._id : cat.parent;
-    return parentId?.toString() === formData.category?.toString();
+    if (!cat.parent || !formData.category) return false;
+    
+    // Populate korar karone cat.parent ekhon ekta object, tai tar bhetor theke _id ta ber kore nite hobe
+    const parentId = cat.parent._id ? cat.parent._id : cat.parent;
+    
+    // Ebar form er category ID er sathe perfectly match korabo
+    return String(parentId) === String(formData.category);
   });
 
   const handleTextChange = (e) => {
     const { name, value } = e.target;
     
-    // মেইন ক্যাটাগরি পরিবর্তন হলে সাব-ক্যাটাগরি রিসেট করে দেওয়া
     if (name === "category") {
-      setFormData({ ...formData, category: value, subCategory: "" });
+      setFormData(prev => ({ ...prev, category: value, subCategory: "" }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -153,6 +154,11 @@ const AdminAddProduct = () => {
       await api.post('/api/products', productData); 
       
       toast.success("Product published successfully! 🎉");
+      
+      // Submit korar por form faka korar jonne:
+      setFormData(prev => ({ ...prev, name: "", sku: "", description: "" })); 
+      setImages([]);
+      setImagePreviews([]);
 
     } catch (error) {
       console.error(error);
@@ -210,7 +216,7 @@ const AdminAddProduct = () => {
               </select>
             </div>
             
-            {/* FIX: Subcategory Dropdown - ভ্যালু হিসেবে নাম (cat.name) পাঠানো হচ্ছে */}
+            {/* Subcategory Dropdown (Database theke dynamically ashbe) */}
             <div>
               <label className={labelClass}>Subcategory</label>
               <select 
@@ -221,10 +227,13 @@ const AdminAddProduct = () => {
                 disabled={!formData.category || availableSubCategories.length === 0}
               >
                 <option value="">
-                  {availableSubCategories.length === 0 && formData.category ? "No subcategories found" : "Select Subcategory"}
+                  {!formData.category 
+                    ? "Select Main Category First" 
+                    : availableSubCategories.length === 0 
+                      ? "No subcategories found" 
+                      : "Select Subcategory"}
                 </option>
                 {availableSubCategories.map(subCat => (
-                  /* এখানে value={subCat.name} দেওয়া হয়েছে, যাতে আপনার আগের সিস্টেমে ঠিকমতো কাজ করে */
                   <option key={subCat._id} value={subCat.name}>{subCat.name}</option>
                 ))}
               </select>

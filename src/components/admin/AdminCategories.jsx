@@ -29,11 +29,10 @@ const AdminCategories = () => {
     fetchCategories();
   }, []);
 
-  // Name লিখলে অটোমেটিক Slug তৈরি হওয়ার ফাংশন
+  // Name লিখলে অটোমেটিক Slug তৈরি হওয়ার ফাংশন
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
-    // নাম থেকে স্পেস ও স্পেশাল ক্যারেক্টার সরিয়ে স্লাগ বানানো
     const generatedSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     setSlug(generatedSlug);
   };
@@ -48,16 +47,16 @@ const AdminCategories = () => {
       const payload = {
         name,
         slug,
-        parent: parent || null, // ড্রপডাউন ফাঁকা থাকলে null যাবে (Main Category)
+        parent: parent || null, 
         image
       };
 
-      const { data } = await api.post("/api/categories", payload);
+      await api.post("/api/categories", payload);
       
-      // নতুন ডেটা লিস্টে আপডেট করা (অটো রিফ্রেশ ছাড়া)
+      // নতুন ডেটা লিস্টে আপডেট করা
       fetchCategories(); 
       
-      // ফর্ম ক্লিয়ার করা
+      // ফর্ম ক্লিয়ার করা
       setName("");
       setSlug("");
       setParent("");
@@ -71,7 +70,7 @@ const AdminCategories = () => {
     }
   };
 
-  // ক্যাটাগরি ডিলিট করা (আপনার ব্যাকএন্ডে delete রাউট থাকতে হবে)
+  // ক্যাটাগরি ডিলিট করা
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
@@ -89,8 +88,28 @@ const AdminCategories = () => {
 
   if (fetchLoading) return <div className="p-8 text-center font-bold text-gray-500 uppercase">Loading Categories...</div>;
 
-  // ড্রপডাউনে দেখানোর জন্য শুধুমাত্র মেইন ক্যাটাগরিগুলো ফিল্টার করা
+  // -------------------------------------------------------------------------
+  // টেবিল সাজানোর লজিক: মেইন ক্যাটাগরির ঠিক নিচেই তার সাব-ক্যাটাগরিগুলো দেখাবে
+  // -------------------------------------------------------------------------
   const mainCategories = categories.filter(cat => !cat.parent);
+  const displayCategories = [];
+
+  mainCategories.forEach(main => {
+    displayCategories.push(main); // প্রথমে মেইন ক্যাটাগরি
+    
+    // এরপর এই মেইন ক্যাটাগরির আন্ডারে থাকা সব সাব-ক্যাটাগরি
+    const subCats = categories.filter(cat => {
+      const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
+      return parentId === main._id;
+    });
+    displayCategories.push(...subCats);
+  });
+
+  // যদি কোনো ক্যাটাগরি মিস হয়ে যায় (Orphan), সেগুলো শেষে যুক্ত করা
+  const groupedIds = new Set(displayCategories.map(c => c._id));
+  const orphans = categories.filter(c => !groupedIds.has(c._id));
+  displayCategories.push(...orphans);
+  // -------------------------------------------------------------------------
 
   return (
     <div className="w-full bg-white border border-gray-200 p-8 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -104,35 +123,17 @@ const AdminCategories = () => {
           
           <div>
             <label className={labelClass}>Category Name *</label>
-            <input 
-              type="text" 
-              value={name} 
-              onChange={handleNameChange} 
-              required 
-              className={inputClass} 
-              placeholder="e.g. Winter Collection" 
-            />
+            <input type="text" value={name} onChange={handleNameChange} required className={inputClass} placeholder="e.g. Winter Collection" />
           </div>
 
           <div>
             <label className={labelClass}>Slug (URL) *</label>
-            <input 
-              type="text" 
-              value={slug} 
-              onChange={(e) => setSlug(e.target.value)} 
-              required 
-              className={inputClass} 
-              placeholder="e.g. winter-collection" 
-            />
+            <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required className={inputClass} placeholder="e.g. winter-collection" />
           </div>
 
           <div>
             <label className={labelClass}>Parent Category</label>
-            <select 
-              value={parent} 
-              onChange={(e) => setParent(e.target.value)} 
-              className={inputClass}
-            >
+            <select value={parent} onChange={(e) => setParent(e.target.value)} className={inputClass}>
               <option value="">None (Main Category)</option>
               {mainCategories.map(cat => (
                 <option key={cat._id} value={cat._id}>{cat.name}</option>
@@ -143,20 +144,10 @@ const AdminCategories = () => {
 
           <div>
             <label className={labelClass}>Image URL (Optional)</label>
-            <input 
-              type="text" 
-              value={image} 
-              onChange={(e) => setImage(e.target.value)} 
-              className={inputClass} 
-              placeholder="https://example.com/image.jpg" 
-            />
+            <input type="text" value={image} onChange={(e) => setImage(e.target.value)} className={inputClass} placeholder="https://example.com/image.jpg" />
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold text-sm uppercase tracking-widest px-6 py-3 transition-colors mt-4"
-          >
+          <button type="submit" disabled={loading} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold text-sm uppercase tracking-widest px-6 py-3 transition-colors mt-4">
             {loading ? "Saving..." : "Create Category"}
           </button>
         </form>
@@ -182,45 +173,52 @@ const AdminCategories = () => {
               </tr>
             </thead>
             <tbody>
-              {categories.length === 0 ? (
+              {displayCategories.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="p-8 text-center text-gray-500">No categories found.</td>
                 </tr>
               ) : (
-                categories.map((category) => (
-                  <tr key={category._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="p-4">
-                      {category.image ? (
-                        <img src={category.image} alt={category.name} className="w-10 h-10 object-cover border border-gray-200 rounded" />
-                      ) : (
-                        <div className="w-10 h-10 bg-gray-100 border border-gray-200 text-gray-400 flex items-center justify-center text-xs">N/A</div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <p className="font-bold text-sm text-gray-800">{category.name}</p>
-                      <p className="text-xs text-gray-400">/{category.slug}</p>
-                    </td>
-                    <td className="p-4">
-                      {category.parent ? (
-                        <span className="text-xs font-bold px-2 py-1 bg-blue-50 text-blue-600 rounded">
-                          Sub of: {category.parent.name}
-                        </span>
-                      ) : (
-                        <span className="text-xs font-bold px-2 py-1 bg-green-50 text-green-600 rounded">
-                          Main Category
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <button 
-                        onClick={() => handleDelete(category._id)} 
-                        className="text-red-600 hover:text-red-800 font-bold text-xs uppercase tracking-wider"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                displayCategories.map((category) => {
+                  const isSub = !!category.parent; // এটি সাব-ক্যাটাগরি কিনা চেক করা হচ্ছে
+                  
+                  return (
+                    <tr key={category._id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isSub ? 'bg-gray-50/40' : ''}`}>
+                      <td className="p-4">
+                        {category.image ? (
+                          <img src={category.image} alt={category.name} className="w-10 h-10 object-cover border border-gray-200 rounded" />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-100 border border-gray-200 text-gray-400 flex items-center justify-center text-xs">N/A</div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {/* সাব-ক্যাটাগরি হলে নামের আগে একটি বাঁকা তীর (↳) দেখাবে */}
+                        <div className="flex items-center gap-2">
+                          {isSub && <span className="text-gray-300 ml-2 font-bold text-lg">↳</span>}
+                          <div>
+                            <p className={`font-bold text-sm ${isSub ? 'text-gray-600' : 'text-gray-900'}`}>{category.name}</p>
+                            <p className="text-xs text-gray-400">/{category.slug}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {category.parent ? (
+                          <span className="text-[10px] font-bold px-2 py-1 bg-blue-50 text-blue-600 rounded uppercase tracking-wider">
+                            Sub of: {category.parent.name}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-1 bg-green-50 text-green-700 rounded uppercase tracking-wider">
+                            Main Category
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        <button onClick={() => handleDelete(category._id)} className="text-red-600 hover:text-red-800 font-bold text-[11px] uppercase tracking-wider">
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
