@@ -11,7 +11,7 @@ const AdminAddProduct = () => {
     name: "",
     sku: "",
     category: "", // Main Category ID
-    subCategory: "", // Sub Category ID
+    subCategory: "", // Sub Category Name (যেমন: Panjabi)
     gender: "Unisex",
     brand: "",
     regularPrice: "",
@@ -45,7 +45,6 @@ const AdminAddProduct = () => {
         setCategories(data);
       } catch (error) {
         console.error("Failed to load categories", error);
-        toast.error("Failed to load categories");
       }
     };
     fetchCategories();
@@ -55,16 +54,17 @@ const AdminAddProduct = () => {
   // মেইন ক্যাটাগরিগুলো (যাদের parent নেই)
   const mainCategories = categories.filter(cat => !cat.parent);
   
-  // বর্তমানে সিলেক্ট করা মেইন ক্যাটাগরির উপর ভিত্তি করে সাব-ক্যাটাগরিগুলো ফিল্টার করা
+  // বর্তমানে সিলেক্ট করা মেইন ক্যাটাগরির উপর ভিত্তি করে সাব-ক্যাটাগরিগুলো ফিল্টার করা (String কনভার্ট করে ম্যাচ করানো হয়েছে)
   const availableSubCategories = categories.filter(cat => {
-    const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
-    return parentId === formData.category;
+    if (!cat.parent) return false;
+    const parentId = typeof cat.parent === 'object' ? cat.parent._id : cat.parent;
+    return parentId?.toString() === formData.category?.toString();
   });
 
   const handleTextChange = (e) => {
     const { name, value } = e.target;
     
-    // যদি মেইন ক্যাটাগরি পরিবর্তন হয়, তাহলে আগের সিলেক্ট করা সাব-ক্যাটাগরি রিসেট করে দেওয়া
+    // মেইন ক্যাটাগরি পরিবর্তন হলে সাব-ক্যাটাগরি রিসেট করে দেওয়া
     if (name === "category") {
       setFormData({ ...formData, category: value, subCategory: "" });
     } else {
@@ -107,7 +107,6 @@ const AdminAddProduct = () => {
       const cloudName = "wtbwxhmc"; 
       const uploadPreset = "dresstown"; 
 
-      // ছবিগুলো সরাসরি Cloudinary তে আপলোড করা
       let uploadedImages = [];
       for (const pic of images) {
         const imageFormData = new FormData();
@@ -125,7 +124,6 @@ const AdminAddProduct = () => {
         });
       }
 
-      // ভিডিও সরাসরি Cloudinary তে আপলোড করা (যদি থাকে)
       let uploadedVideo = null;
       if (video) {
         const videoFormData = new FormData();
@@ -143,7 +141,6 @@ const AdminAddProduct = () => {
         };
       }
 
-      // ডাটাবেসে পাঠানোর জন্য প্রোডাক্ট ডেটা রেডি করা
       const generatedSlug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       
       const productData = {
@@ -153,18 +150,9 @@ const AdminAddProduct = () => {
         video: uploadedVideo || undefined
       };
 
-      // ব্যাকএন্ডে ডেটা পাঠানো
       await api.post('/api/products', productData); 
       
       toast.success("Product published successfully! 🎉");
-      
-      // ফর্ম রিসেট (Optional)
-      /*
-      setFormData({...});
-      setImages([]);
-      setImagePreviews([]);
-      setVideo(null);
-      */
 
     } catch (error) {
       console.error(error);
@@ -174,7 +162,6 @@ const AdminAddProduct = () => {
     }
   };
 
-  // কমন ইনপুট স্টাইল
   const inputClass = "w-full border border-gray-300 p-3 text-sm focus:border-red-500 focus:outline-none transition-colors bg-white";
   const labelClass = "block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2";
   const sectionTitleClass = "text-sm font-extrabold text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-200 pb-2";
@@ -223,7 +210,7 @@ const AdminAddProduct = () => {
               </select>
             </div>
             
-            {/* Subcategory Dropdown (Dynamic) */}
+            {/* FIX: Subcategory Dropdown - ভ্যালু হিসেবে নাম (cat.name) পাঠানো হচ্ছে */}
             <div>
               <label className={labelClass}>Subcategory</label>
               <select 
@@ -231,11 +218,14 @@ const AdminAddProduct = () => {
                 value={formData.subCategory} 
                 onChange={handleTextChange} 
                 className={inputClass}
-                disabled={!formData.category || availableSubCategories.length === 0} // মেইন ক্যাটাগরি সিলেক্ট না করলে ডিজেবল থাকবে
+                disabled={!formData.category || availableSubCategories.length === 0}
               >
-                <option value="">{availableSubCategories.length === 0 && formData.category ? "No subcategories found" : "Select Subcategory"}</option>
+                <option value="">
+                  {availableSubCategories.length === 0 && formData.category ? "No subcategories found" : "Select Subcategory"}
+                </option>
                 {availableSubCategories.map(subCat => (
-                  <option key={subCat._id} value={subCat._id}>{subCat.name}</option>
+                  /* এখানে value={subCat.name} দেওয়া হয়েছে, যাতে আপনার আগের সিস্টেমে ঠিকমতো কাজ করে */
+                  <option key={subCat._id} value={subCat.name}>{subCat.name}</option>
                 ))}
               </select>
             </div>
