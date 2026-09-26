@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import api from "../../api/axios";
-import toast from "react-hot-toast"; // <-- টোস্ট ইম্পোর্ট করা হয়েছে
+import toast from "react-hot-toast";
 
 const AdminAddProduct = () => {
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]); // ডাটাবেস থেকে সব ক্যাটাগরি রাখার স্টেট
   
-  // ক্লায়েন্টের রিকয়ারমেন্ট অনুযায়ী সম্পূর্ণ স্টেট
   const [formData, setFormData] = useState({
     name: "",
     sku: "",
-    category: "",
-    subCategory: "",
+    category: "", // Main Category ID
+    subCategory: "", // Sub Category ID
     gender: "Unisex",
     brand: "",
     regularPrice: "",
@@ -37,14 +37,45 @@ const AdminAddProduct = () => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [video, setVideo] = useState(null);
 
+  // ১. কম্পোনেন্ট লোড হলে ডাটাবেস থেকে ক্যাটাগরিগুলো নিয়ে আসা
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await api.get('/api/categories');
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to load categories", error);
+        toast.error("Failed to load categories");
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // ২. ফিল্টার লজিক (Main এবং Sub ক্যাটাগরির জন্য)
+  // মেইন ক্যাটাগরিগুলো (যাদের parent নেই)
+  const mainCategories = categories.filter(cat => !cat.parent);
+  
+  // বর্তমানে সিলেক্ট করা মেইন ক্যাটাগরির উপর ভিত্তি করে সাব-ক্যাটাগরিগুলো ফিল্টার করা
+  const availableSubCategories = categories.filter(cat => {
+    const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
+    return parentId === formData.category;
+  });
+
   const handleTextChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // যদি মেইন ক্যাটাগরি পরিবর্তন হয়, তাহলে আগের সিলেক্ট করা সাব-ক্যাটাগরি রিসেট করে দেওয়া
+    if (name === "category") {
+      setFormData({ ...formData, category: value, subCategory: "" });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 6) {
-      toast.error("You can upload a maximum of 6 images."); // <-- টোস্ট ব্যবহার
+      toast.error("You can upload a maximum of 6 images.");
       return;
     }
     setImages((prev) => [...prev, ...files]);
@@ -66,7 +97,7 @@ const AdminAddProduct = () => {
     e.preventDefault();
 
     if (images.length < 1) {
-      toast.error("Please upload at least 1 product image."); // <-- টোস্ট ব্যবহার
+      toast.error("Please upload at least 1 product image.");
       return;
     }
 
@@ -76,7 +107,7 @@ const AdminAddProduct = () => {
       const cloudName = "wtbwxhmc"; 
       const uploadPreset = "dresstown"; 
 
-      // ১. ছবিগুলো সরাসরি Cloudinary তে আপলোড করা
+      // ছবিগুলো সরাসরি Cloudinary তে আপলোড করা
       let uploadedImages = [];
       for (const pic of images) {
         const imageFormData = new FormData();
@@ -94,7 +125,7 @@ const AdminAddProduct = () => {
         });
       }
 
-      // ২. ভিডিও সরাসরি Cloudinary তে আপলোড করা (যদি থাকে)
+      // ভিডিও সরাসরি Cloudinary তে আপলোড করা (যদি থাকে)
       let uploadedVideo = null;
       if (video) {
         const videoFormData = new FormData();
@@ -112,7 +143,7 @@ const AdminAddProduct = () => {
         };
       }
 
-      // ৩. ডাটাবেসে পাঠানোর জন্য প্রোডাক্ট ডেটা রেডি করা
+      // ডাটাবেসে পাঠানোর জন্য প্রোডাক্ট ডেটা রেডি করা
       const generatedSlug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       
       const productData = {
@@ -122,14 +153,14 @@ const AdminAddProduct = () => {
         video: uploadedVideo || undefined
       };
 
-      // ৪. ব্যাকএন্ডে ডেটা পাঠানো
+      // ব্যাকএন্ডে ডেটা পাঠানো
       await api.post('/api/products', productData); 
       
-      toast.success("Product published successfully! 🎉"); // <-- টোস্ট ব্যবহার
+      toast.success("Product published successfully! 🎉");
       
-      // অপশনাল: আপলোড সাকসেস হওয়ার পর ফর্ম ক্লিয়ার করতে চাইলে নিচের লাইনগুলো আনকমেন্ট করতে পারেন
+      // ফর্ম রিসেট (Optional)
       /*
-      setFormData({...}); // Initial state
+      setFormData({...});
       setImages([]);
       setImagePreviews([]);
       setVideo(null);
@@ -137,7 +168,7 @@ const AdminAddProduct = () => {
 
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to add product 😔"); // <-- টোস্ট ব্যবহার
+      toast.error(error.response?.data?.message || "Failed to add product 😔");
     } finally {
       setLoading(false);
     }
@@ -180,20 +211,35 @@ const AdminAddProduct = () => {
         <div>
           <h3 className={sectionTitleClass}>2. Categorization</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Main Category Dropdown */}
             <div>
               <label className={labelClass}>Main Category *</label>
               <select name="category" value={formData.category} onChange={handleTextChange} required className={inputClass}>
                 <option value="">Select Category</option>
-                <option value="a030397335f7f6e5cbffbe3b">Men</option>
-                <option value="2056d1734b0f09e8604e5d7f">Women</option>
-                <option value="78a6179b08d1b4762adb4431">Kids</option>
-                <option value="39548d73e5e02a6d6ce06511">Winter Collection</option>
+                {mainCategories.map(cat => (
+                  <option key={cat._id} value={cat._id}>{cat.name}</option>
+                ))}
               </select>
             </div>
+            
+            {/* Subcategory Dropdown (Dynamic) */}
             <div>
               <label className={labelClass}>Subcategory</label>
-              <input type="text" name="subCategory" value={formData.subCategory} onChange={handleTextChange} className={inputClass} placeholder="e.g. Panjabi" />
+              <select 
+                name="subCategory" 
+                value={formData.subCategory} 
+                onChange={handleTextChange} 
+                className={inputClass}
+                disabled={!formData.category || availableSubCategories.length === 0} // মেইন ক্যাটাগরি সিলেক্ট না করলে ডিজেবল থাকবে
+              >
+                <option value="">{availableSubCategories.length === 0 && formData.category ? "No subcategories found" : "Select Subcategory"}</option>
+                {availableSubCategories.map(subCat => (
+                  <option key={subCat._id} value={subCat._id}>{subCat.name}</option>
+                ))}
+              </select>
             </div>
+            
             <div>
               <label className={labelClass}>Gender</label>
               <select name="gender" value={formData.gender} onChange={handleTextChange} className={inputClass}>
@@ -211,26 +257,11 @@ const AdminAddProduct = () => {
         <div>
           <h3 className={sectionTitleClass}>3. Pricing & Inventory</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className={labelClass}>Regular Price (৳) *</label>
-              <input type="number" name="regularPrice" value={formData.regularPrice} onChange={handleTextChange} required className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Discount Price (৳)</label>
-              <input type="number" name="discountPrice" value={formData.discountPrice} onChange={handleTextChange} className={inputClass} placeholder="Optional" />
-            </div>
-            <div>
-              <label className={labelClass}>Available Stock *</label>
-              <input type="number" name="stock" value={formData.stock} onChange={handleTextChange} required className={inputClass} />
-            </div>
-            <div className="md:col-span-1">
-              <label className={labelClass}>Available Sizes</label>
-              <input type="text" name="sizes" value={formData.sizes} onChange={handleTextChange} className={inputClass} placeholder="e.g. S, M, L, XL, XXL" />
-            </div>
-            <div className="md:col-span-2">
-              <label className={labelClass}>Available Colours</label>
-              <input type="text" name="colors" value={formData.colors} onChange={handleTextChange} className={inputClass} placeholder="e.g. Black, White, Navy Blue" />
-            </div>
+            <div><label className={labelClass}>Regular Price (৳) *</label><input type="number" name="regularPrice" value={formData.regularPrice} onChange={handleTextChange} required className={inputClass} /></div>
+            <div><label className={labelClass}>Discount Price (৳)</label><input type="number" name="discountPrice" value={formData.discountPrice} onChange={handleTextChange} className={inputClass} placeholder="Optional" /></div>
+            <div><label className={labelClass}>Available Stock *</label><input type="number" name="stock" value={formData.stock} onChange={handleTextChange} required className={inputClass} /></div>
+            <div className="md:col-span-1"><label className={labelClass}>Available Sizes</label><input type="text" name="sizes" value={formData.sizes} onChange={handleTextChange} className={inputClass} placeholder="e.g. S, M, L, XL, XXL" /></div>
+            <div className="md:col-span-2"><label className={labelClass}>Available Colours</label><input type="text" name="colors" value={formData.colors} onChange={handleTextChange} className={inputClass} placeholder="e.g. Black, White, Navy Blue" /></div>
           </div>
         </div>
 

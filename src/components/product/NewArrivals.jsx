@@ -13,7 +13,10 @@ const NewArrivals = () => {
         const { data } = await api.get('/api/products'); 
         
         // Backend er response formatting onujayi
-        setProducts(data.products || data); 
+        const allProducts = data.products || data;
+        
+        // ঠিক ২ লাইন (৫ x ২ = ১০) দেখানোর জন্য প্রথম ১০টি প্রোডাক্ট নেওয়া হলো
+        setProducts(allProducts.slice(0, 10)); 
         setLoading(false);
       } catch (err) {
         console.error("Error fetching products:", err);

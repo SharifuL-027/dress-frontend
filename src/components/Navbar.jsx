@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router"; // react-router-dom bebohar korle bhalo hoy (Vite e standard)
+import { Link } from "react-router";
 import api from "../api/axios"; 
-import { useAuth } from "../context/AuthContext"; // Auth Context Import Kora Holo
+import { useAuth } from "../context/AuthContext"; 
 
 const Navbar = () => {
-  const { user, logout } = useAuth(); // Auth hook theke user o logout niye aslam
+  const { user, logout } = useAuth();
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -30,6 +30,7 @@ const Navbar = () => {
       try {
         const { data } = await api.get('/api/categories');
         
+        // ১. মেইন ক্যাটাগরিগুলো আলাদা করা
         const formattedCategories = data.reduce((acc, current) => {
           if (!current.parent) {
             acc.push({ ...current, subCategories: [] });
@@ -37,11 +38,15 @@ const Navbar = () => {
           return acc;
         }, []);
 
+        // ২. সাব-ক্যাটাগরিগুলো মেইন ক্যাটাগরির ভেতরে যুক্ত করা
         data.forEach((item) => {
           if (item.parent) {
+            const parentId = typeof item.parent === 'object' ? item.parent._id : item.parent;
+            
             const parentIndex = formattedCategories.findIndex(
-              (cat) => cat._id === item.parent._id
+              (cat) => cat._id.toString() === parentId.toString()
             );
+            
             if (parentIndex > -1) {
               formattedCategories[parentIndex].subCategories.push(item);
             }
@@ -61,7 +66,7 @@ const Navbar = () => {
 
   return (
     <nav 
-      className={`fixed top-0 left-0 w-full z-50 transition-colors duration-500 ease-in-out ${
+      className={`fixed top-0 left-0 w-full z-[100] transition-colors duration-500 ease-in-out ${
         isScrolled ? "bg-white shadow-md" : "bg-transparent"
       }`}
     >
@@ -80,7 +85,7 @@ const Navbar = () => {
           </div>
 
           {/* Center - Navigation Links (Dynamic) */}
-          <div className="hidden lg:flex flex-1 mx-8 items-center space-x-8 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="hidden lg:flex flex-1 mx-8 items-center space-x-8">
             
             <Link to="/" className="shrink-0 flex items-center text-[13px] font-bold text-gray-800 uppercase tracking-wide hover:text-red-500 transition">
               Home
@@ -103,14 +108,15 @@ const Navbar = () => {
                     {category.name}
                   </Link>
 
+                  {/* FIX: Dropdown Menu - Subcategories (Z-index & Background fixed) */}
                   {category.subCategories.length > 0 && (
-                    <div className="absolute top-[80px] left-0 w-48 bg-white border border-gray-100 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-b-md">
+                    <div className="absolute top-[90px] left-0 w-56 bg-white border border-gray-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-md z-50 overflow-hidden">
                       <ul className="py-2">
                         {category.subCategories.map((sub) => (
                           <li key={sub._id}>
                             <Link 
                               to={`/category/${sub.slug}`}
-                              className="block px-4 py-2 text-[12px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition"
+                              className="block px-6 py-3 text-[12px] font-bold text-gray-700 hover:bg-gray-100 hover:text-red-600 uppercase transition"
                             >
                               {sub.name}
                             </Link>
@@ -142,7 +148,7 @@ const Navbar = () => {
               </button>
             </div>
             
-            {/* UPDATED: Profile Icon with Dynamic Dropdown */}
+            {/* Profile Icon with Dynamic Dropdown */}
             <div className="relative group flex flex-col items-center cursor-pointer mt-1 h-24 justify-center">
               <div className="flex flex-col items-center text-gray-800 group-hover:text-red-500 transition">
                 <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,60 +158,57 @@ const Navbar = () => {
               </div>
 
               {/* Dynamic Profile Dropdown Menu */}
-              <div className="absolute top-[80px] right-0 w-48 bg-white border border-gray-100 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-md">
+              <div className="absolute top-[80px] right-0 w-48 bg-white border border-gray-100 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-md z-50">
                 <ul className="py-2">
                   
-                  {/* User Login Kora NA Thakle */}
                   {!user ? (
                     <>
                       <li>
-                        <Link to="/login" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition">
+                        <Link to="/login" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition">
                           Sign In
                         </Link>
                       </li>
                       <li>
-                        <Link to="/register" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition">
+                        <Link to="/register" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition">
                           Sign Up
                         </Link>
                       </li>
                       <div className="border-t border-gray-100 my-1"></div>
                       <li>
-                        <Link to="/track-order" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition">
+                        <Link to="/track-order" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition">
                           Track Order
                         </Link>
                       </li>
                     </>
                   ) : (
-                    /* User Login Kora Thakle */
                     <>
                       <li className="px-4 py-2 border-b border-gray-100 mb-1">
                         <span className="block text-[11px] text-gray-400 font-semibold uppercase">Welcome back,</span>
                         <span className="block text-[13px] font-bold text-gray-800 truncate">{user.name}</span>
                       </li>
                       
-                      {/* Shudhu Admin Hole Ei Link Dekhabe */}
-                     {user.role === 'admin' && (
-  <li>
-    <Link to="/admin/dashboard" className="block px-4 py-2 text-[13px] font-bold text-red-600 hover:bg-red-50 uppercase transition">
-      Admin Panel
-    </Link>
-  </li>
-)}
+                      {user.role === 'admin' && (
+                        <li>
+                          <Link to="/admin/dashboard" className="block px-4 py-2 text-[13px] font-bold text-red-600 hover:bg-red-50 uppercase transition">
+                            Admin Panel
+                          </Link>
+                        </li>
+                      )}
 
                       <li>
-                        <Link to="/profile" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition">
+                        <Link to="/profile" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition">
                           My Dashboard
                         </Link>
                       </li>
                       <li>
-                        <Link to="/my-orders" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition">
+                        <Link to="/my-orders" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition">
                           My Orders
                         </Link>
                       </li>
                       <li>
                         <button 
                           onClick={logout}
-                          className="w-full text-left block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 uppercase transition"
+                          className="w-full text-left block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition"
                         >
                           Logout
                         </button>

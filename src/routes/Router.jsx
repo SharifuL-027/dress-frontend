@@ -13,6 +13,8 @@ import AdminEditProduct from "../components/admin/AdminEditProduct";
 import AdminCategories from "../components/admin/AdminCategories";
 import AdminOrders from "../components/admin/AdminOrders";
 import AdminCustomers from './../components/admin/AdminCustomers';
+import ProductDetails from "../components/product/ProductDetails";
+import CategoryPage from "../components/product/CategoryPage";
 
 const Shop = () => <div>Shop Page</div>;
 
@@ -42,6 +44,14 @@ const router = createBrowserRouter([
         path: "/profile",
         element: <Profile />,
       },
+      {
+         path: "/product/:id", 
+         element: <ProductDetails/>, 
+      },
+      {
+        path: "/category/:slug",
+        element: <CategoryPage/>
+      }
     ],
   },
   
@@ -62,7 +72,8 @@ const router = createBrowserRouter([
           { path: "/admin/edit-product/:id", element: <AdminEditProduct/> },
           { path: "/admin/categories", element: <AdminCategories/> },
           { path: "/admin/orders", element: <AdminOrders />, },
-          { path: "/admin/users", element: <AdminCustomers />, }
+          { path: "/admin/users", element: <AdminCustomers />, },
+          ,
         ]
       }
     ]

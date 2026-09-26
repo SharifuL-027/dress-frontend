@@ -1,4 +1,5 @@
 import Hero from "../Hero";
+import DynamicCategories from "../product/DynamicCategories";
 import NewArrivals from "../product/NewArrivals";
 
 const Home = () => {
@@ -6,6 +7,7 @@ const Home = () => {
     <div>
       <Hero />
       <NewArrivals/>
+      <DynamicCategories/>
     </div>
   );
 };
