@@ -1,11 +1,11 @@
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 import { Link } from "react-router";
 
 const WishlistPage = () => {
   const { wishlist, toggleWishlist, addToCart } = useCart();
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-32 mb-24 font-sans">
+    <div className="max-w-375 mx-auto px-4 md:px-8 mt-32 mb-24 font-sans">
       
       {/* Page Header */}
       <div className="mb-10 border-b border-gray-200 pb-6">

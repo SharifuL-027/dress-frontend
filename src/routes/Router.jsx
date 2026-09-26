@@ -15,6 +15,7 @@ import AdminOrders from "../components/admin/AdminOrders";
 import AdminCustomers from './../components/admin/AdminCustomers';
 import ProductDetails from "../components/product/ProductDetails";
 import CategoryPage from "../components/product/CategoryPage";
+import WishlistPage from "../components/Cart/WishlistPage";
 
 const Shop = () => <div>Shop Page</div>;
 
@@ -51,6 +52,10 @@ const router = createBrowserRouter([
       {
         path: "/category/:slug",
         element: <CategoryPage/>
+      },
+      {
+        path: "/wishlist",
+        element: <WishlistPage/>
       }
     ],
   },
