@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import api from "../api/axios"; 
 import { useAuth } from "../context/AuthContext"; 
-import { useCart } from "../context/CartContext"; // <-- Cart Context Import করা হলো
+import { useCart } from "../context/CartContext"; 
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { cart, wishlist } = useCart(); // <-- Cart ও Wishlist এর ডেটা নিয়ে আসা হলো
+  const { cart, wishlist, openCart } = useCart(); // <-- openCart function ekhane niye asha holo
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -238,19 +238,22 @@ const Navbar = () => {
               <span className="text-xs font-semibold text-gray-800 group-hover:text-red-500">Wishlist</span>
             </Link>
 
-            {/* DYNAMIC CART ICON */}
-            <Link to="/cart" className="relative flex flex-col items-center hover:text-red-500 transition group mt-1">
+            {/* DYNAMIC CART ICON (Link er bodole button ebong openCart use kora holo) */}
+            <button 
+              onClick={openCart} 
+              className="relative flex flex-col items-center hover:text-red-500 transition group mt-1 cursor-pointer bg-transparent border-none"
+            >
               <div className="relative">
                 <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                {/* কার্টের ব্যাজ সবসময় দেখাবে (খালি থাকলে 0 দেখাবে) */}
+                {/* কার্টের মোট পরিমাণ (Quantity) ব্যাজে শো করবে */}
                 <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
-                  {cart?.length || 0}
+                  {cart?.reduce((acc, item) => acc + item.qty, 0) || 0}
                 </span>
               </div>
               <span className="text-xs font-semibold text-gray-800 group-hover:text-red-500">Cart</span>
-            </Link>
+            </button>
 
           </div>
 

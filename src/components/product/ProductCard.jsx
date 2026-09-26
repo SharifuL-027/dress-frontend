@@ -1,8 +1,27 @@
 import { Link } from 'react-router';
+import { useCart } from '../../context/CartContext'; 
 
 const ProductCard = ({ product }) => {
+  const { addToCart, toggleWishlist } = useCart(); 
+  const handleAddToCart = (e) => {
+    e.preventDefault(); 
+    const cartItem = {
+      ...product,
+      price: product.discountPrice || product.regularPrice || product.price || 0,
+      size: product.sizes?.[0] || 'Standard',
+      color: product.colors?.[0] || 'Default',
+      qty: 1
+    };
+    addToCart(cartItem);
+  };
+
+  // উইশলিস্ট বাটনে ক্লিক করলে
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    toggleWishlist(product);
+  };
+
   return (
-    // 'rounded' muche deya hoyeche, text-center kora hoyeche clean look-er jonno
     <div className="bg-white border border-gray-100 overflow-hidden group transition-all duration-300 hover:shadow-lg flex flex-col relative">
       
       {/* Product Image Section */}
@@ -15,12 +34,12 @@ const ProductCard = ({ product }) => {
           />
         </Link>
         
-        {/* Hover Action Buttons - Side theke smoothly ashbe */}
-        {/* translate-x-12 diye baire rakha hoyeche, hover korle translate-x-0 hobe */}
+        {/* Hover Action Buttons */}
         <div className="absolute top-4 right-0 flex flex-col gap-2 px-3 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 ease-out z-10">
           
-          {/* Wishlist Icon */}
+          {/* Wishlist Button */}
           <button 
+            onClick={handleToggleWishlist}
             title="Add to Wishlist"
             className="w-9 h-9 bg-white flex items-center justify-center text-gray-600 hover:bg-red-500 hover:text-white transition-colors shadow-sm"
           >
@@ -29,8 +48,9 @@ const ProductCard = ({ product }) => {
             </svg>
           </button>
           
-          {/* Cart Icon */}
+          {/* Cart Button */}
           <button 
+            onClick={handleAddToCart}
             title="Add to Cart"
             className="w-9 h-9 bg-white flex items-center justify-center text-gray-600 hover:bg-red-500 hover:text-white transition-colors shadow-sm"
           >
@@ -41,15 +61,15 @@ const ProductCard = ({ product }) => {
           
         </div>
 
-        {/* Optional: Sale/Discount Badge (Kono rounded chara) */}
-        {product.oldPrice && (
+        {/* Sale/Discount Badge */}
+        {product.discountPrice && (
           <div className="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
             Sale
           </div>
         )}
       </div>
 
-      {/* Product Details Section (Soto o Compact) */}
+      {/* Product Details Section */}
       <div className="p-3 flex flex-col grow text-center">
         <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest mb-1">
           {product.category?.name || 'Category'}
@@ -62,15 +82,15 @@ const ProductCard = ({ product }) => {
         </Link>
         
         <div className="flex items-center justify-center gap-2 mt-auto">
-  <span className="text-[14px] ubuntu-bold text-red-500">
-    ৳{product.regularPrice || product.price || 0}
-  </span>
-  {product.discountPrice && (
-    <span className="text-[11px] ubuntu-medium text-gray-400 line-through">
-      ৳{product.regularPrice}
-    </span>
-  )}
-</div>
+          <span className="text-[14px] ubuntu-bold text-red-500">
+            ৳{product.discountPrice || product.regularPrice || product.price || 0}
+          </span>
+          {product.discountPrice && (
+            <span className="text-[11px] ubuntu-medium text-gray-400 line-through">
+              ৳{product.regularPrice}
+            </span>
+          )}
+        </div>
       </div>
 
     </div>
