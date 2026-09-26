@@ -10,6 +10,9 @@ import AdminLayout from "../components/admin/AdminLayout";
 import AdminAddProduct from "../components/admin/AdminAddProduct";
 import AdminProducts from "../components/admin/AdminProducts";
 import AdminEditProduct from "../components/admin/AdminEditProduct";
+import AdminCategories from "../components/admin/AdminCategories";
+import AdminOrders from "../components/admin/AdminOrders";
+import AdminCustomers from './../components/admin/AdminCustomers';
 
 const Shop = () => <div>Shop Page</div>;
 
@@ -56,7 +59,10 @@ const router = createBrowserRouter([
           
           { path: "/admin/add-product", element: <AdminAddProduct /> },
           { path: "/admin/products", element: <AdminProducts/> },
-           { path: "/admin/edit-product/:id", element: <AdminEditProduct/> },
+          { path: "/admin/edit-product/:id", element: <AdminEditProduct/> },
+          { path: "/admin/categories", element: <AdminCategories/> },
+          { path: "/admin/orders", element: <AdminOrders />, },
+          { path: "/admin/users", element: <AdminCustomers />, }
         ]
       }
     ]
