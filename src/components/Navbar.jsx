@@ -6,7 +6,7 @@ import { useCart } from "../context/CartContext";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { cart, wishlist, openCart } = useCart(); // <-- openCart function ekhane niye asha holo
+  const { cart, wishlist, openCart } = useCart(); 
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -32,7 +32,6 @@ const Navbar = () => {
       try {
         const { data } = await api.get('/api/categories');
         
-        // ১. মেইন ক্যাটাগরিগুলো আলাদা করা
         const formattedCategories = data.reduce((acc, current) => {
           if (!current.parent) {
             acc.push({ ...current, subCategories: [] });
@@ -40,7 +39,6 @@ const Navbar = () => {
           return acc;
         }, []);
 
-        // ২. সাব-ক্যাটাগরিগুলো মেইন ক্যাটাগরির ভেতরে যুক্ত করা
         data.forEach((item) => {
           if (item.parent) {
             const parentId = typeof item.parent === 'object' ? item.parent._id : item.parent;
@@ -175,12 +173,6 @@ const Navbar = () => {
                           Sign Up
                         </Link>
                       </li>
-                      <div className="border-t border-gray-100 my-1"></div>
-                      <li>
-                        <Link to="/track-order" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition">
-                          Track Order
-                        </Link>
-                      </li>
                     </>
                   ) : (
                     <>
@@ -203,11 +195,6 @@ const Navbar = () => {
                         </Link>
                       </li>
                       <li>
-                        <Link to="/my-orders" className="block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition">
-                          My Orders
-                        </Link>
-                      </li>
-                      <li>
                         <button 
                           onClick={logout}
                           className="w-full text-left block px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50 hover:text-red-600 uppercase transition"
@@ -222,13 +209,28 @@ const Navbar = () => {
               </div>
             </div>
 
+            {/* DYNAMIC ORDERS / TRACK ORDER ICON */}
+            <Link 
+              to={user ? "/my-orders" : "/track-order"} 
+              className="relative flex flex-col items-center hover:text-red-500 transition group mt-1"
+            >
+              <div className="relative">
+                {/* Package/Box Icon */}
+                <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <span className="text-xs font-semibold text-gray-800 group-hover:text-red-500">
+                {user ? "Orders" : "Track"}
+              </span>
+            </Link>
+
             {/* DYNAMIC WISHLIST ICON */}
             <Link to="/wishlist" className="relative flex flex-col items-center hover:text-red-500 transition group mt-1">
               <div className="relative">
                 <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                {/* উইশলিস্টে আইটেম থাকলেই ব্যাজ দেখাবে */}
                 {wishlist?.length > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
                     {wishlist.length}
@@ -238,7 +240,7 @@ const Navbar = () => {
               <span className="text-xs font-semibold text-gray-800 group-hover:text-red-500">Wishlist</span>
             </Link>
 
-            {/* DYNAMIC CART ICON (Link er bodole button ebong openCart use kora holo) */}
+            {/* DYNAMIC CART ICON */}
             <button 
               onClick={openCart} 
               className="relative flex flex-col items-center hover:text-red-500 transition group mt-1 cursor-pointer bg-transparent border-none"
@@ -247,7 +249,6 @@ const Navbar = () => {
                 <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                {/* কার্টের মোট পরিমাণ (Quantity) ব্যাজে শো করবে */}
                 <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
                   {cart?.reduce((acc, item) => acc + item.qty, 0) || 0}
                 </span>

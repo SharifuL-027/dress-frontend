@@ -4,7 +4,7 @@ import api from "../../api/axios";
 import ProductCard from "../product/ProductCard"; 
 
 const CategoryPage = () => {
-  const { slug } = useParams(); // URL থেকে বর্তমান ক্যাটাগরির slug
+  const { slug } = useParams(); // URL theke bortoman category-r slug
   
   const [allCategories, setAllCategories] = useState([]);
   const [structuredCategories, setStructuredCategories] = useState([]);
@@ -19,7 +19,7 @@ const CategoryPage = () => {
   const [sortOrder, setSortOrder] = useState("newest");
   const [currentCategory, setCurrentCategory] = useState(null);
 
-  // ১. ডেটা ফেচ এবং সাইডবার স্ট্রাকচার তৈরি করা
+  // ১. Data fetch ebong sidebar structure toiri kora
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -35,7 +35,7 @@ const CategoryPage = () => {
         setAllCategories(fetchedCategories);
         setAllProducts(fetchedProducts);
 
-        // সাইডবারের জন্য ট্রি-স্ট্রাকচার (Main -> Sub) তৈরি করা
+        // Sidebar er jonno tree-structure (Main -> Sub) toiri kora
         const mainCats = fetchedCategories.filter(c => !c.parent);
         const structured = mainCats.map(main => {
           return {
@@ -57,36 +57,28 @@ const CategoryPage = () => {
     fetchData();
   }, []);
 
-  // ২. ফিল্টারিং এবং সর্টিং লজিক (যখনই URL, Search, Price বা Sort চেঞ্জ হবে)
+  // ২. Filtering ebong sorting logic
   useEffect(() => {
     if (allCategories.length === 0 || allProducts.length === 0) return;
 
     let result = [...allProducts];
 
-    // ক) URL Slug অনুযায়ী ক্যাটাগরি ফিল্টার করা
+    // ক) URL Slug onujayi Category Filter Kora (NEW LOGIC)
     const activeCat = allCategories.find(c => c.slug === slug);
     setCurrentCategory(activeCat || null);
 
     if (activeCat) {
-      const isMainCategory = !activeCat.parent;
-      let allowedCategoryIds = [activeCat._id];
-      
-      // যদি মেইন ক্যাটাগরি হয়, তাহলে তার সব সাব-ক্যাটাগরির প্রোডাক্টও দেখাবে
-      if (isMainCategory) {
-        const subCats = allCategories.filter(c => {
-          const parentId = typeof c.parent === 'object' ? c.parent?._id : c.parent;
-          return parentId === activeCat._id;
-        });
-        allowedCategoryIds = [...allowedCategoryIds, ...subCats.map(c => c._id)];
-      }
-
       result = result.filter(product => {
+        // Product er category ebong subCategory ID ber kora
         const pCatId = typeof product.category === 'object' ? product.category?._id : product.category;
-        return allowedCategoryIds.includes(pCatId);
+        const pSubCatId = typeof product.subCategory === 'object' ? product.subCategory?._id : product.subCategory;
+
+        // Active category-r ID jodi product er Main Category othba Sub Category kono ektar sathe mile jay
+        return String(pCatId) === String(activeCat._id) || String(pSubCatId) === String(activeCat._id);
       });
     }
 
-    // খ) নাম দিয়ে সার্চ ফিল্টার
+    // খ) Name diye search filter
     if (searchQuery.trim() !== "") {
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,7 +86,7 @@ const CategoryPage = () => {
       );
     }
 
-    // গ) প্রাইস ফিল্টার (Min / Max)
+    // গ) Price filter (Min / Max)
     if (minPrice !== "") {
       result = result.filter(product => {
         const price = product.discountPrice || product.regularPrice;
@@ -108,7 +100,7 @@ const CategoryPage = () => {
       });
     }
 
-    // ঘ) সর্টিং লজিক
+    // ঘ) Sorting logic
     if (sortOrder === "price-low") {
       result.sort((a, b) => (a.discountPrice || a.regularPrice) - (b.discountPrice || b.regularPrice));
     } else if (sortOrder === "price-high") {
@@ -185,7 +177,6 @@ const CategoryPage = () => {
                 );
               })}
             </div>
-
           </div>
         </div>
 

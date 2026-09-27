@@ -16,6 +16,9 @@ import AdminCustomers from './../components/admin/AdminCustomers';
 import ProductDetails from "../components/product/ProductDetails";
 import CategoryPage from "../components/product/CategoryPage";
 import WishlistPage from "../components/Cart/WishlistPage";
+import CheckoutPage from "../components/Cart/CheckoutPage";
+import MyOrdersPage from "../components/Cart/MyOrderspage";
+import NewArrivalsPage from "../components/product/NewArrivalsPage";
 
 const Shop = () => <div>Shop Page</div>;
 
@@ -56,6 +59,18 @@ const router = createBrowserRouter([
       {
         path: "/wishlist",
         element: <WishlistPage/>
+      },
+      {
+        path: "/checkout",
+        element: <CheckoutPage/>
+      },
+      {
+        path: "/my-orders",
+        element: <MyOrdersPage/>
+      },
+      {
+        path: "/new-arrivals",
+        element: <NewArrivalsPage/>
       }
     ],
   },

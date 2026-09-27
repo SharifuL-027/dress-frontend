@@ -16,9 +16,6 @@ const AdminAddProduct = () => {
     brand: "",
     regularPrice: "",
     discountPrice: "",
-    stock: "",
-    sizes: "", 
-    colors: "", 
     fabric: "",
     gsm: "",
     fitType: "",
@@ -32,6 +29,34 @@ const AdminAddProduct = () => {
     deliveryInfo: "Inside Dhaka: 2-3 Days | Outside Dhaka: 3-5 Days",
     returnPolicy: "7 Days Return & Exchange Policy Applicable."
   });
+
+  // =====================================
+  // NEW: Variant Management State
+  // =====================================
+  const [variants, setVariants] = useState([]); // [{ color: "Red", size: "M", stock: 10 }]
+  const [newVariant, setNewVariant] = useState({ color: "", size: "", stock: "" });
+
+  const handleAddVariant = () => {
+    if (!newVariant.color || !newVariant.size || !newVariant.stock) {
+      toast.error("Please fill color, size, and stock to add a variant.");
+      return;
+    }
+    
+    // চেক করা যে এই কালার-সাইজ কম্বিনেশন আগে থেকেই আছে কিনা
+    const exists = variants.find(v => v.color.toLowerCase() === newVariant.color.toLowerCase() && v.size.toLowerCase() === newVariant.size.toLowerCase());
+    if (exists) {
+      toast.error("This color and size combination already exists.");
+      return;
+    }
+
+    setVariants([...variants, { ...newVariant, stock: Number(newVariant.stock) }]);
+    setNewVariant({ color: "", size: "", stock: "" }); // ইনপুট ক্লিয়ার
+  };
+
+  const handleRemoveVariant = (indexToRemove) => {
+    setVariants(variants.filter((_, index) => index !== indexToRemove));
+  };
+  // =====================================
 
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -49,23 +74,16 @@ const AdminAddProduct = () => {
     fetchCategories();
   }, []);
 
-  // ১. Main Category Filter (yader parent nai)
   const mainCategories = categories.filter(cat => !cat.parent);
   
-  // ২. Sub Category Filter (Backend er populate kora data dhore bulletproof matching)
   const availableSubCategories = categories.filter(cat => {
     if (!cat.parent || !formData.category) return false;
-    
-    // Populate korar karone cat.parent ekhon ekta object, tai tar bhetor theke _id ta ber kore nite hobe
     const parentId = cat.parent._id ? cat.parent._id : cat.parent;
-    
-    // Ebar form er category ID er sathe perfectly match korabo
     return String(parentId) === String(formData.category);
   });
 
   const handleTextChange = (e) => {
     const { name, value } = e.target;
-    
     if (name === "category") {
       setFormData(prev => ({ ...prev, category: value, subCategory: "" }));
     } else {
@@ -101,6 +119,10 @@ const AdminAddProduct = () => {
       toast.error("Please upload at least 1 product image.");
       return;
     }
+    if (variants.length < 1) {
+      toast.error("Please add at least 1 product variant (Color/Size/Stock).");
+      return;
+    }
 
     setLoading(true);
 
@@ -114,15 +136,8 @@ const AdminAddProduct = () => {
         imageFormData.append("file", pic);
         imageFormData.append("upload_preset", uploadPreset);
 
-        const res = await axios.post(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          imageFormData
-        );
-        
-        uploadedImages.push({
-          url: res.data.secure_url,
-          public_id: res.data.public_id
-        });
+        const res = await axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, imageFormData);
+        uploadedImages.push({ url: res.data.secure_url, public_id: res.data.public_id });
       }
 
       let uploadedVideo = null;
@@ -131,32 +146,36 @@ const AdminAddProduct = () => {
         videoFormData.append("file", video);
         videoFormData.append("upload_preset", uploadPreset);
 
-        const res = await axios.post(
-          `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
-          videoFormData
-        );
-        
-        uploadedVideo = {
-          url: res.data.secure_url,
-          public_id: res.data.public_id
-        };
+        const res = await axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, videoFormData);
+        uploadedVideo = { url: res.data.secure_url, public_id: res.data.public_id };
       }
 
       const generatedSlug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       
+      // Total stock হিসাব করা
+      const totalStock = variants.reduce((acc, curr) => acc + curr.stock, 0);
+
+      // Color এবং Size গুলোর ইউনিক লিস্ট তৈরি করা (যাতে ডিটেইলস পেজে ফিল্টার দেখানো যায়)
+      const uniqueColors = [...new Set(variants.map(v => v.color))];
+      const uniqueSizes = [...new Set(variants.map(v => v.size))];
+
       const productData = {
         ...formData,
         slug: generatedSlug,
         images: uploadedImages, 
-        video: uploadedVideo || undefined
+        video: uploadedVideo || undefined,
+        variants: variants,           // নতুন ভেরিয়েন্ট ডেটা
+        totalStock: totalStock,       // মোট স্টক
+        colors: uniqueColors.join(', '), // পুরোনো ফরম্যাট সাপোর্ট করার জন্য কমা দিয়ে জোড়া লাগানো
+        sizes: uniqueSizes.join(', ')    // পুরোনো ফরম্যাট সাপোর্ট করার জন্য
       };
 
       await api.post('/api/products', productData); 
       
       toast.success("Product published successfully! 🎉");
       
-      // Submit korar por form faka korar jonne:
-      setFormData(prev => ({ ...prev, name: "", sku: "", description: "" })); 
+      setFormData({ name: "", sku: "", category: "", subCategory: "", gender: "Unisex", brand: "", regularPrice: "", discountPrice: "", fabric: "", gsm: "", fitType: "", sleeveType: "", pattern: "", description: "", keyFeatures: "", sizeChart: "", washingInstructions: "Hand wash preferred. Do not bleach.", origin: "Bangladesh", deliveryInfo: "Inside Dhaka: 2-3 Days | Outside Dhaka: 3-5 Days", returnPolicy: "7 Days Return & Exchange Policy Applicable." }); 
+      setVariants([]);
       setImages([]);
       setImagePreviews([]);
 
@@ -185,18 +204,9 @@ const AdminAddProduct = () => {
         <div>
           <h3 className={sectionTitleClass}>1. Basic Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className={labelClass}>Product Name *</label>
-              <input type="text" name="name" value={formData.name} onChange={handleTextChange} required className={inputClass} placeholder="e.g. Premium Cotton Panjabi" />
-            </div>
-            <div>
-              <label className={labelClass}>Product Code / SKU *</label>
-              <input type="text" name="sku" value={formData.sku} onChange={handleTextChange} required className={inputClass} placeholder="e.g. PNJ-2026-BLK" />
-            </div>
-            <div>
-              <label className={labelClass}>Brand</label>
-              <input type="text" name="brand" value={formData.brand} onChange={handleTextChange} className={inputClass} placeholder="e.g. DressTown Exclusives" />
-            </div>
+            <div className="md:col-span-2"><label className={labelClass}>Product Name *</label><input type="text" name="name" value={formData.name} onChange={handleTextChange} required className={inputClass} placeholder="e.g. Premium Cotton Panjabi" /></div>
+            <div><label className={labelClass}>Product Code / SKU *</label><input type="text" name="sku" value={formData.sku} onChange={handleTextChange} required className={inputClass} placeholder="e.g. PNJ-2026-BLK" /></div>
+            <div><label className={labelClass}>Brand</label><input type="text" name="brand" value={formData.brand} onChange={handleTextChange} className={inputClass} placeholder="e.g. DressTown Exclusives" /></div>
           </div>
         </div>
 
@@ -204,63 +214,75 @@ const AdminAddProduct = () => {
         <div>
           <h3 className={sectionTitleClass}>2. Categorization</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Main Category Dropdown */}
             <div>
               <label className={labelClass}>Main Category *</label>
               <select name="category" value={formData.category} onChange={handleTextChange} required className={inputClass}>
                 <option value="">Select Category</option>
-                {mainCategories.map(cat => (
-                  <option key={cat._id} value={cat._id}>{cat.name}</option>
-                ))}
+                {mainCategories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
               </select>
             </div>
-            
-            {/* Subcategory Dropdown (Database theke dynamically ashbe) */}
             <div>
               <label className={labelClass}>Subcategory</label>
-              <select 
-                name="subCategory" 
-                value={formData.subCategory} 
-                onChange={handleTextChange} 
-                className={inputClass}
-                disabled={!formData.category || availableSubCategories.length === 0}
-              >
-                <option value="">
-                  {!formData.category 
-                    ? "Select Main Category First" 
-                    : availableSubCategories.length === 0 
-                      ? "No subcategories found" 
-                      : "Select Subcategory"}
-                </option>
-                {availableSubCategories.map(subCat => (
-                  <option key={subCat._id} value={subCat.name}>{subCat.name}</option>
-                ))}
+              <select name="subCategory" value={formData.subCategory} onChange={handleTextChange} className={inputClass}>
+                <option value="">{!formData.category ? "Select Main Category First" : availableSubCategories.length === 0 ? "No subcategories found" : "Select Subcategory"}</option>
+                {availableSubCategories.map(subCat => <option key={subCat._id} value={subCat._id}>{subCat.name}</option>)}
               </select>
             </div>
-            
             <div>
               <label className={labelClass}>Gender</label>
               <select name="gender" value={formData.gender} onChange={handleTextChange} className={inputClass}>
-                <option value="Men">Men</option>
-                <option value="Women">Women</option>
-                <option value="Boys">Boys</option>
-                <option value="Girls">Girls</option>
-                <option value="Unisex">Unisex</option>
+                <option value="Men">Men</option><option value="Women">Women</option><option value="Boys">Boys</option><option value="Girls">Girls</option><option value="Unisex">Unisex</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* --- 3. Pricing & Inventory --- */}
+        {/* --- 3. Pricing & Variants (NEW) --- */}
         <div>
-          <h3 className={sectionTitleClass}>3. Pricing & Inventory</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <h3 className={sectionTitleClass}>3. Pricing & Inventory Variants</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div><label className={labelClass}>Regular Price (৳) *</label><input type="number" name="regularPrice" value={formData.regularPrice} onChange={handleTextChange} required className={inputClass} /></div>
             <div><label className={labelClass}>Discount Price (৳)</label><input type="number" name="discountPrice" value={formData.discountPrice} onChange={handleTextChange} className={inputClass} placeholder="Optional" /></div>
-            <div><label className={labelClass}>Available Stock *</label><input type="number" name="stock" value={formData.stock} onChange={handleTextChange} required className={inputClass} /></div>
-            <div className="md:col-span-1"><label className={labelClass}>Available Sizes</label><input type="text" name="sizes" value={formData.sizes} onChange={handleTextChange} className={inputClass} placeholder="e.g. S, M, L, XL, XXL" /></div>
-            <div className="md:col-span-2"><label className={labelClass}>Available Colours</label><input type="text" name="colors" value={formData.colors} onChange={handleTextChange} className={inputClass} placeholder="e.g. Black, White, Navy Blue" /></div>
+          </div>
+
+          {/* Variant Manager */}
+          <div className="bg-gray-50 border border-gray-200 p-6">
+            <h4 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Add Product Variants (Color, Size & Stock)</h4>
+            
+            <div className="flex flex-wrap gap-4 items-end mb-6">
+              <div className="flex-1 min-w-[150px]"><label className={labelClass}>Color</label><input type="text" value={newVariant.color} onChange={(e) => setNewVariant({ ...newVariant, color: e.target.value })} placeholder="e.g. Black" className={inputClass} /></div>
+              <div className="flex-1 min-w-[150px]"><label className={labelClass}>Size</label><input type="text" value={newVariant.size} onChange={(e) => setNewVariant({ ...newVariant, size: e.target.value })} placeholder="e.g. M" className={inputClass} /></div>
+              <div className="flex-1 min-w-[150px]"><label className={labelClass}>Stock Qty</label><input type="number" value={newVariant.stock} onChange={(e) => setNewVariant({ ...newVariant, stock: e.target.value })} placeholder="e.g. 10" className={inputClass} /></div>
+              <button type="button" onClick={handleAddVariant} className="bg-gray-900 text-white font-bold text-sm uppercase tracking-widest px-6 h-[46px] hover:bg-red-600 transition-colors">Add</button>
+            </div>
+
+            {/* Variants Table */}
+            {variants.length > 0 && (
+              <table className="w-full text-left text-sm border-collapse bg-white">
+                <thead>
+                  <tr className="bg-gray-100 uppercase text-[10px] tracking-widest text-gray-500">
+                    <th className="p-3 border border-gray-200">Color</th>
+                    <th className="p-3 border border-gray-200">Size</th>
+                    <th className="p-3 border border-gray-200">Stock</th>
+                    <th className="p-3 border border-gray-200 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {variants.map((v, idx) => (
+                    <tr key={idx}>
+                      <td className="p-3 border border-gray-200 font-bold">{v.color}</td>
+                      <td className="p-3 border border-gray-200 font-bold">{v.size}</td>
+                      <td className="p-3 border border-gray-200 font-bold text-red-600">{v.stock} pcs</td>
+                      <td className="p-3 border border-gray-200 text-center"><button type="button" onClick={() => handleRemoveVariant(idx)} className="text-red-500 font-bold hover:underline">Remove</button></td>
+                    </tr>
+                  ))}
+                  <tr className="bg-gray-50">
+                    <td colSpan="2" className="p-3 border border-gray-200 font-bold text-right uppercase text-[11px] tracking-widest">Total Stock:</td>
+                    <td colSpan="2" className="p-3 border border-gray-200 font-extrabold text-red-600">{variants.reduce((acc, curr) => acc + curr.stock, 0)} pcs</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
@@ -329,7 +351,7 @@ const AdminAddProduct = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="pt-8 mt-8 border-t border-gray-200">
+        <div className="pt-8 mt-8 border-t border-gray-200 flex gap-4">
           <button type="submit" disabled={loading} className="bg-red-500 hover:bg-red-600 text-white font-bold text-sm uppercase tracking-widest px-8 py-4 w-full md:w-auto transition-colors">
             {loading ? "Publishing Product..." : "Publish Product"}
           </button>
