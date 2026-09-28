@@ -119,7 +119,7 @@ const ProductCard = ({ product }) => {
           </span>
           
           {hasDiscount && (
-            <span className="text-[12px] ubuntu-bold text-gray-400 line-through decoration-gray-300 decoration-1">
+            <span className="text-[12px] ubuntu-bold text-gray-500 line-through decoration-gray-600 decoration-1">
               ৳{regularPrice}
             </span>
           )}
