@@ -8,7 +8,7 @@ const Footer = () => {
       {/* FLOATING CONTACT BANNER (Overlapping Top Edge) */}
       {/* ============================================== */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1500px] px-4 md:px-8 z-20">
-        <div className="bg-red-600 rounded-md shadow-2xl flex flex-col lg:flex-row justify-between items-center p-6 md:p-8 gap-6">
+        <div className="bg-red-700 rounded-md shadow-2xl flex flex-col lg:flex-row justify-between items-center p-6 md:p-8 gap-6">
           
           <div className="flex flex-col md:flex-row gap-6 md:gap-12 w-full lg:w-auto">
             {/* Phone */}
@@ -61,19 +61,18 @@ const Footer = () => {
       {/* ============================================== */}
       {/* MAIN FOOTER CONTENT */}
       {/* ============================================== */}
-      <div className="max-w-[1500px] mx-auto px-4 md:px-8 pb-12 pt-8">
+      <div className="max-w-375 mx-auto px-4 md:px-8 pb-12 pt-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           
           {/* Column 1: Brand Info */}
           <div>
             {/* Logo on White Background */}
-            <Link to="/" className="inline-block bg-white px-5 py-3 mb-6 rounded-sm shadow-md">
-              <span className="inter-bold text-2xl text-black tracking-widest uppercase flex items-center">
-                DRESS<span className="text-red-600 ml-1">TOWN</span>
-              </span>
-              <span className="block text-[8px] text-gray-500 tracking-[0.35em] uppercase text-center mt-1">
-                Flagship Store
-              </span>
+            <Link to="/" className="inline-block bg-white px-4 py-4 mb-6 rounded-sm shadow-md">
+              <img 
+                src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1789818500/DressTown_Logo_Png_oilfhm.png" 
+                alt="Dress Town Flagship" 
+                className="h-10 md:h-16 w-auto object-contain" 
+              />
             </Link>
             
             <p className="text-sm inter-regular text-gray-400 leading-relaxed mb-6">
@@ -166,7 +165,7 @@ const Footer = () => {
       {/* COPYRIGHT BOTTOM BAR */}
       {/* ============================================== */}
       <div className="border-t border-gray-900">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="max-w-375 mx-auto px-4 md:px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-500 inter-regular text-xs text-center md:text-left">
             Copyright &copy; {new Date().getFullYear()} DRESS TOWN FLAGSHIP. All Right Reserved.
           </p>

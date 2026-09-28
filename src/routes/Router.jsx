@@ -72,7 +72,8 @@ const router = createBrowserRouter([
       {
         path: "/new-arrivals",
         element: <NewArrivalsPage/>
-      }
+      },
+     
     ],
   },
   
