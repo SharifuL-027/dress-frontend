@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router"; // <-- useLocation ইমপোর্ট করা হলো
+import { Link, useLocation } from "react-router";
 import api from "../api/axios"; 
 import { useAuth } from "../context/AuthContext"; 
 import { useCart } from "../context/CartContext"; 
@@ -7,7 +7,7 @@ import { useCart } from "../context/CartContext";
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { cart, wishlist, openCart } = useCart(); 
-  const location = useLocation(); // <-- বর্তমান পেজের URL ট্র্যাক করার জন্য
+  const location = useLocation(); 
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState([]);

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router";
 import api from "../../api/axios"; 
 import toast from "react-hot-toast";
 import { useCart } from "../../context/CartContext"; 
+import ProductCard from "./ProductCard"; // <-- ProductCard ইম্পোর্ট করা হলো (পাথ ঠিক করে নেবেন)
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -10,6 +11,7 @@ const ProductDetails = () => {
   const { addToCart } = useCart(); 
   
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]); // রিলেটেড প্রোডাক্টের স্টেট
   const [loading, setLoading] = useState(true);
 
   // Cart States
@@ -25,21 +27,39 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState("description");
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductData = async () => {
       try {
+        // ১. কারেন্ট প্রোডাক্ট ফেচ করা
         const { data } = await api.get(`/api/products/${id}`);
         setProduct(data);
         
-        // ডিফল্ট কালার এবং সাইজ সিলেক্ট করা
         if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
         if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
+
+        // ২. একই ক্যাটাগরির অন্যান্য প্রোডাক্ট ফেচ করা
+        const categoryId = data.category?._id || data.category;
+        if (categoryId) {
+          const relatedRes = await api.get('/api/products');
+          const allProducts = relatedRes.data.products || relatedRes.data;
+          
+          // বর্তমান প্রোডাক্টটি বাদ দিয়ে একই ক্যাটাগরির সর্বোচ্চ ৪টি প্রোডাক্ট ফিল্টার করা
+          const filteredRelated = allProducts.filter(p => 
+            (p.category?._id === categoryId || p.category === categoryId) && p._id !== data._id
+          ).slice(0, 4);
+          
+          setRelatedProducts(filteredRelated);
+        }
+
       } catch (error) {
         toast.error("Failed to load product details!");
       } finally {
         setLoading(false);
       }
     };
-    fetchProduct();
+    
+    // পেজ পরিবর্তন হলে স্ক্রল টপে নিয়ে যাওয়া এবং ডাটা লোড করা
+    window.scrollTo(0, 0);
+    fetchProductData();
   }, [id]);
 
   // Gallery Handlers
@@ -75,7 +95,6 @@ const ProductDetails = () => {
 
   const currentVariantStock = getCurrentStock();
 
-  // ডাইনামিক মেসেজ তৈরি করার লজিক
   const variantLabel = `${selectedColor} ${selectedSize}`.trim();
   const stockMessage = currentVariantStock > 0 
     ? (variantLabel ? `${currentVariantStock} In Stock for ${variantLabel}` : `${currentVariantStock} In Stock`)
@@ -106,7 +125,8 @@ const ProductDetails = () => {
       price: product.discountPrice || product.regularPrice || product.price || 0,
       qty: qty,
       size: selectedSize || 'Standard',
-      color: selectedColor || 'Default'
+      color: selectedColor || 'Default',
+      maxStock: currentVariantStock
     };
 
     addToCart(cartItem);
@@ -136,7 +156,6 @@ const ProductDetails = () => {
           <><span className="text-gray-600">{product.category.name}</span><span>/</span></>
         )}
         
-        {/* FIX: Subcategory Name Render Logic */}
         {product.subCategory && (
           <>
             <span className="text-gray-600">
@@ -153,7 +172,9 @@ const ProductDetails = () => {
         
         {/* ---------------- LEFT: Image Gallery ---------------- */}
         <div className="lg:col-span-7 flex flex-col gap-4 sticky top-4 self-start">
-          <div className="w-full aspect-[4/5] border border-gray-200 bg-gray-50 cursor-zoom-in overflow-hidden relative group" onClick={() => openModal(activeImageIndex)}>
+          
+          {/* Main Image (Aspect Ratio 1:1 করা হয়েছে `aspect-square` দিয়ে) */}
+          <div className="w-full aspect-square border border-gray-200 bg-gray-50 cursor-zoom-in overflow-hidden relative group" onClick={() => openModal(activeImageIndex)}>
             <img src={images[activeImageIndex].url} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center">
               <span className="opacity-0 group-hover:opacity-100 bg-white text-black text-[10px] inter-bold uppercase tracking-widest px-4 py-2 shadow-sm transition-opacity">Click to Zoom</span>
@@ -369,6 +390,24 @@ const ProductDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* ---------------- RELATED PRODUCTS SECTION ---------------- */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-24 pt-12 border-t border-gray-200">
+          <div className="flex flex-col items-center mb-10">
+            <h2 className="text-2xl md:text-3xl inter-bold text-gray-900 uppercase tracking-widest">
+              You May Also Like
+            </h2>
+            <div className="h-1 w-16 bg-red-600 mt-4 rounded-full"></div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {relatedProducts.map((item) => (
+              <ProductCard key={item._id} product={item} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ----------------- MODALS ----------------- */}
       {isModalOpen && (

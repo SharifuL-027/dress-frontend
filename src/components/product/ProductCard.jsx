@@ -1,11 +1,12 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useCart } from '../../context/CartContext'; 
 import toast from 'react-hot-toast';
 
 const ProductCard = ({ product }) => {
   const { addToCart, toggleWishlist } = useCart(); 
+  const navigate = useNavigate(); // রিডাইরেক্ট করার জন্য useNavigate হুক যুক্ত করা হয়েছে
   
-  // স্টক চেক করা (ডাটাবেসের নতুন totalStock ফিল্ড অনুযায়ী)
+  // স্টক চেক করা (ডাটাবেসের নতুন totalStock ফিল্ড অনুযায়ী)
   const isOutOfStock = product.totalStock === 0 || product.stock === 0;
 
   const handleAddToCart = (e) => {
@@ -16,12 +17,24 @@ const ProductCard = ({ product }) => {
       return;
     }
 
+    // লজিক: যদি প্রোডাক্টের সাইজ বা কালার অপশন থাকে, তবে ডিটেইলস পেজে রিডাইরেক্ট করবে
+    if ((product.sizes && product.sizes.length > 0) || (product.colors && product.colors.length > 0)) {
+      toast("Please select a size and color first!", {
+        icon: '👉',
+        style: { background: '#333', color: '#fff', borderRadius: '8px' }
+      });
+      navigate(`/product/${product._id}`);
+      return;
+    }
+
+    // যদি কোনো সাইজ/কালার না থাকে, তবে সরাসরি কার্টে অ্যাড হবে
     const cartItem = {
       ...product,
       price: product.discountPrice || product.regularPrice || product.price || 0,
-      size: product.sizes?.[0] || 'Standard',
-      color: product.colors?.[0] || 'Default',
-      qty: 1
+      size: 'Standard',
+      color: 'Default',
+      qty: 1,
+      maxStock: product.totalStock || product.stock // কার্টে ম্যাক্স স্টক পাঠিয়ে দেওয়া হলো
     };
     addToCart(cartItem);
   };
@@ -54,7 +67,7 @@ const ProductCard = ({ product }) => {
       <div className="relative aspect-square bg-gray-50 overflow-hidden">
         <Link to={`/product/${product._id}`}>
           
-          {/* Base Image (Hover করলে হালকা বড় হয়ে মিলিয়ে যাবে) */}
+          {/* Base Image (Hover করলে হালকা বড় হয়ে মিলিয়ে যাবে) */}
           <img 
             src={mainImage} 
             alt={product.name} 
