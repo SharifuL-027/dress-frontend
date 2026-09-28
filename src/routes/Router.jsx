@@ -19,6 +19,7 @@ import WishlistPage from "../components/Cart/WishlistPage";
 import CheckoutPage from "../components/Cart/CheckoutPage";
 import MyOrdersPage from "../components/Cart/MyOrderspage";
 import NewArrivalsPage from "../components/product/NewArrivalsPage";
+import AdminBanners from "../components/admin/AdminBanners";
 
 const Shop = () => <div>Shop Page</div>;
 
@@ -93,6 +94,7 @@ const router = createBrowserRouter([
           { path: "/admin/categories", element: <AdminCategories/> },
           { path: "/admin/orders", element: <AdminOrders />, },
           { path: "/admin/users", element: <AdminCustomers />, },
+          {path: "/admin/banners", element: <AdminBanners/>}
           ,
         ]
       }

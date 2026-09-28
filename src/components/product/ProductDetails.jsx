@@ -75,7 +75,7 @@ const ProductDetails = () => {
 
   const currentVariantStock = getCurrentStock();
 
-  // ডাইনামিক মেসেজ তৈরি করার লজিক (যাতে কালার এবং সাইজের নাম দেখায়)
+  // ডাইনামিক মেসেজ তৈরি করার লজিক
   const variantLabel = `${selectedColor} ${selectedSize}`.trim();
   const stockMessage = currentVariantStock > 0 
     ? (variantLabel ? `${currentVariantStock} In Stock for ${variantLabel}` : `${currentVariantStock} In Stock`)
@@ -123,10 +123,10 @@ const ProductDetails = () => {
   const currentPrice = product.discountPrice || product.regularPrice;
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-30 mb-20 font-sans text-gray-800">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-30 mb-20 inter-regular text-gray-800">
       
       {/* ---------------- BREADCRUMB ---------------- */}
-      <div className="mb-6 flex flex-wrap items-center text-[10px] ubuntu-bold text-gray-400 uppercase tracking-widest gap-2">
+      <div className="mb-6 flex flex-wrap items-center text-[10px] inter-bold text-gray-400 uppercase tracking-widest gap-2">
         <Link to="/" className="hover:text-gray-800 transition-colors">Home</Link> 
         <span>/</span>
         {product.gender && product.gender.toLowerCase() !== product.category?.name?.toLowerCase() && (
@@ -135,9 +135,17 @@ const ProductDetails = () => {
         {product.category?.name && (
           <><span className="text-gray-600">{product.category.name}</span><span>/</span></>
         )}
+        
+        {/* FIX: Subcategory Name Render Logic */}
         {product.subCategory && (
-          <><span className="text-gray-600">{product.subCategory}</span><span>/</span></>
+          <>
+            <span className="text-gray-600">
+              {product.subCategory.name || product.subCategory}
+            </span>
+            <span>/</span>
+          </>
         )}
+        
         <span className="text-gray-900">{product.name}</span>
       </div>
 
@@ -148,7 +156,7 @@ const ProductDetails = () => {
           <div className="w-full aspect-[4/5] border border-gray-200 bg-gray-50 cursor-zoom-in overflow-hidden relative group" onClick={() => openModal(activeImageIndex)}>
             <img src={images[activeImageIndex].url} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center">
-              <span className="opacity-0 group-hover:opacity-100 bg-white text-black text-[10px] ubuntu-bold uppercase tracking-widest px-4 py-2 shadow-sm transition-opacity">Click to Zoom</span>
+              <span className="opacity-0 group-hover:opacity-100 bg-white text-black text-[10px] inter-bold uppercase tracking-widest px-4 py-2 shadow-sm transition-opacity">Click to Zoom</span>
             </div>
           </div>
 
@@ -161,7 +169,7 @@ const ProductDetails = () => {
             {product.video?.url && (
               <button onClick={() => setIsVideoModalOpen(true)} className="aspect-square border border-gray-200 opacity-80 hover:opacity-100 bg-gray-100 flex flex-col items-center justify-center gap-1 transition-all">
                 <span className="text-xl">🎥</span>
-                <span className="text-[9px] ubuntu-bold uppercase tracking-wider">Play</span>
+                <span className="text-[9px] inter-bold uppercase tracking-wider">Play</span>
               </button>
             )}
           </div>
@@ -170,14 +178,14 @@ const ProductDetails = () => {
         {/* ---------------- RIGHT: Product Info ---------------- */}
         <div className="lg:col-span-5 flex flex-col justify-start">
           
-          <h1 className="text-2xl md:text-4xl ubuntu-bold text-gray-900 leading-tight mb-2">{product.name}</h1>
+          <h1 className="text-2xl md:text-4xl inter-bold text-gray-900 leading-tight mb-2">{product.name}</h1>
           
           <div className="flex flex-wrap items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <p className="text-2xl md:text-3xl ubuntu-bold text-red-600">৳{currentPrice}</p>
-              {product.discountPrice && <p className="text-lg ubuntu-bold text-gray-400 line-through decoration-gray-300">৳{product.regularPrice}</p>}
+              <p className="text-2xl md:text-3xl inter-bold text-red-600">৳{currentPrice}</p>
+              {product.discountPrice && <p className="text-lg inter-bold text-gray-400 line-through decoration-gray-300">৳{product.regularPrice}</p>}
             </div>
-            {product.sku && <div className="bg-gray-100 px-3 py-1 text-[11px] ubuntu-bold uppercase tracking-widest text-gray-500">SKU: {product.sku}</div>}
+            {product.sku && <div className="bg-gray-100 px-3 py-1 text-[11px] inter-bold uppercase tracking-widest text-gray-500">SKU: {product.sku}</div>}
           </div>
 
           <div className="w-full h-px bg-gray-200 mb-6"></div>
@@ -185,10 +193,10 @@ const ProductDetails = () => {
           {/* Colors */}
           {product.colors?.length > 0 && (
             <div className="mb-6">
-              <p className="text-[11px] ubuntu-bold uppercase tracking-widest mb-3">Select Color</p>
+              <p className="text-[11px] inter-bold uppercase tracking-widest mb-3">Select Color</p>
               <div className="flex gap-2 flex-wrap">
                 {product.colors.map((color, idx) => (
-                  <button key={idx} onClick={() => { setSelectedColor(color); setQty(1); }} className={`px-4 py-2 text-xs ubuntu-bold uppercase tracking-wider border transition-all cursor-pointer ${selectedColor === color ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-800'}`}>
+                  <button key={idx} onClick={() => { setSelectedColor(color); setQty(1); }} className={`px-4 py-2 text-xs inter-bold uppercase tracking-wider border transition-all cursor-pointer ${selectedColor === color ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-800'}`}>
                     {color}
                   </button>
                 ))}
@@ -199,10 +207,10 @@ const ProductDetails = () => {
           {/* Sizes */}
           {product.sizes?.length > 0 && (
             <div className="mb-8">
-              <p className="text-[11px] ubuntu-bold uppercase tracking-widest mb-3">Select Size</p>
+              <p className="text-[11px] inter-bold uppercase tracking-widest mb-3">Select Size</p>
               <div className="flex gap-2 flex-wrap">
                 {product.sizes.map((size, idx) => (
-                  <button key={idx} onClick={() => { setSelectedSize(size); setQty(1); }} className={`w-12 h-12 flex items-center justify-center text-xs ubuntu-bold uppercase border transition-all cursor-pointer ${selectedSize === size ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-800'}`}>
+                  <button key={idx} onClick={() => { setSelectedSize(size); setQty(1); }} className={`w-12 h-12 flex items-center justify-center text-xs inter-bold uppercase border transition-all cursor-pointer ${selectedSize === size ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-800'}`}>
                     {size}
                   </button>
                 ))}
@@ -212,7 +220,7 @@ const ProductDetails = () => {
 
           {/* ================= DYNAMIC STOCK BADGE ================= */}
           <div className="mb-6">
-            <span className={`text-[10px] ubuntu-bold uppercase tracking-widest px-3 py-1.5 border rounded-sm ${currentVariantStock > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+            <span className={`text-[10px] inter-bold uppercase tracking-widest px-3 py-1.5 border rounded-sm ${currentVariantStock > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
               {stockMessage}
             </span>
           </div>
@@ -222,15 +230,15 @@ const ProductDetails = () => {
             <div className="flex gap-3 h-14">
               {/* Quantity Selector */}
               <div className="flex border border-gray-300 w-32 bg-white">
-                <button onClick={() => handleQtyChange('decrement')} className="w-10 h-full text-gray-500 hover:bg-gray-100 hover:text-black cursor-pointer">-</button>
-                <div className="flex-1 h-full flex items-center justify-center text-sm ubuntu-bold border-x border-gray-200">{qty}</div>
-                <button onClick={() => handleQtyChange('increment')} className="w-10 h-full text-gray-500 hover:bg-gray-100 hover:text-black cursor-pointer">+</button>
+                <button onClick={() => handleQtyChange('decrement')} className="w-10 h-full text-gray-500 hover:bg-gray-100 hover:text-black cursor-pointer inter-medium">-</button>
+                <div className="flex-1 h-full flex items-center justify-center text-sm inter-bold border-x border-gray-200">{qty}</div>
+                <button onClick={() => handleQtyChange('increment')} className="w-10 h-full text-gray-500 hover:bg-gray-100 hover:text-black cursor-pointer inter-medium">+</button>
               </div>
               
               <button 
                 onClick={() => handleAction('cart')} 
                 disabled={currentVariantStock === 0} 
-                className={`flex-1 text-xs ubuntu-bold uppercase tracking-widest border-2 transition-all cursor-pointer ${currentVariantStock === 0 ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' : 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'}`}
+                className={`flex-1 text-xs inter-bold uppercase tracking-widest border-2 transition-all cursor-pointer ${currentVariantStock === 0 ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed' : 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'}`}
               >
                 Add to Cart
               </button>
@@ -239,7 +247,7 @@ const ProductDetails = () => {
             <button 
               onClick={() => handleAction('buy')} 
               disabled={currentVariantStock === 0} 
-              className={`w-full h-14 text-xs ubuntu-bold uppercase tracking-widest transition-all cursor-pointer ${currentVariantStock === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700 shadow-md'}`}
+              className={`w-full h-14 text-xs inter-bold uppercase tracking-widest transition-all cursor-pointer ${currentVariantStock === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700 shadow-md'}`}
             >
               Order Now
             </button>
@@ -251,11 +259,11 @@ const ProductDetails = () => {
             {product.description && (
               <div className="border-b border-gray-200 w-full">
                 <button onClick={() => setActiveTab(activeTab === 'description' ? '' : 'description')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs ubuntu-bold uppercase tracking-widest">Description</span>
-                  <span className="text-gray-400">{activeTab === 'description' ? '−' : '+'}</span>
+                  <span className="text-xs inter-bold uppercase tracking-widest">Description</span>
+                  <span className="text-gray-400 inter-medium">{activeTab === 'description' ? '−' : '+'}</span>
                 </button>
                 {activeTab === 'description' && (
-                  <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word">{product.description}</div>
+                  <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">{product.description}</div>
                 )}
               </div>
             )}
@@ -263,11 +271,11 @@ const ProductDetails = () => {
             {product.keyFeatures && (
               <div className="border-b border-gray-200 w-full">
                 <button onClick={() => setActiveTab(activeTab === 'features' ? '' : 'features')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs ubuntu-bold uppercase tracking-widest">Key Features</span>
-                  <span className="text-gray-400">{activeTab === 'features' ? '−' : '+'}</span>
+                  <span className="text-xs inter-bold uppercase tracking-widest">Key Features</span>
+                  <span className="text-gray-400 inter-medium">{activeTab === 'features' ? '−' : '+'}</span>
                 </button>
                 {activeTab === 'features' && (
-                  <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word">{product.keyFeatures}</div>
+                  <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">{product.keyFeatures}</div>
                 )}
               </div>
             )}
@@ -276,8 +284,8 @@ const ProductDetails = () => {
             {product.sizeChart && (
               <div className="border-b border-gray-200 w-full">
                 <button onClick={() => setActiveTab(activeTab === 'size' ? '' : 'size')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs ubuntu-bold uppercase tracking-widest">Size Chart</span>
-                  <span className="text-gray-400">{activeTab === 'size' ? '−' : '+'}</span>
+                  <span className="text-xs inter-bold uppercase tracking-widest">Size Chart</span>
+                  <span className="text-gray-400 inter-medium">{activeTab === 'size' ? '−' : '+'}</span>
                 </button>
                 {activeTab === 'size' && (
                   <div className="pb-6">
@@ -290,7 +298,7 @@ const ProductDetails = () => {
                           <div className="overflow-x-auto border border-gray-200 mt-2">
                             <table className="w-full text-left border-collapse text-[11px] uppercase tracking-wider">
                               <thead>
-                                <tr className="bg-gray-50 text-gray-500 ubuntu-bold">
+                                <tr className="bg-gray-50 text-gray-500 inter-bold">
                                   <th className="p-3 border-b border-gray-200">Size</th>
                                   <th className="p-3 border-b border-gray-200">বুক (Chest)</th>
                                   <th className="p-3 border-b border-gray-200">কোমর (Waist)</th>
@@ -313,10 +321,10 @@ const ProductDetails = () => {
 
                                   return (
                                     <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                      <td className="p-3 border-b border-gray-100 ubuntu-bold text-gray-900">{size}</td>
-                                      <td className="p-3 border-b border-gray-100 text-gray-700 font-bold">{chest ? `${chest}" (${(parseFloat(chest) * 2.54).toFixed(1)} cm)` : '-'}</td>
-                                      <td className="p-3 border-b border-gray-100 text-gray-700 font-bold">{actualWaist ? `${actualWaist}" (${(parseFloat(actualWaist) * 2.54).toFixed(1)} cm)` : '-'}</td>
-                                      <td className="p-3 border-b border-gray-100 text-gray-700 font-bold">{actualLength ? `${actualLength.replace(/[^0-9.]/g, '')}" (${(parseFloat(actualLength) * 2.54).toFixed(1)} cm)` : '-'}</td>
+                                      <td className="p-3 border-b border-gray-100 inter-bold text-gray-900">{size}</td>
+                                      <td className="p-3 border-b border-gray-100 text-gray-700 inter-bold">{chest ? `${chest}" (${(parseFloat(chest) * 2.54).toFixed(1)} cm)` : '-'}</td>
+                                      <td className="p-3 border-b border-gray-100 text-gray-700 inter-bold">{actualWaist ? `${actualWaist}" (${(parseFloat(actualWaist) * 2.54).toFixed(1)} cm)` : '-'}</td>
+                                      <td className="p-3 border-b border-gray-100 text-gray-700 inter-bold">{actualLength ? `${actualLength.replace(/[^0-9.]/g, '')}" (${(parseFloat(actualLength) * 2.54).toFixed(1)} cm)` : '-'}</td>
                                     </tr>
                                   );
                                 })}
@@ -325,7 +333,7 @@ const ProductDetails = () => {
                           </div>
                         );
                       } else {
-                        return <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word">{product.sizeChart}</div>;
+                        return <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">{product.sizeChart}</div>;
                       }
                     })()}
                   </div>
@@ -336,23 +344,23 @@ const ProductDetails = () => {
             {product.washingInstructions && (
               <div className="border-b border-gray-200 w-full">
                 <button onClick={() => setActiveTab(activeTab === 'wash' ? '' : 'wash')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs ubuntu-bold uppercase tracking-widest">Wash & Care</span>
-                  <span className="text-gray-400">{activeTab === 'wash' ? '−' : '+'}</span>
+                  <span className="text-xs inter-bold uppercase tracking-widest">Wash & Care</span>
+                  <span className="text-gray-400 inter-medium">{activeTab === 'wash' ? '−' : '+'}</span>
                 </button>
-                {activeTab === 'wash' && <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words">{product.washingInstructions}</div>}
+                {activeTab === 'wash' && <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">{product.washingInstructions}</div>}
               </div>
             )}
 
             {(product.deliveryInfo || product.returnPolicy) && (
               <div className="border-b border-gray-200 w-full">
                 <button onClick={() => setActiveTab(activeTab === 'delivery' ? '' : 'delivery')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs ubuntu-bold uppercase tracking-widest">Delivery & Returns</span>
-                  <span className="text-gray-400">{activeTab === 'delivery' ? '−' : '+'}</span>
+                  <span className="text-xs inter-bold uppercase tracking-widest">Delivery & Returns</span>
+                  <span className="text-gray-400 inter-medium">{activeTab === 'delivery' ? '−' : '+'}</span>
                 </button>
                 {activeTab === 'delivery' && (
-                  <div className="pb-6 text-sm text-gray-600 leading-relaxed space-y-4 break-words">
-                    {product.deliveryInfo && <div><p className="font-bold text-gray-800 mb-1">Delivery Info:</p><p>{product.deliveryInfo}</p></div>}
-                    {product.returnPolicy && <div><p className="font-bold text-gray-800 mb-1">Return Policy:</p><p>{product.returnPolicy}</p></div>}
+                  <div className="pb-6 text-sm text-gray-600 leading-relaxed space-y-4 break-words inter-regular">
+                    {product.deliveryInfo && <div><p className="inter-bold text-gray-800 mb-1">Delivery Info:</p><p>{product.deliveryInfo}</p></div>}
+                    {product.returnPolicy && <div><p className="inter-bold text-gray-800 mb-1">Return Policy:</p><p>{product.returnPolicy}</p></div>}
                   </div>
                 )}
               </div>
@@ -365,7 +373,7 @@ const ProductDetails = () => {
       {/* ----------------- MODALS ----------------- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-white p-4 md:p-12">
-          <button onClick={closeModal} className="absolute top-6 right-6 text-gray-400 hover:text-black font-bold text-4xl z-50 cursor-pointer">&times;</button>
+          <button onClick={closeModal} className="absolute top-6 right-6 text-gray-400 hover:text-black inter-bold text-4xl z-50 cursor-pointer">&times;</button>
           {images.length > 1 && <button onClick={prevImage} className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black p-4 z-50 text-3xl cursor-pointer">&larr;</button>}
           <div className="w-full max-w-4xl h-full flex items-center justify-center overflow-hidden relative cursor-crosshair bg-white" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} onClick={closeModal}>
             <img src={images[activeImageIndex].url} alt="Zoom" className="max-w-full max-h-full object-contain transition-transform duration-200 ease-out" style={zoomStyle} onClick={(e) => e.stopPropagation()} />
@@ -376,7 +384,7 @@ const ProductDetails = () => {
 
       {isVideoModalOpen && product.video?.url && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/90 p-4">
-          <button onClick={() => setIsVideoModalOpen(false)} className="absolute top-6 right-6 text-white hover:text-red-500 font-bold text-4xl z-50 cursor-pointer">&times;</button>
+          <button onClick={() => setIsVideoModalOpen(false)} className="absolute top-6 right-6 text-white hover:text-red-500 inter-bold text-4xl z-50 cursor-pointer">&times;</button>
           <div className="w-full max-w-4xl bg-black">
             <video src={product.video.url} controls autoPlay className="w-full h-auto max-h-[80vh] object-contain"></video>
           </div>
