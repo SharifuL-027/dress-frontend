@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router'; // react-router-dom ব্যবহার করলে সেটি দিন
+import { Link } from 'react-router'; 
+import ChangePasswordModal from '../LogReg/ChangePasswordModal';
+import EditProfileModal from './EditProfileModal';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth(); // AuthContext থেকে setUser আনুন ডাটা রিফ্রেশ করার জন্য
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false); 
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-32 pb-20 min-h-screen">
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-32 pb-20 min-h-screen relative">
       <h1 className="text-3xl inter-bold text-gray-900 mb-8 uppercase tracking-widest">My Account</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -18,7 +23,10 @@ const Profile = () => {
           <h2 className="text-xl inter-bold text-gray-900 tracking-wide">{user?.name || 'User Name'}</h2>
           <p className="text-gray-500 text-sm mb-8 inter-medium">{user?.email || 'user@email.com'}</p>
           
-          <button className="w-full bg-gray-900 text-white font-bold py-3.5 text-xs rounded-sm hover:bg-red-600 transition-colors uppercase tracking-[0.2em] shadow-md">
+          <button 
+            onClick={() => setIsEditProfileOpen(true)}
+            className="w-full bg-gray-900 text-white font-bold py-3.5 text-xs rounded-sm hover:bg-red-600 transition-colors uppercase tracking-[0.2em] shadow-md cursor-pointer"
+          >
             Edit Profile
           </button>
         </div>
@@ -39,11 +47,10 @@ const Profile = () => {
           </Link>
           
           {/* DYNAMIC ADDRESS BLOCK */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group cursor-pointer flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group flex flex-col justify-between">
             <div>
               <h3 className="text-lg inter-bold text-gray-900 group-hover:text-red-600 transition-colors mb-3">Default Address</h3>
               
-              {/* চেক করা হচ্ছে ইউজারের অ্যাড্রেস আছে কি না */}
               {user?.address ? (
                 <div className="text-sm text-gray-600 leading-relaxed inter-regular">
                   <p className="inter-bold text-gray-900">{user.name}</p>
@@ -60,13 +67,16 @@ const Profile = () => {
               )}
             </div>
             
-            <button className="mt-5 text-[11px] inter-bold text-gray-400 group-hover:text-red-600 uppercase tracking-widest text-left transition-colors">
-              {user?.address ? 'Edit Address →' : 'Add New Address →'}
+            <button className="mt-5 text-[11px] inter-bold text-gray-400 group-hover:text-red-600 uppercase tracking-widest text-left transition-colors cursor-default">
+              {user?.address ? 'Update at checkout' : 'Added at checkout'}
             </button>
           </div>
 
           {/* Security */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group cursor-pointer flex flex-col justify-between">
+          <div 
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group cursor-pointer flex flex-col justify-between"
+          >
             <div>
               <h3 className="text-lg inter-bold text-gray-900 group-hover:text-red-600 transition-colors">Security</h3>
               <p className="text-gray-500 text-sm mt-2 inter-regular">Change password & account settings</p>
@@ -79,6 +89,22 @@ const Profile = () => {
         </div>
 
       </div>
+
+      {/* ================= MODALS ================= */}
+      <ChangePasswordModal 
+        isOpen={isPasswordModalOpen} 
+        onClose={() => setIsPasswordModalOpen(false)} 
+      />
+      
+      <EditProfileModal 
+        isOpen={isEditProfileOpen} 
+        onClose={() => setIsEditProfileOpen(false)} 
+        user={user}
+        onUpdateSuccess={(updatedData) => {
+          if(setUser) setUser({ ...user, ...updatedData });
+        }}
+      />
+
     </div>
   );
 };
