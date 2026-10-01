@@ -1,49 +1,81 @@
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router';
+import { Link } from 'react-router'; // react-router-dom ব্যবহার করলে সেটি দিন
 
 const Profile = () => {
   const { user } = useAuth();
 
   return (
-    <div className="max-w-250 mx-auto px-6 lg:px-10 pt-32 pb-10 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">My Account</h1>
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-32 pb-20 min-h-screen">
+      <h1 className="text-3xl inter-bold text-gray-900 mb-8 uppercase tracking-widest">My Account</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* Left Side - Profile Info */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
-          <div className="w-24 h-24 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-4xl font-bold mb-4">
+        {/* ================= Left Side - Profile Info ================= */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+          <div className="w-24 h-24 bg-red-50 text-red-600 rounded-full flex items-center justify-center text-4xl inter-bold mb-4 border border-red-100 shadow-sm">
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
           </div>
-          <h2 className="text-xl font-bold text-gray-800">{user?.name || 'User Name'}</h2>
-          <p className="text-gray-500 text-sm mb-6">{user?.email || 'user@email.com'}</p>
+          <h2 className="text-xl inter-bold text-gray-900 tracking-wide">{user?.name || 'User Name'}</h2>
+          <p className="text-gray-500 text-sm mb-8 inter-medium">{user?.email || 'user@email.com'}</p>
           
-          <button className="w-full bg-red-50 text-red-500 font-semibold py-2 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+          <button className="w-full bg-gray-900 text-white font-bold py-3.5 text-xs rounded-sm hover:bg-red-600 transition-colors uppercase tracking-[0.2em] shadow-md">
             Edit Profile
           </button>
         </div>
 
-        {/* Right Side - Quick Links / Stats */}
-        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Link to="/my-orders" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-red-500 transition-colors group cursor-pointer">
-            <h3 className="text-lg font-bold text-gray-800 group-hover:text-red-500">My Orders</h3>
-            <p className="text-gray-500 text-sm mt-1">Track, return, or buy things again</p>
+        {/* ================= Right Side - Quick Links / Stats ================= */}
+        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+          
+          {/* My Orders */}
+          <Link to="/my-orders" className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group cursor-pointer flex flex-col justify-center">
+            <h3 className="text-lg inter-bold text-gray-900 group-hover:text-red-600 transition-colors">My Orders</h3>
+            <p className="text-gray-500 text-sm mt-2 inter-regular">Track, return, or view past purchases</p>
           </Link>
           
-          <Link to="/wishlist" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-red-500 transition-colors group cursor-pointer">
-            <h3 className="text-lg font-bold text-gray-800 group-hover:text-red-500">Wishlist</h3>
-            <p className="text-gray-500 text-sm mt-1">Items you saved for later</p>
+          {/* Wishlist */}
+          <Link to="/wishlist" className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group cursor-pointer flex flex-col justify-center">
+            <h3 className="text-lg inter-bold text-gray-900 group-hover:text-red-600 transition-colors">Wishlist</h3>
+            <p className="text-gray-500 text-sm mt-2 inter-regular">Items you saved for later</p>
           </Link>
           
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-red-500 transition-colors group cursor-pointer">
-            <h3 className="text-lg font-bold text-gray-800 group-hover:text-red-500">Addresses</h3>
-            <p className="text-gray-500 text-sm mt-1">Edit delivery addresses</p>
+          {/* DYNAMIC ADDRESS BLOCK */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group cursor-pointer flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg inter-bold text-gray-900 group-hover:text-red-600 transition-colors mb-3">Default Address</h3>
+              
+              {/* চেক করা হচ্ছে ইউজারের অ্যাড্রেস আছে কি না */}
+              {user?.address ? (
+                <div className="text-sm text-gray-600 leading-relaxed inter-regular">
+                  <p className="inter-bold text-gray-900">{user.name}</p>
+                  {user.phone && <p>{user.phone}</p>}
+                  <p className="mt-1">{user.address}</p>
+                  {(user.city || user.postalCode) && (
+                    <p>{user.city} {user.postalCode}</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm inter-regular">
+                  No default address saved. It will update automatically after your first order.
+                </p>
+              )}
+            </div>
+            
+            <button className="mt-5 text-[11px] inter-bold text-gray-400 group-hover:text-red-600 uppercase tracking-widest text-left transition-colors">
+              {user?.address ? 'Edit Address →' : 'Add New Address →'}
+            </button>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-red-500 transition-colors group cursor-pointer">
-            <h3 className="text-lg font-bold text-gray-800 group-hover:text-red-500">Security</h3>
-            <p className="text-gray-500 text-sm mt-1">Change password</p>
+          {/* Security */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-gray-900 transition-colors group cursor-pointer flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg inter-bold text-gray-900 group-hover:text-red-600 transition-colors">Security</h3>
+              <p className="text-gray-500 text-sm mt-2 inter-regular">Change password & account settings</p>
+            </div>
+            <button className="mt-5 text-[11px] inter-bold text-gray-400 group-hover:text-red-600 uppercase tracking-widest text-left transition-colors">
+              Manage Settings →
+            </button>
           </div>
+          
         </div>
 
       </div>
