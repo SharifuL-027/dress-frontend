@@ -17,12 +17,11 @@ const CheckoutPage = () => {
   useEffect(() => {
     const fetchDeliverySettings = async () => {
       try {
-        // ডামি ডেটা মুছে রিয়েল API কল করা হলো
         const { data } = await api.get('/api/delivery');
         
         setDeliveryOptions(data);
         
-        // যদি ডাটাবেসে অন্তত ১টি ডেলিভারি অপশন থাকে, তবে প্রথমটি ডিফল্ট সিলেক্ট হয়ে থাকবে
+        // যদি ডাটাবেসে অন্তত ১টি ডেলিভারি অপশন থাকে, তবে প্রথমটি ডিফল্ট সিলেক্ট হয়ে থাকবে
         if (data && data.length > 0) {
           setSelectedDelivery(data[0]);
         }
@@ -65,8 +64,8 @@ const CheckoutPage = () => {
     setSelectedDelivery(option);
   };
 
-  // ================= PROMO CODE LOGIC =================
-  const handleApplyPromo = (e) => {
+  // ================= PROMO CODE LOGIC (REAL API) =================
+  const handleApplyPromo = async (e) => {
     e.preventDefault();
     if (!promoCode.trim()) {
       setPromoStatus({ type: "error", message: "Please enter a code." });
@@ -76,22 +75,33 @@ const CheckoutPage = () => {
     setIsApplyingPromo(true);
     setPromoStatus({ type: "", message: "" });
 
-    setTimeout(() => {
-      const code = promoCode.trim().toUpperCase();
+    try {
+      // ব্যাকএন্ডের API তে প্রোমো কোড পাঠিয়ে চেক করা হচ্ছে
+      const { data } = await api.post('/api/promo/validate', { 
+        code: promoCode.trim() 
+      });
       
-      if (code === "DRESSTOWN50") {
-        setDiscount(500); 
-        setPromoStatus({ type: "success", message: "৳500 discount applied successfully!" });
-      } else if (code === "SAVE20") {
-        const percentDiscount = Math.round(subtotal * 0.20);
+      // ব্যাকএন্ড থেকে আসা রেসপন্স অনুযায়ী ডিসকাউন্ট হিসাব করা
+      if (data.discountType === 'fixed') {
+        setDiscount(data.discountValue);
+        setPromoStatus({ type: "success", message: `৳${data.discountValue} discount applied successfully!` });
+      } else if (data.discountType === 'percentage') {
+        const percentDiscount = Math.round((subtotal * data.discountValue) / 100);
         setDiscount(percentDiscount);
-        setPromoStatus({ type: "success", message: `20% discount applied! (৳${percentDiscount} OFF)` });
-      } else {
-        setDiscount(0);
-        setPromoStatus({ type: "error", message: "Invalid or expired promo code." });
+        setPromoStatus({ type: "success", message: `${data.discountValue}% discount applied! (৳${percentDiscount} OFF)` });
       }
+
+    } catch (error) {
+      console.error("Promo error:", error);
+      // ব্যাকএন্ড থেকে পাঠানো এরর মেসেজটি দেখানো হবে
+      setDiscount(0);
+      setPromoStatus({ 
+        type: "error", 
+        message: error.response?.data?.message || "Invalid or expired promo code." 
+      });
+    } finally {
       setIsApplyingPromo(false);
-    }, 800);
+    }
   };
 
   // ================= REAL API CALL FOR PLACING ORDER =================
@@ -119,7 +129,7 @@ const CheckoutPage = () => {
         shippingAddress: {
           fullName: formData.name,
           phone: formData.phone,
-          city: selectedDelivery?.area || "N/A", // ডায়নামিক ডেলিভারি এরিয়া
+          city: selectedDelivery?.area || "N/A", // ডায়নামিক ডেলিভারি এরিয়া
           address: formData.address,
           notes: formData.notes
         },
@@ -234,7 +244,7 @@ const CheckoutPage = () => {
                   {isLoadingDelivery ? (
                     <option value="">Loading options...</option>
                   ) : deliveryOptions.length === 0 ? (
-                    <option value="" disabled>No delivery options available</option> // ডাটাবেস ফাঁকা থাকলে এটি দেখাবে
+                    <option value="" disabled>No delivery options available</option> 
                   ) : (
                     deliveryOptions.map(option => (
                       <option key={option._id} value={option._id}>
@@ -314,15 +324,11 @@ const CheckoutPage = () => {
               Order Summary
             </h3>
 
-            {/* 
-                Item List 
-                FIX: Image overflow/cut-off issue fixed by adding pt-3 and adjusting margins. 
-            */}
+            {/* Item List */}
             <div className="space-y-5 mb-6 max-h-[300px] overflow-y-auto pr-3 pt-3 pb-2 custom-scrollbar">
               {cart.map((item, index) => (
                 <div key={index} className="flex gap-4 items-center">
                   
-                  {/* mt-2 এবং overflow issue ফিক্স করা হয়েছে */}
                   <div className="relative w-16 h-20 bg-gray-100 shrink-0 mt-2">
                     <img 
                       src={item.images?.[0]?.url || item.image || 'https://placehold.co/100x100/eeeeee/333333?text=No+Image'} 
@@ -349,7 +355,7 @@ const CheckoutPage = () => {
 
             {/* ================= PROMO CODE SECTION ================= */}
             <div className="border-t border-gray-800 pt-6 mb-6">
-              <label className="block text-[10px] inter-semibold text-gray-400 uppercase tracking-widest mb-3">
+              <label className="block text-[10px] inter-bold text-gray-400 uppercase tracking-widest mb-3">
                 Have a promo code?
               </label>
               <div className="flex gap-2">
