@@ -7,6 +7,24 @@ const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // ================= NEW: Dynamic Text Animation Logic =================
+  const dynamicWords = ["Story", "Occasion", "Moment", "Season", "Journey"];
+  const [wordIndex, setWordIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const wordInterval = setInterval(() => {
+      setFade(false); // প্রথমে লেখাটি ফেড-আউট হবে
+      setTimeout(() => {
+        setWordIndex((prev) => (prev + 1) % dynamicWords.length);
+        setFade(true); // নতুন শব্দ আসার পর ফেড-ইন হবে
+      }, 500); // 500ms ফেড-আউট হওয়ার সময় নেবে
+    }, 3000); // প্রতি ৩ সেকেন্ড পর পর পরিবর্তন হবে
+
+    return () => clearInterval(wordInterval);
+  }, []);
+  // ====================================================================
+
   // ব্যাকএন্ড থেকে শুধুমাত্র Hero ব্যানার ফেচ করা
   useEffect(() => {
     const fetchHeroBanners = async () => {
@@ -33,7 +51,7 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  // লোডিং স্টেট (Premium minimalist loading)
+  // লোডিং স্টেট 
   if (loading) {
     return (
       <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-50 flex items-center justify-center border-b border-gray-100">
@@ -53,14 +71,13 @@ const Hero = () => {
       <div className="relative w-full h-[350px] sm:h-[450px] md:h-[550px] lg:h-[600px] xl:h-[70vh] bg-gray-100">
         <div 
           className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop')" }}
+          style={{ backgroundImage: "url('https://res.cloudinary.com/dsrs8hryx/image/upload/v1791007439/Sunlit_South_Asian_Family_Portrait_skjr0z.png')" }}
         ></div>
       </div>
     );
   }
 
   return (
-    // Height adjusted to be responsive and fit perfectly under the sticky navbar
     <div className="relative w-full h-[350px] sm:h-[450px] md:h-[550px] lg:h-[600px] xl:h-[70vh] bg-gray-100 overflow-hidden group">
       
       {/* ================= BANNERS ================= */}
@@ -71,10 +88,13 @@ const Hero = () => {
             index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
+          {/* কালো ওভারলে (যাতে লেখাগুলো ছবির উপর পরিষ্কার বোঝা যায়) */}
+          <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none"></div>
+
           {banner.link ? (
             <Link to={banner.link} className="block w-full h-full">
               <div 
-                className="w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-[10000ms] ease-linear hover:scale-105"
+                className="w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-10000 ease-linear hover:scale-105"
                 style={{ backgroundImage: `url('${banner.image.url}')` }}
               ></div>
             </Link>
@@ -86,6 +106,37 @@ const Hero = () => {
           )}
         </div>
       ))}
+
+      {/* ================= STYLISH TITLE & CTA BUTTON ================= */}
+      <div className="absolute bottom-12 left-6 md:bottom-20 md:left-12 lg:left-20 z-30 flex flex-col items-start max-w-lg transition-all duration-700 transform translate-y-0 opacity-100">
+        
+        <h2 className="text-3xl sm:text-4xl md:text-5xl inter-bold text-red-600 uppercase tracking-tight mb-2 drop-shadow-xl leading-tight">
+          Style For <br className="hidden md:block" /> Every{' '}
+          {/* অ্যানিমেটেড পরিবর্তনশীল শব্দ */}
+          <span 
+            className={`inline-block text-gray-900 transition-all duration-500 ease-in-out transform ${
+              fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            }`}
+          >
+            {dynamicWords[wordIndex]}
+          </span>
+        </h2>
+        
+        <p className="text-gray-800 text-sm inter-medium md:text-base mb-6 drop-shadow-md">
+          Elevate your everyday look with our exclusive, handpicked collections.
+        </p>
+        
+        {/* 'group' ক্লাসটি এখানে দেওয়া হয়েছে বাটন আইকন অ্যানিমেশনের জন্য */}
+        <Link 
+          to="/shop" 
+          className="group bg-white text-gray-900 px-6 py-3 md:px-8 md:py-3.5 text-xs md:text-sm inter-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors duration-300 shadow-xl flex items-center gap-3"
+        >
+          Explore Collection
+          <svg className="w-4 h-4 transition-transform duration-300 transform group-hover:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+      </div>
 
       {/* ================= SLIDER INDICATORS (DOTS) ================= */}
       {banners.length > 1 && (
@@ -108,7 +159,7 @@ const Hero = () => {
         <>
           <button 
             onClick={() => setCurrentIndex(currentIndex === 0 ? banners.length - 1 : currentIndex - 1)}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 hover:text-red-600 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 cursor-pointer transform -translate-x-4 group-hover:translate-x-0"
+            className="absolute left-4 md:left-auto md:right-24 top-1/2 -translate-y-1/2 md:top-auto md:bottom-20 bg-white/90 hover:bg-white text-gray-800 hover:text-red-600 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 cursor-pointer transform -translate-x-4 md:translate-x-0 md:translate-y-4 group-hover:translate-y-0"
           >
             <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -117,7 +168,7 @@ const Hero = () => {
           
           <button 
             onClick={() => setCurrentIndex(currentIndex === banners.length - 1 ? 0 : currentIndex + 1)}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 hover:text-red-600 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 cursor-pointer transform translate-x-4 group-hover:translate-x-0"
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 md:top-auto md:bottom-20 bg-white/90 hover:bg-white text-gray-800 hover:text-red-600 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 cursor-pointer transform translate-x-4 md:translate-x-0 md:translate-y-4 group-hover:translate-y-0"
           >
             <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />

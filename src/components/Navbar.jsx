@@ -262,10 +262,6 @@ const Navbar = () => {
               })
             )}
 
-            <Link to="/sale" className="shrink-0 group">
-              <div className={getNavStyle("/sale") + " !text-red-600"}>Sale</div>
-            </Link>
-
           </div>
         </div>
       </div>

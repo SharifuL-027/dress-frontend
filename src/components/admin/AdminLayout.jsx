@@ -19,14 +19,14 @@ const AdminLayout = () => {
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-10">
         {/* Admin Logo Area */}
         <div className="h-20 flex items-center justify-center border-b border-gray-100">
-          <Link to="/" className="text-2xl font-extrabold text-gray-800 tracking-widest">
-            DRESS<span className="text-red-500">TOWN</span>
+          <Link to="/" className="text-2xl inter-bold text-gray-800 tracking-widest">
+            Dress<span className="text-red-500">Town</span>
           </Link>
         </div>
 
         {/* Navigation Links */}
         <nav className="flex-1 py-6 flex flex-col gap-1 overflow-y-auto">
-          <p className="px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Main Menu</p>
+          <p className="px-6 text-[10px] inter-bold text-gray-600 uppercase tracking-widest mb-2">Main Menu</p>
           
           <NavLink to="/admin/dashboard" end className={navLinkClass}>
             Dashboard
@@ -58,12 +58,12 @@ const AdminLayout = () => {
 
         {/* Bottom Actions */}
         <div className="border-t border-gray-100 p-4 flex flex-col gap-2">
-          <Link to="/" className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 border border-gray-200 hover:border-red-500 hover:text-red-500 transition-colors">
+          <Link to="/" className="flex items-center justify-center gap-2 px-4 py-2 text-sm inter-bold text-gray-600 border border-gray-200 hover:border-red-500 hover:text-red-500 transition-colors">
             Back to Store
           </Link>
           <button 
             onClick={logout}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold bg-gray-800 text-white hover:bg-red-500 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm inter-bold bg-gray-800 text-white hover:bg-red-500 transition-colors"
           >
             Logout
           </button>
