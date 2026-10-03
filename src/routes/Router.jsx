@@ -20,8 +20,8 @@ import CheckoutPage from "../components/Cart/CheckoutPage";
 import MyOrdersPage from "../components/Cart/MyOrderspage";
 import NewArrivalsPage from "../components/product/NewArrivalsPage";
 import AdminBanners from "../components/admin/AdminBanners";
+import Shop from "../components/product/Shop";
 
-const Shop = () => <div>Shop Page</div>;
 
 const router = createBrowserRouter([
   // 1. PUBLIC & CUSTOMER ROUTES (Navbar ebong Footer soho)
@@ -73,6 +73,10 @@ const router = createBrowserRouter([
         path: "/new-arrivals",
         element: <NewArrivalsPage/>
       },
+      {
+        path: "/shop",
+        element: <Shop/>
+      }
      
     ],
   },
