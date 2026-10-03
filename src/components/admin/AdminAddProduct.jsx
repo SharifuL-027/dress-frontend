@@ -50,7 +50,7 @@ const AdminAddProduct = () => {
     }
 
     setVariants([...variants, { ...newVariant, stock: Number(newVariant.stock) }]);
-    setNewVariant({ color: "", size: "", stock: "" }); // ইনপুট ক্লিয়ার
+    setNewVariant({ color: "", size: "", stock: "" }); // ইনপুট ক্লিয়ার
   };
 
   const handleRemoveVariant = (indexToRemove) => {
@@ -155,7 +155,7 @@ const AdminAddProduct = () => {
       // Total stock হিসাব করা
       const totalStock = variants.reduce((acc, curr) => acc + curr.stock, 0);
 
-      // Color এবং Size গুলোর ইউনিক লিস্ট তৈরি করা (যাতে ডিটেইলস পেজে ফিল্টার দেখানো যায়)
+      // Color এবং Size গুলোর ইউনিক লিস্ট তৈরি করা (যাতে ডিটেইলস পেজে ফিল্টার দেখানো যায়)
       const uniqueColors = [...new Set(variants.map(v => v.color))];
       const uniqueSizes = [...new Set(variants.map(v => v.size))];
 
@@ -164,9 +164,9 @@ const AdminAddProduct = () => {
         slug: generatedSlug,
         images: uploadedImages, 
         video: uploadedVideo || undefined,
-        variants: variants,           // নতুন ভেরিয়েন্ট ডেটা
+        variants: variants,           // নতুন ভেরিয়েন্ট ডেটা
         totalStock: totalStock,       // মোট স্টক
-        colors: uniqueColors.join(', '), // পুরোনো ফরম্যাট সাপোর্ট করার জন্য কমা দিয়ে জোড়া লাগানো
+        colors: uniqueColors.join(', '), // পুরোনো ফরম্যাট সাপোর্ট করার জন্য কমা দিয়ে জোড়া লাগানো
         sizes: uniqueSizes.join(', ')    // পুরোনো ফরম্যাট সাপোর্ট করার জন্য
       };
 
@@ -187,15 +187,15 @@ const AdminAddProduct = () => {
     }
   };
 
-  const inputClass = "w-full border border-gray-300 p-3 text-sm focus:border-red-500 focus:outline-none transition-colors bg-white";
-  const labelClass = "block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2";
-  const sectionTitleClass = "text-sm font-extrabold text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-200 pb-2";
+  const inputClass = "w-full border border-gray-300 p-3 text-sm inter-medium focus:border-red-500 focus:outline-none transition-colors bg-white";
+  const labelClass = "block text-[11px] inter-bold text-gray-400 uppercase tracking-widest mb-2";
+  const sectionTitleClass = "text-sm inter-bold text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-200 pb-2";
 
   return (
     <div className="w-full max-w-5xl bg-white border border-gray-200 p-8 shadow-sm">
       <div className="mb-8 border-b border-gray-200 pb-4">
-        <h2 className="text-2xl font-extrabold text-gray-800 uppercase tracking-widest">Add New Product</h2>
-        <p className="text-sm text-gray-500 mt-1">Fill all the required details below to list a new item.</p>
+        <h2 className="text-2xl inter-bold text-gray-800 uppercase tracking-widest">Add New Product</h2>
+        <p className="text-sm inter-medium text-gray-500 mt-1">Fill all the required details below to list a new item.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
@@ -247,13 +247,13 @@ const AdminAddProduct = () => {
 
           {/* Variant Manager */}
           <div className="bg-gray-50 border border-gray-200 p-6">
-            <h4 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Add Product Variants (Color, Size & Stock)</h4>
+            <h4 className="text-[11px] inter-bold text-gray-800 uppercase tracking-widest mb-4">Add Product Variants (Color, Size & Stock)</h4>
             
             <div className="flex flex-wrap gap-4 items-end mb-6">
               <div className="flex-1 min-w-[150px]"><label className={labelClass}>Color</label><input type="text" value={newVariant.color} onChange={(e) => setNewVariant({ ...newVariant, color: e.target.value })} placeholder="e.g. Black" className={inputClass} /></div>
               <div className="flex-1 min-w-[150px]"><label className={labelClass}>Size</label><input type="text" value={newVariant.size} onChange={(e) => setNewVariant({ ...newVariant, size: e.target.value })} placeholder="e.g. M" className={inputClass} /></div>
               <div className="flex-1 min-w-[150px]"><label className={labelClass}>Stock Qty</label><input type="number" value={newVariant.stock} onChange={(e) => setNewVariant({ ...newVariant, stock: e.target.value })} placeholder="e.g. 10" className={inputClass} /></div>
-              <button type="button" onClick={handleAddVariant} className="bg-gray-900 text-white font-bold text-sm uppercase tracking-widest px-6 h-[46px] hover:bg-red-600 transition-colors">Add</button>
+              <button type="button" onClick={handleAddVariant} className="bg-gray-900 text-white inter-bold text-sm uppercase tracking-widest px-6 h-[46px] hover:bg-red-600 transition-colors">Add</button>
             </div>
 
             {/* Variants Table */}
@@ -261,24 +261,24 @@ const AdminAddProduct = () => {
               <table className="w-full text-left text-sm border-collapse bg-white">
                 <thead>
                   <tr className="bg-gray-100 uppercase text-[10px] tracking-widest text-gray-500">
-                    <th className="p-3 border border-gray-200">Color</th>
-                    <th className="p-3 border border-gray-200">Size</th>
-                    <th className="p-3 border border-gray-200">Stock</th>
-                    <th className="p-3 border border-gray-200 text-center">Action</th>
+                    <th className="p-3 border border-gray-200 inter-bold">Color</th>
+                    <th className="p-3 border border-gray-200 inter-bold">Size</th>
+                    <th className="p-3 border border-gray-200 inter-bold">Stock</th>
+                    <th className="p-3 border border-gray-200 text-center inter-bold">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {variants.map((v, idx) => (
                     <tr key={idx}>
-                      <td className="p-3 border border-gray-200 font-bold">{v.color}</td>
-                      <td className="p-3 border border-gray-200 font-bold">{v.size}</td>
-                      <td className="p-3 border border-gray-200 font-bold text-red-600">{v.stock} pcs</td>
-                      <td className="p-3 border border-gray-200 text-center"><button type="button" onClick={() => handleRemoveVariant(idx)} className="text-red-500 font-bold hover:underline">Remove</button></td>
+                      <td className="p-3 border border-gray-200 inter-bold">{v.color}</td>
+                      <td className="p-3 border border-gray-200 inter-bold">{v.size}</td>
+                      <td className="p-3 border border-gray-200 inter-bold text-red-600">{v.stock} pcs</td>
+                      <td className="p-3 border border-gray-200 text-center"><button type="button" onClick={() => handleRemoveVariant(idx)} className="text-red-500 inter-bold hover:underline">Remove</button></td>
                     </tr>
                   ))}
                   <tr className="bg-gray-50">
-                    <td colSpan="2" className="p-3 border border-gray-200 font-bold text-right uppercase text-[11px] tracking-widest">Total Stock:</td>
-                    <td colSpan="2" className="p-3 border border-gray-200 font-extrabold text-red-600">{variants.reduce((acc, curr) => acc + curr.stock, 0)} pcs</td>
+                    <td colSpan="2" className="p-3 border border-gray-200 inter-bold text-right uppercase text-[11px] tracking-widest">Total Stock:</td>
+                    <td colSpan="2" className="p-3 border border-gray-200 inter-bold text-red-600">{variants.reduce((acc, curr) => acc + curr.stock, 0)} pcs</td>
                   </tr>
                 </tbody>
               </table>
@@ -322,27 +322,27 @@ const AdminAddProduct = () => {
               <input type="file" accept="image/*" multiple onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
               <div className="flex flex-col items-center justify-center gap-2">
                 <span className="text-3xl">📸</span>
-                <p className="text-sm font-bold text-gray-700">Upload Images *</p>
-                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Min 1, Max 6 Images</p>
+                <p className="text-sm inter-bold text-gray-700">Upload Images *</p>
+                <p className="text-[11px] inter-medium text-gray-400 uppercase tracking-wider">Min 1, Max 6 Images</p>
               </div>
             </div>
             <div className="border border-gray-300 p-6 bg-gray-50 text-center relative group hover:border-red-500 transition-colors">
               <input type="file" accept="video/*" onChange={handleVideoChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
               <div className="flex flex-col items-center justify-center gap-2">
                 <span className="text-3xl">🎥</span>
-                <p className="text-sm font-bold text-gray-700">{video ? video.name : "Upload Video"}</p>
-                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Optional, Max 1 File</p>
+                <p className="text-sm inter-bold text-gray-700">{video ? video.name : "Upload Video"}</p>
+                <p className="text-[11px] inter-medium text-gray-400 uppercase tracking-wider">Optional, Max 1 File</p>
               </div>
             </div>
           </div>
           {imagePreviews.length > 0 && (
             <div className="mt-6">
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Selected Images ({imagePreviews.length}/6)</p>
+              <p className="text-[11px] inter-bold text-gray-400 uppercase tracking-widest mb-3">Selected Images ({imagePreviews.length}/6)</p>
               <div className="flex flex-wrap gap-4">
                 {imagePreviews.map((src, index) => (
                   <div key={index} className="relative w-24 h-24 border border-gray-200 group">
                     <img src={src} alt="Preview" className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => removeImage(index)} className="absolute top-0 right-0 bg-red-500 text-white w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold">X</button>
+                    <button type="button" onClick={() => removeImage(index)} className="absolute top-0 right-0 bg-red-500 text-white w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs inter-bold">X</button>
                   </div>
                 ))}
               </div>
@@ -352,7 +352,7 @@ const AdminAddProduct = () => {
 
         {/* Submit Button */}
         <div className="pt-8 mt-8 border-t border-gray-200 flex gap-4">
-          <button type="submit" disabled={loading} className="bg-red-500 hover:bg-red-600 text-white font-bold text-sm uppercase tracking-widest px-8 py-4 w-full md:w-auto transition-colors">
+          <button type="submit" disabled={loading} className="bg-red-500 hover:bg-red-600 text-white inter-bold text-sm uppercase tracking-widest px-8 py-4 w-full md:w-auto transition-colors">
             {loading ? "Publishing Product..." : "Publish Product"}
           </button>
         </div>

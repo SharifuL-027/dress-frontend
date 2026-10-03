@@ -31,7 +31,7 @@ const AdminCustomers = () => {
       try {
         await api.delete(`/api/users/${id}`);
         setCustomers(customers.filter((c) => c._id !== id));
-        toast.success("Customer deleted successfully! 🗑️");
+        toast.success("Customer deleted successfully! 🗑️️");
       } catch (error) {
         toast.error("Failed to delete customer!");
       }
@@ -98,27 +98,27 @@ const AdminCustomers = () => {
     toast.success("PDF File Downloaded!");
   };
 
-  if (loading) return <div className="p-8 text-center font-bold text-gray-500 uppercase">Loading Customers...</div>;
+  if (loading) return <div className="p-8 text-center inter-bold text-gray-500 uppercase">Loading Customers...</div>;
 
   return (
     <div className="w-full bg-white border border-gray-200 p-8 shadow-sm">
       <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-gray-800 uppercase tracking-widest">Customers List</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage all registered users and customers ({customers.length} found).</p>
+          <h2 className="text-2xl inter-bold text-gray-800 uppercase tracking-widest">Customers List</h2>
+          <p className="text-sm inter-medium text-gray-500 mt-1">Manage all registered users and customers ({customers.length} found).</p>
         </div>
         
         <div className="flex gap-3">
           <button 
             onClick={exportToExcel}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs uppercase tracking-widest px-4 py-2 flex items-center gap-2 transition-colors"
+            className="bg-green-600 hover:bg-green-700 text-white inter-bold text-xs uppercase tracking-widest px-4 py-2 flex items-center gap-2 transition-colors"
           >
             📊 Excel
           </button>
           
           <button 
             onClick={exportToPDF}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-widest px-4 py-2 flex items-center gap-2 transition-colors"
+            className="bg-red-500 hover:bg-red-600 text-white inter-bold text-xs uppercase tracking-widest px-4 py-2 flex items-center gap-2 transition-colors"
           >
             📄 PDF
           </button>
@@ -128,7 +128,7 @@ const AdminCustomers = () => {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-y border-gray-200 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            <tr className="bg-gray-50 border-y border-gray-200 text-[11px] inter-bold text-gray-400 uppercase tracking-widest">
               <th className="p-4">Customer Info</th>
               <th className="p-4">Email Address</th>
               <th className="p-4">Role</th>
@@ -139,20 +139,20 @@ const AdminCustomers = () => {
           <tbody>
             {customers.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-8 text-center text-gray-500">No customers found.</td>
+                <td colSpan="5" className="p-8 text-center inter-medium text-gray-500">No customers found.</td>
               </tr>
             ) : (
               customers.map((user) => (
                 <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="p-4">
-                    <p className="font-bold text-sm text-gray-800">{user.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">ID: #{user._id.slice(-6).toUpperCase()}</p>
+                    <p className="inter-bold text-sm text-gray-800">{user.name}</p>
+                    <p className="text-xs inter-medium text-gray-500 mt-1">ID: #{user._id.slice(-6).toUpperCase()}</p>
                   </td>
                   <td className="p-4">
-                    <p className="text-sm text-gray-600 font-medium">{user.email}</p>
+                    <p className="text-sm text-gray-600 inter-medium">{user.email}</p>
                   </td>
                   <td className="p-4">
-                    <span className={`text-[10px] font-bold px-2 py-1 uppercase tracking-widest border ${
+                    <span className={`text-[10px] inter-bold px-2 py-1 uppercase tracking-widest border ${
                       user.role === 'admin' 
                         ? 'bg-blue-50 text-blue-700 border-blue-200' 
                         : 'bg-gray-50 text-gray-600 border-gray-200'
@@ -161,7 +161,7 @@ const AdminCustomers = () => {
                     </span>
                   </td>
                   <td className="p-4">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm inter-medium text-gray-600">
                       {new Date(user.createdAt).toLocaleDateString('en-GB', {
                         day: 'numeric', month: 'short', year: 'numeric'
                       })}
@@ -171,7 +171,7 @@ const AdminCustomers = () => {
                     <button
                       onClick={() => handleDelete(user._id)}
                       disabled={user.role === 'admin'}
-                      className={`font-bold text-xs uppercase tracking-wider transition-colors ${
+                      className={`inter-bold text-xs uppercase tracking-wider transition-colors ${
                         user.role === 'admin' 
                           ? 'text-gray-300 cursor-not-allowed' 
                           : 'text-red-600 hover:text-red-800'

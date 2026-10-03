@@ -21,7 +21,7 @@ const AdminEditProduct = () => {
     const fetchSingleProduct = async () => {
       try {
         const { data } = await api.get(`/api/products/${id}`);
-        // Array গুলোকে কমা (,) দিয়ে String এ রূপান্তর করে ফর্মে বসানো
+        // Array গুলোকে কমা (,) দিয়ে String এ রূপান্তর করে ফর্মে বসানো
         setFormData({
           ...data,
           category: data.category?._id || data.category, // পপুলেট থাকলে শুধু আইডি নিবে
@@ -50,7 +50,7 @@ const AdminEditProduct = () => {
       setMessage({ type: "success", text: "Product updated successfully!" });
       window.scrollTo(0, 0);
       
-      // ২ সেকেন্ড পর প্রোডাক্ট লিস্ট পেজে পাঠিয়ে দিবে
+      // ২ সেকেন্ড পর প্রোডাক্ট লিস্ট পেজে পাঠিয়ে দিবে
       setTimeout(() => navigate('/admin/products'), 2000);
     } catch (error) {
       setMessage({ type: "error", text: "Failed to update product." });
@@ -60,24 +60,24 @@ const AdminEditProduct = () => {
     }
   };
 
-  const inputClass = "w-full border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none transition-colors bg-white";
-  const labelClass = "block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2";
+  const inputClass = "w-full border border-gray-300 p-3 text-sm inter-medium focus:border-blue-500 focus:outline-none transition-colors bg-white";
+  const labelClass = "block text-[11px] inter-bold text-gray-400 uppercase tracking-widest mb-2";
 
   return (
     <div className="w-full max-w-5xl bg-white border border-gray-200 p-8 shadow-sm">
       <div className="mb-8 border-b border-gray-200 pb-4">
-        <h2 className="text-2xl font-extrabold text-gray-800 uppercase tracking-widest">Edit Product</h2>
+        <h2 className="text-2xl inter-bold text-gray-800 uppercase tracking-widest">Edit Product</h2>
       </div>
 
       {message.text && (
-        <div className={`p-4 mb-6 border font-bold text-sm uppercase tracking-wider ${message.type === 'success' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
+        <div className={`p-4 mb-6 border inter-bold text-sm uppercase tracking-wider ${message.type === 'success' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
           {message.text}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         
-        {/* শুধুমাত্র বেসিক কয়েকটি ফিল্ড উদাহরণস্বরূপ দিলাম (আপনি আপনার AdminAddProduct এর মতো বাকি সব ফিল্ড এখানে বসিয়ে নিবেন) */}
+        {/* শুধুমাত্র বেসিক কয়েকটি ফিল্ড উদাহরণস্বরূপ দিলাম (আপনি আপনার AdminAddProduct এর মতো বাকি সব ফিল্ড এখানে বসিয়ে নিবেন) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className={labelClass}>Product Name</label>
@@ -104,10 +104,10 @@ const AdminEditProduct = () => {
             <input type="text" name="colors" value={formData.colors || ""} onChange={handleTextChange} className={inputClass} />
           </div>
         </div>
-        {/* Note: AdminAddProduct.jsx এর বাকি ফিল্ডগুলো হুবহু এখানে কপি করে বসাতে পারবেন, Value হিসেবে শুধু formData.propertyName দিয়ে দিবেন */}
+        {/* Note: AdminAddProduct.jsx এর বাকি ফিল্ডগুলো হুবহু এখানে কপি করে বসাতে পারবেন, Value হিসেবে শুধু formData.propertyName দিয়ে দিবেন */}
 
         <div className="pt-6 mt-6 border-t border-gray-200">
-          <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm uppercase tracking-widest px-8 py-4 transition-colors">
+          <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white inter-bold text-sm uppercase tracking-widest px-8 py-4 transition-colors">
             {loading ? "Updating..." : "Update Product"}
           </button>
         </div>
