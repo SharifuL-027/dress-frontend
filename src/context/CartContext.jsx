@@ -37,7 +37,7 @@ export const CartProvider = ({ children }) => {
       );
       if (existing) {
         itemExists = true;
-        // যদি আগেই থাকে, তবে পরিমাণ ১ বাড়িয়ে দিতে পারেন অথবা একই রাখতে পারেন
+        // যদি আগেই থাকে, তবে পরিমাণ ১ বাড়িয়ে দিতে পারেন অথবা একই রাখতে পারেন
         return prev.map(item => 
           item._id === product._id && item.size === product.size && item.color === product.color
             ? { ...item, qty: item.qty + 1 }
@@ -53,7 +53,7 @@ export const CartProvider = ({ children }) => {
       toast.success("Added to Cart 🛒");
     }
 
-    // প্রোডাক্ট কার্টে অ্যাড হওয়ার সাথে সাথেই ড্রয়ারটি ডান দিক থেকে বের হয়ে আসবে
+    // প্রোডাক্ট কার্টে অ্যাড হওয়ার সাথে সাথেই ড্রয়ারটি ডান দিক থেকে বের হয়ে আসবে
     openCart();
   };
 
@@ -70,6 +70,14 @@ export const CartProvider = ({ children }) => {
       }
       return item;
     }));
+  };
+
+  // ==========================================
+  // NEW: Cart Clear Function (For Checkout)
+  // ==========================================
+  const clearCart = () => {
+    setCart([]); // স্টেট থেকে কার্ট খালি করে দিবে
+    localStorage.removeItem("cart"); // ব্রাউজার স্টোরেজ থেকে মুছে ফেলবে
   };
 
   // --- Wishlist Function ---
@@ -99,6 +107,7 @@ export const CartProvider = ({ children }) => {
       addToCart, 
       removeFromCart, 
       updateQty, 
+      clearCart,     // <--- এটি এখানে যুক্ত করা হয়েছে
       wishlist, 
       toggleWishlist, 
       isCartOpen, 
