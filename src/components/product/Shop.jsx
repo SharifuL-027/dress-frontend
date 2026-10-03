@@ -42,7 +42,7 @@ const Shop = () => {
     fetchData();
   }, []);
 
-  // ফিল্টারিং এবং সর্টিং লজিক (যখনই সার্চ, ক্যাটাগরি বা সর্ট চেঞ্জ হবে)
+ 
   useEffect(() => {
     let result = [...allProducts];
 
