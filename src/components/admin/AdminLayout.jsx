@@ -54,6 +54,9 @@ const AdminLayout = () => {
            <NavLink to="/admin/banners" className={navLinkClass}>
             Banners
           </NavLink>
+          <NavLink to="/admin/settings" className={navLinkClass}>
+            Settings
+          </NavLink>
         </nav>
 
         {/* Bottom Actions */}

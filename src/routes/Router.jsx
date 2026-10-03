@@ -21,6 +21,7 @@ import MyOrdersPage from "../components/Cart/MyOrderspage";
 import NewArrivalsPage from "../components/product/NewArrivalsPage";
 import AdminBanners from "../components/admin/AdminBanners";
 import Shop from "../components/product/Shop";
+import AdminSettings from "../components/admin/AdminSettings";
 
 
 const router = createBrowserRouter([
@@ -99,7 +100,8 @@ const router = createBrowserRouter([
           { path: "/admin/categories", element: <AdminCategories/> },
           { path: "/admin/orders", element: <AdminOrders />, },
           { path: "/admin/users", element: <AdminCustomers />, },
-          {path: "/admin/banners", element: <AdminBanners/>}
+          {path: "/admin/banners", element: <AdminBanners/>},
+          {path: "/admin/settings", element: <AdminSettings/> }
           ,
         ]
       }

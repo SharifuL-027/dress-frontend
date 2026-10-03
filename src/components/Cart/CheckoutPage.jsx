@@ -17,18 +17,15 @@ const CheckoutPage = () => {
   useEffect(() => {
     const fetchDeliverySettings = async () => {
       try {
-        // TODO: Replace this with your actual API endpoint later
-        // const { data } = await api.get('/api/settings/delivery');
+        // ডামি ডেটা মুছে রিয়েল API কল করা হলো
+        const { data } = await api.get('/api/delivery');
         
-        // যেহেতু আপাতত API নেই, আমি ডামি ডেটা দিয়ে দিচ্ছি। অ্যাডমিন প্যানেল হলে এটা ডাটাবেস থেকে আসবে।
-        const dummyData = [
-          { _id: '1', area: 'Inside Dhaka', cost: 60 },
-          { _id: '2', area: 'Outside Dhaka', cost: 120 },
-          { _id: '3', area: 'Free Delivery (Campaign)', cost: 0 } // ফ্রি ডেলিভারি অপশন
-        ];
+        setDeliveryOptions(data);
         
-        setDeliveryOptions(dummyData);
-        setSelectedDelivery(dummyData[0]); // প্রথমটি ডিফল্ট সিলেক্ট থাকবে
+        // যদি ডাটাবেসে অন্তত ১টি ডেলিভারি অপশন থাকে, তবে প্রথমটি ডিফল্ট সিলেক্ট হয়ে থাকবে
+        if (data && data.length > 0) {
+          setSelectedDelivery(data[0]);
+        }
       } catch (error) {
         console.error("Error fetching delivery settings", error);
       } finally {
@@ -236,6 +233,8 @@ const CheckoutPage = () => {
                 >
                   {isLoadingDelivery ? (
                     <option value="">Loading options...</option>
+                  ) : deliveryOptions.length === 0 ? (
+                    <option value="" disabled>No delivery options available</option> // ডাটাবেস ফাঁকা থাকলে এটি দেখাবে
                   ) : (
                     deliveryOptions.map(option => (
                       <option key={option._id} value={option._id}>
