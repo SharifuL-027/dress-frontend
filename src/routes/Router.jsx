@@ -22,6 +22,8 @@ import NewArrivalsPage from "../components/product/NewArrivalsPage";
 import AdminBanners from "../components/admin/AdminBanners";
 import Shop from "../components/product/Shop";
 import AdminSettings from "../components/admin/AdminSettings";
+import ContactPage from "../components/contact/ContactPage";
+import StoreLocation from "../components/contact/StoreLocation";
 
 
 const router = createBrowserRouter([
@@ -77,6 +79,14 @@ const router = createBrowserRouter([
       {
         path: "/shop",
         element: <Shop/>
+      },
+      {
+        path: "/contact",
+        element: <ContactPage/>
+      },
+      {
+        path: "/stores",
+        element: <StoreLocation/>
       }
      
     ],
