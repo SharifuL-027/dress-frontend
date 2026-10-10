@@ -24,7 +24,7 @@ import Shop from "../components/product/Shop";
 import AdminSettings from "../components/admin/AdminSettings";
 import ContactPage from "../components/contact/ContactPage";
 import StoreLocation from "../components/contact/StoreLocation";
-
+import OrderDetailsPage from "../components/Cart/OrdersDetailsPage";
 
 const router = createBrowserRouter([
   // 1. PUBLIC & CUSTOMER ROUTES (Navbar ebong Footer soho)
@@ -36,10 +36,6 @@ const router = createBrowserRouter([
         path: "/",
         element: <Home />, 
       },
-      // {
-      //   path: "/shop",
-      //   element: <Shop />,
-      // },
       {
         path: "/login",
         element: <Login />,
@@ -72,6 +68,12 @@ const router = createBrowserRouter([
         path: "/my-orders",
         element: <MyOrdersPage/>
       },
+  
+      {
+        path: "/order/:id",
+        element: <OrderDetailsPage /> 
+      }, 
+
       {
         path: "/new-arrivals",
         element: <NewArrivalsPage/>
@@ -88,31 +90,28 @@ const router = createBrowserRouter([
         path: "/stores",
         element: <StoreLocation/>
       }
-     
     ],
   },
   
-  // 2. ADMIN PRIVATE ROUTES (Customer Navbar chara, shudhu Admin Sidebar soho)
+  // 2. ADMIN PRIVATE ROUTES
   {
-    element: <AdminRoute />, // Ei protector er vitore joto page thakbe sob private hoye jabe
-    children: [ // <-- Ekhane third-bracket [] hobe
+    element: <AdminRoute />, 
+    children: [ 
       {
-        element: <AdminLayout />, // Notun Admin Layout (Sidebar soho)
+        element: <AdminLayout />, 
         children: [
           {
             path: "/admin/dashboard",
             element: <AdminDashboard />,
           },
-          
           { path: "/admin/add-product", element: <AdminAddProduct /> },
           { path: "/admin/products", element: <AdminProducts/> },
           { path: "/admin/edit-product/:id", element: <AdminEditProduct/> },
           { path: "/admin/categories", element: <AdminCategories/> },
           { path: "/admin/orders", element: <AdminOrders />, },
           { path: "/admin/users", element: <AdminCustomers />, },
-          {path: "/admin/banners", element: <AdminBanners/>},
-          {path: "/admin/settings", element: <AdminSettings/> }
-          ,
+          { path: "/admin/banners", element: <AdminBanners/> },
+          { path: "/admin/settings", element: <AdminSettings/> }
         ]
       }
     ]

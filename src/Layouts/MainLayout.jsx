@@ -7,7 +7,6 @@ import ScrollToTop from "../components/ScrollToTop";
 
 const MainLayout = () => {
   return (
-    // মোবাইলে নিচের মেনুবারের জন্য pb-16 দেওয়া হলো যাতে কন্টেন্ট ঢাকা না পড়ে
     <div className="min-h-screen bg-white text-gray-900">
       <ScrollToTop/>
       <Navbar />
