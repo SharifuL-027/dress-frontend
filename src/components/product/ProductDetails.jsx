@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router";
 import api from "../../api/axios"; 
 import toast from "react-hot-toast";
 import { useCart } from "../../context/CartContext"; 
-import ProductCard from "./ProductCard"; // <-- ProductCard ইম্পোর্ট করা হলো (পাথ ঠিক করে নেবেন)
+import ProductCard from "./ProductCard";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -11,7 +11,7 @@ const ProductDetails = () => {
   const { addToCart } = useCart(); 
   
   const [product, setProduct] = useState(null);
-  const [relatedProducts, setRelatedProducts] = useState([]); // রিলেটেড প্রোডাক্টের স্টেট
+  const [relatedProducts, setRelatedProducts] = useState([]); 
   const [loading, setLoading] = useState(true);
 
   // Cart States
@@ -24,25 +24,21 @@ const ProductDetails = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [zoomStyle, setZoomStyle] = useState({ transform: "scale(1)" });
-  const [activeTab, setActiveTab] = useState("description");
 
   useEffect(() => {
     const fetchProductData = async () => {
       try {
-        // ১. কারেন্ট প্রোডাক্ট ফেচ করা
         const { data } = await api.get(`/api/products/${id}`);
         setProduct(data);
         
         if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
         if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
 
-        // ২. একই ক্যাটাগরির অন্যান্য প্রোডাক্ট ফেচ করা
         const categoryId = data.category?._id || data.category;
         if (categoryId) {
           const relatedRes = await api.get('/api/products');
           const allProducts = relatedRes.data.products || relatedRes.data;
           
-          // বর্তমান প্রোডাক্টটি বাদ দিয়ে একই ক্যাটাগরির সর্বোচ্চ ৪টি প্রোডাক্ট ফিল্টার করা
           const filteredRelated = allProducts.filter(p => 
             (p.category?._id === categoryId || p.category === categoryId) && p._id !== data._id
           ).slice(0, 4);
@@ -57,7 +53,6 @@ const ProductDetails = () => {
       }
     };
     
-    // পেজ পরিবর্তন হলে স্ক্রল টপে নিয়ে যাওয়া এবং ডাটা লোড করা
     window.scrollTo(0, 0);
     fetchProductData();
   }, [id]);
@@ -81,7 +76,6 @@ const ProductDetails = () => {
   // ==========================================
   const getCurrentStock = () => {
     if (!product) return 0;
-    
     if (product.variants?.length > 0 && selectedColor && selectedSize) {
       const variant = product.variants.find(
         v => v.color.toLowerCase() === selectedColor.toLowerCase() && 
@@ -89,12 +83,10 @@ const ProductDetails = () => {
       );
       return variant ? variant.stock : 0;
     }
-    
     return product.totalStock || 0;
   };
 
   const currentVariantStock = getCurrentStock();
-
   const variantLabel = `${selectedColor} ${selectedSize}`.trim();
   const stockMessage = currentVariantStock > 0 
     ? (variantLabel ? `${currentVariantStock} In Stock for ${variantLabel}` : `${currentVariantStock} In Stock`)
@@ -130,10 +122,67 @@ const ProductDetails = () => {
     };
 
     addToCart(cartItem);
+    if (type === 'buy') navigate('/checkout');
+  };
 
-    if (type === 'buy') {
-      navigate('/checkout');
+  // ==========================================
+  // AUTO SIZE CHART TABLE RENDERER (SMART)
+  // ==========================================
+  const renderSizeChart = (chartText) => {
+    if (!chartText) return null;
+    
+    const lines = chartText.split('\n').map(l => l.trim()).filter(l => l !== '');
+    if (lines.length === 0) return null;
+
+    let delimiter = null;
+    if (lines.some(l => l.includes('|'))) delimiter = '|';
+    else if (lines.some(l => l.includes(','))) delimiter = ',';
+
+    if (!delimiter) {
+      return <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">{chartText}</div>;
     }
+
+    const parsedRows = lines.map(line => {
+      let cleanLine = line;
+      if (delimiter === '|' && cleanLine.startsWith('|')) cleanLine = cleanLine.substring(1);
+      if (delimiter === '|' && cleanLine.endsWith('|')) cleanLine = cleanLine.slice(0, -1);
+      return cleanLine.split(delimiter).map(cell => cell.trim());
+    }).filter(row => {
+      const isSeparator = row.every(cell => cell.replace(/-/g, '').trim() === '');
+      return !isSeparator && row.some(cell => cell !== '');
+    });
+
+    if (parsedRows.length < 2) {
+      return <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">{chartText}</div>;
+    }
+
+    const headers = parsedRows[0];
+    const dataRows = parsedRows.slice(1);
+
+    return (
+      <div className="overflow-x-auto border border-gray-200 mt-2 bg-white shadow-sm">
+        <table className="w-full text-left border-collapse text-[12px]">
+          <thead>
+            <tr className="bg-gray-100 text-gray-800 inter-bold uppercase tracking-wider">
+              {headers.map((h, i) => (
+                <th key={i} className="p-4 border-b border-gray-200 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataRows.map((row, rIdx) => (
+              <tr key={rIdx} className="hover:bg-gray-50 transition-colors">
+                {row.map((cell, cIdx) => (
+                  <td key={cIdx} className={`p-4 border-b border-gray-100 ${cIdx === 0 ? 'inter-bold text-gray-900' : 'text-gray-600 inter-medium'}`}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   };
 
   if (loading) return <div className="p-8 text-center inter-bold text-gray-500 uppercase tracking-widest mt-20">Loading...</div>;
@@ -141,6 +190,9 @@ const ProductDetails = () => {
 
   const images = product.images?.length > 0 ? product.images : [{ url: "https://via.placeholder.com/600" }];
   const currentPrice = product.discountPrice || product.regularPrice;
+
+  // Check if any specifications exist
+  const hasSpecifications = product.brand || product.fabric || product.gsm || product.fitType || product.sleeveType || product.pattern;
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-30 mb-20 inter-regular text-gray-800">
@@ -172,8 +224,6 @@ const ProductDetails = () => {
         
         {/* ---------------- LEFT: Image Gallery ---------------- */}
         <div className="lg:col-span-7 flex flex-col gap-4 sticky top-4 self-start">
-          
-          {/* Main Image (Aspect Ratio 1:1 করা হয়েছে `aspect-square` দিয়ে) */}
           <div className="w-full aspect-square border border-gray-200 bg-gray-50 cursor-zoom-in overflow-hidden relative group" onClick={() => openModal(activeImageIndex)}>
             <img src={images[activeImageIndex].url} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center">
@@ -249,7 +299,6 @@ const ProductDetails = () => {
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 mb-10">
             <div className="flex gap-3 h-14">
-              {/* Quantity Selector */}
               <div className="flex border border-gray-300 w-32 bg-white">
                 <button onClick={() => handleQtyChange('decrement')} className="w-10 h-full text-gray-500 hover:bg-gray-100 hover:text-black cursor-pointer inter-medium">-</button>
                 <div className="flex-1 h-full flex items-center justify-center text-sm inter-bold border-x border-gray-200">{qty}</div>
@@ -274,116 +323,73 @@ const ProductDetails = () => {
             </button>
           </div>
 
-          {/* ---------------- DYNAMIC ACCORDION (With Smart Table) ---------------- */}
-          <div className="border-t border-gray-200 w-full overflow-hidden">
+          {/* ---------------- STATIC SECTIONS (ALWAYS OPEN) ---------------- */}
+          <div className="w-full space-y-8 mt-6">
             
+            {/* Description */}
             {product.description && (
-              <div className="border-b border-gray-200 w-full">
-                <button onClick={() => setActiveTab(activeTab === 'description' ? '' : 'description')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs inter-bold uppercase tracking-widest">Description</span>
-                  <span className="text-gray-400 inter-medium">{activeTab === 'description' ? '−' : '+'}</span>
-                </button>
-                {activeTab === 'description' && (
-                  <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">{product.description}</div>
-                )}
+              <div className="w-full">
+                <h3 className="text-sm inter-bold uppercase tracking-widest text-gray-900 mb-4 pb-2 border-b border-gray-200">Description</h3>
+                <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                  {product.description}
+                </div>
               </div>
             )}
 
+            {/* ================= NEW: Specifications ================= */}
+            {hasSpecifications && (
+              <div className="w-full">
+                <h3 className="text-sm inter-bold uppercase tracking-widest text-gray-900 mb-4 pb-2 border-b border-gray-200">Specifications</h3>
+                <ul className="text-sm text-gray-600 space-y-2 inter-regular">
+                  {product.brand && <li><span className="inter-bold text-gray-800">Brand:</span> {product.brand}</li>}
+                  {product.fabric && <li><span className="inter-bold text-gray-800">Fabric/Material:</span> {product.fabric}</li>}
+                  {product.gsm && <li><span className="inter-bold text-gray-800">GSM:</span> {product.gsm}</li>}
+                  {product.fitType && <li><span className="inter-bold text-gray-800">Fit Type:</span> {product.fitType}</li>}
+                  {product.sleeveType && <li><span className="inter-bold text-gray-800">Sleeve Type:</span> {product.sleeveType}</li>}
+                  {product.pattern && <li><span className="inter-bold text-gray-800">Pattern/Design:</span> {product.pattern}</li>}
+                  {product.origin && <li><span className="inter-bold text-gray-800">Origin:</span> {product.origin}</li>}
+                </ul>
+              </div>
+            )}
+
+            {/* Key Features */}
             {product.keyFeatures && (
-              <div className="border-b border-gray-200 w-full">
-                <button onClick={() => setActiveTab(activeTab === 'features' ? '' : 'features')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs inter-bold uppercase tracking-widest">Key Features</span>
-                  <span className="text-gray-400 inter-medium">{activeTab === 'features' ? '−' : '+'}</span>
-                </button>
-                {activeTab === 'features' && (
-                  <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">{product.keyFeatures}</div>
-                )}
+              <div className="w-full">
+                <h3 className="text-sm inter-bold uppercase tracking-widest text-gray-900 mb-4 pb-2 border-b border-gray-200">Key Features</h3>
+                <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                  {product.keyFeatures}
+                </div>
               </div>
             )}
 
             {/* Smart Size Chart */}
             {product.sizeChart && (
-              <div className="border-b border-gray-200 w-full">
-                <button onClick={() => setActiveTab(activeTab === 'size' ? '' : 'size')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs inter-bold uppercase tracking-widest">Size Chart</span>
-                  <span className="text-gray-400 inter-medium">{activeTab === 'size' ? '−' : '+'}</span>
-                </button>
-                {activeTab === 'size' && (
-                  <div className="pb-6">
-                    {(() => {
-                      const lines = product.sizeChart.split('\n').filter(line => line.trim() !== '');
-                      const hasTableFormat = lines.some(l => l.includes('|') || l.includes(','));
-
-                      if (hasTableFormat) {
-                        return (
-                          <div className="overflow-x-auto border border-gray-200 mt-2">
-                            <table className="w-full text-left border-collapse text-[11px] uppercase tracking-wider">
-                              <thead>
-                                <tr className="bg-gray-50 text-gray-500 inter-bold">
-                                  <th className="p-3 border-b border-gray-200">Size</th>
-                                  <th className="p-3 border-b border-gray-200">বুক (Chest)</th>
-                                  <th className="p-3 border-b border-gray-200">কোমর (Waist)</th>
-                                  <th className="p-3 border-b border-gray-200">লম্বা (Length)</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {lines.map((line, idx) => {
-                                  if (line.includes('---') || line.toLowerCase().includes('size')) return null;
-                                  let cols = line.includes('|') ? line.split('|').map(c => c.trim()).filter(c => c !== '') : line.split(',').map(c => c.trim());
-                                  if (cols.length < 2) return null;
-
-                                  const size = cols[0];
-                                  const chest = cols[1] ? cols[1].replace(/[^0-9.]/g, '') : '';
-                                  const waist = cols[2] ? cols[2].replace(/[^0-9.]/g, '') : '';
-                                  const length = cols[3] ? cols[3].replace(/[^0-9.]/g, '') : (cols[2] && !cols[3] ? '' : ''); 
-                                  const is3Col = cols.length === 3;
-                                  const actualWaist = is3Col ? null : waist;
-                                  const actualLength = is3Col ? cols[2] : length;
-
-                                  return (
-                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                      <td className="p-3 border-b border-gray-100 inter-bold text-gray-900">{size}</td>
-                                      <td className="p-3 border-b border-gray-100 text-gray-700 inter-bold">{chest ? `${chest}" (${(parseFloat(chest) * 2.54).toFixed(1)} cm)` : '-'}</td>
-                                      <td className="p-3 border-b border-gray-100 text-gray-700 inter-bold">{actualWaist ? `${actualWaist}" (${(parseFloat(actualWaist) * 2.54).toFixed(1)} cm)` : '-'}</td>
-                                      <td className="p-3 border-b border-gray-100 text-gray-700 inter-bold">{actualLength ? `${actualLength.replace(/[^0-9.]/g, '')}" (${(parseFloat(actualLength) * 2.54).toFixed(1)} cm)` : '-'}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        );
-                      } else {
-                        return <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">{product.sizeChart}</div>;
-                      }
-                    })()}
-                  </div>
-                )}
+              <div className="w-full">
+                <h3 className="text-sm inter-bold uppercase tracking-widest text-gray-900 mb-4 pb-2 border-b border-gray-200">Size Chart</h3>
+                <div className="w-full">
+                  {renderSizeChart(product.sizeChart)}
+                </div>
               </div>
             )}
 
+            {/* Wash & Care */}
             {product.washingInstructions && (
-              <div className="border-b border-gray-200 w-full">
-                <button onClick={() => setActiveTab(activeTab === 'wash' ? '' : 'wash')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs inter-bold uppercase tracking-widest">Wash & Care</span>
-                  <span className="text-gray-400 inter-medium">{activeTab === 'wash' ? '−' : '+'}</span>
-                </button>
-                {activeTab === 'wash' && <div className="pb-6 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">{product.washingInstructions}</div>}
+              <div className="w-full">
+                <h3 className="text-sm inter-bold uppercase tracking-widest text-gray-900 mb-4 pb-2 border-b border-gray-200">Wash & Care</h3>
+                <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                  {product.washingInstructions}
+                </div>
               </div>
             )}
 
+            {/* Delivery & Returns */}
             {(product.deliveryInfo || product.returnPolicy) && (
-              <div className="border-b border-gray-200 w-full">
-                <button onClick={() => setActiveTab(activeTab === 'delivery' ? '' : 'delivery')} className="w-full py-4 flex justify-between items-center text-left outline-none cursor-pointer">
-                  <span className="text-xs inter-bold uppercase tracking-widest">Delivery & Returns</span>
-                  <span className="text-gray-400 inter-medium">{activeTab === 'delivery' ? '−' : '+'}</span>
-                </button>
-                {activeTab === 'delivery' && (
-                  <div className="pb-6 text-sm text-gray-600 leading-relaxed space-y-4 break-words inter-regular">
-                    {product.deliveryInfo && <div><p className="inter-bold text-gray-800 mb-1">Delivery Info:</p><p>{product.deliveryInfo}</p></div>}
-                    {product.returnPolicy && <div><p className="inter-bold text-gray-800 mb-1">Return Policy:</p><p>{product.returnPolicy}</p></div>}
-                  </div>
-                )}
+              <div className="w-full">
+                <h3 className="text-sm inter-bold uppercase tracking-widest text-gray-900 mb-4 pb-2 border-b border-gray-200">Delivery & Returns</h3>
+                <div className="text-sm text-gray-600 leading-relaxed space-y-4 break-words inter-regular">
+                  {product.deliveryInfo && <div><p className="inter-bold text-gray-800 mb-1">Delivery Info:</p><p>{product.deliveryInfo}</p></div>}
+                  {product.returnPolicy && <div><p className="inter-bold text-gray-800 mb-1">Return Policy:</p><p>{product.returnPolicy}</p></div>}
+                </div>
               </div>
             )}
             

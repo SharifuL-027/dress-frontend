@@ -2,17 +2,24 @@ import { Outlet } from "react-router";
 import Navbar from "../components/Navbar";
 import CartDrawer from "../components/Cart/CartDrawyer";
 import Footer from "../components/Footer";
+import MobileBottomNav from "../components/MobileBottomNav"; 
 
 const MainLayout = () => {
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    // মোবাইলে নিচের মেনুবারের জন্য pb-16 দেওয়া হলো যাতে কন্টেন্ট ঢাকা না পড়ে
+    <div className="min-h-screen bg-white text-gray-900 pb-16 md:pb-0">
       <Navbar />
       <CartDrawer/>
+      
       {/* Outlet holo sekhan theke routing er page gulo render hobe */}
       <main>
         <Outlet /> 
       </main>
+      
       <Footer/>
+      
+      {/* মোবাইলের জন্য অ্যাপ-লাইক বটম নেভিগেশন (শুধু মোবাইলেই দেখাবে) */}
+      <MobileBottomNav />
     </div>
   );
 };
