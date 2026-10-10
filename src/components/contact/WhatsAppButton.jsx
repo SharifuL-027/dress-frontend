@@ -2,10 +2,11 @@ import { FaWhatsapp } from "react-icons/fa";
 
 const WhatsAppButton = () => {
   return (
-    <div className="fixed bottom-12 right-6 z-50 flex items-center group">
+
+    <div className="fixed bottom-24 md:bottom-12 right-4 md:right-6 z-50 flex items-center group">
       
-      {/* Tooltip (Hover text with smooth slide-in animation) */}
-      <div className="absolute right-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+      {/* Tooltip (Hover text with smooth slide-in animation - Hidden on mobile for better UX) */}
+      <div className="hidden md:block absolute right-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-x-4 group-hover:translate-x-0">
         <span className="relative bg-white text-black text-[11px] inter-bold uppercase tracking-widest px-5 py-3 shadow-xl whitespace-nowrap border border-gray-100 rounded flex items-center">
           Chat with us
           {/* Tooltip Arrow (ডানপাশের ছোট কোণা) */}
@@ -18,14 +19,14 @@ const WhatsAppButton = () => {
         href="https://wa.me/8801624541181"
         target="_blank"
         rel="noopener noreferrer"
-        className="relative flex items-center justify-center w-[60px] h-[60px] bg-[#25D366] text-white rounded-full shadow-2xl hover:scale-110 transition-transform duration-300"
+        className="relative flex items-center justify-center w-[55px] h-[55px] md:w-[60px] md:h-[60px] bg-[#25D366] text-white rounded-full shadow-2xl hover:scale-110 transition-transform duration-300"
         aria-label="Chat on WhatsApp"
       >
         {/* Continuous Ping Animation Layer (তরঙ্গের মতো ছড়াবে) */}
         <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30"></span>
         
         {/* Main WhatsApp Icon */}
-        <FaWhatsapp size={34} className="relative z-10" />
+        <FaWhatsapp className="relative z-10 text-[30px] md:text-[34px]" />
       </a>
       
     </div>

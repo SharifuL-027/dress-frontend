@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router"; 
 import api from "../../api/axios"; 
 import ProductCard from "../product/ProductCard";
+import { FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi"; 
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +21,14 @@ const Shop = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sortOrder, setSortOrder] = useState("default");
+
+  // Mobile Responsiveness States
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [expandedMenu, setExpandedMenu] = useState({});
+
+  const toggleMenu = (id) => {
+    setExpandedMenu(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // ================= FETCH DATA =================
   useEffect(() => {
@@ -131,78 +140,113 @@ const Shop = () => {
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-32 mb-24 inter-normal">
+    <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-6 md:mt-24 mb-24 inter-normal">
       
       {/* ---------------- PAGE HEADER ---------------- */}
-      <div className="mb-10 text-center">
-        <h1 className="text-3xl md:text-4xl inter-bold text-black uppercase tracking-[0.15em]">
+      <div className="mb-6 md:mb-10 text-center mt-4 md:mt-0">
+        <h1 className="text-2xl md:text-4xl inter-bold text-black uppercase tracking-[0.15em]">
           Shop All Products
         </h1>
-        <div className="w-24 h-1 bg-red-600 mx-auto mt-4 mb-3"></div>
-        <p className="text-xs text-gray-500 inter-normal uppercase tracking-widest">
-          Explore our complete collection of exclusive items
+        <div className="w-16 md:w-24 h-1 bg-red-600 mx-auto mt-3 md:mt-4 mb-2 md:mb-3"></div>
+        <p className="text-[10px] md:text-xs text-gray-500 inter-normal uppercase tracking-widest">
+          Explore our complete collection
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+      {/* ================= MOBILE TOGGLE BUTTON (Hidden on Desktop) ================= */}
+      <button 
+        onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        className="lg:hidden w-full mb-5 flex items-center justify-between bg-gray-900 text-white px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest rounded-sm shadow-md transition-colors"
+      >
+        <span className="flex items-center gap-2"><FiFilter size={16} /> {isMobileSidebarOpen ? "Hide Categories" : "Shop by Category"}</span>
+        <span className="text-lg leading-none">{isMobileSidebarOpen ? "−" : "+"}</span>
+      </button>
+
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
         
         {/* ================= LEFT SIDEBAR (Categories) ================= */}
-        <div className="w-full lg:w-[260px] shrink-0">
-          <div className="sticky top-28 bg-white border border-gray-200 p-6 shadow-sm">
-            <h3 className="text-sm inter-bold text-gray-900 uppercase tracking-widest mb-6 border-b border-gray-200 pb-3">
+        <div className={`w-full lg:w-[260px] shrink-0 transition-all duration-300 ease-in-out origin-top ${isMobileSidebarOpen ? "block mb-4" : "hidden lg:block"}`}>
+          <div className="sticky top-28 bg-white border border-gray-200 p-5 md:p-6 shadow-sm rounded-sm">
+            <h3 className="text-[12px] md:text-sm inter-bold text-gray-900 uppercase tracking-widest mb-4 md:mb-6 border-b border-gray-200 pb-3">
               Categories
             </h3>
             
-            <ul className="space-y-4">
-              <li>
+            <div className="space-y-2">
+              <div className="pb-1 border-b border-gray-50">
                 <button 
-                  onClick={() => setSelectedCategory("all")}
-                  className={`w-full text-left text-xs inter-bold uppercase tracking-widest transition-colors cursor-pointer ${
+                  onClick={() => { setSelectedCategory("all"); setIsMobileSidebarOpen(false); }}
+                  className={`w-full text-left py-2 text-[11px] md:text-xs inter-bold uppercase tracking-widest transition-colors cursor-pointer ${
                     selectedCategory === "all" ? 'text-red-600' : 'text-gray-800 hover:text-red-600'
                   }`}
                 >
                   All Products
                 </button>
-              </li>
+              </div>
 
-              {structuredCategories.map(mainCat => (
-                <li key={mainCat._id} className="space-y-2">
-                  <button 
-                    onClick={() => setSelectedCategory(mainCat.slug)}
-                    className={`w-full text-left text-xs inter-bold uppercase tracking-widest transition-colors cursor-pointer ${
-                      selectedCategory === mainCat.slug ? 'text-red-600' : 'text-gray-900 hover:text-red-600'
-                    }`}
-                  >
-                    {mainCat.name}
-                  </button>
-                  
-                  {mainCat.subCats && mainCat.subCats.length > 0 && (
-                    <ul className="pl-4 space-y-2 border-l-2 border-gray-100 my-2">
-                      {mainCat.subCats.map(subCat => (
-                        <li key={subCat._id}>
-                          <button 
-                            onClick={() => setSelectedCategory(subCat.slug)}
-                            className={`w-full text-left text-[11px] inter-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                              selectedCategory === subCat.slug ? 'text-red-600 inter-bold' : 'text-gray-500 hover:text-gray-900'
-                            }`}
-                          >
-                            {subCat.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
+              {structuredCategories.map(mainCat => {
+                const isActiveMain = selectedCategory === mainCat.slug;
+                const hasSub = mainCat.subCats && mainCat.subCats.length > 0;
+                const isOpen = expandedMenu[mainCat._id] || false; 
+
+                return (
+                  <div key={mainCat._id} className="pb-1 border-b border-gray-50 last:border-0 last:pb-0">
+                    <div className="flex justify-between items-center py-2">
+                      <button 
+                        onClick={() => { setSelectedCategory(mainCat.slug); !hasSub && setIsMobileSidebarOpen(false); }}
+                        className={`flex-1 text-left text-[11px] md:text-xs inter-bold uppercase tracking-widest transition-colors cursor-pointer ${
+                          isActiveMain ? 'text-red-600' : 'text-gray-900 hover:text-red-600'
+                        }`}
+                      >
+                        {mainCat.name}
+                      </button>
+
+                      {hasSub && (
+                        <button 
+                          onClick={() => toggleMenu(mainCat._id)} 
+                          className="p-1 -mr-1 text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          {isOpen ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Sub Categories (Collapsible Dropdown) */}
+                    {hasSub && (
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <ul className="pl-4 mt-1 space-y-2 pb-3 border-l-2 border-gray-100">
+                          {mainCat.subCats.map(subCat => {
+                            const isActiveSub = selectedCategory === subCat.slug;
+                            return (
+                              <li key={subCat._id}>
+                                <button 
+                                  onClick={() => { setSelectedCategory(subCat.slug); setIsMobileSidebarOpen(false); }}
+                                  className={`w-full text-left block text-[10px] md:text-[11px] inter-bold uppercase tracking-wider transition-all relative ${
+                                    isActiveSub 
+                                      ? 'text-red-600 translate-x-1' 
+                                      : 'text-gray-500 hover:text-gray-900 hover:translate-x-1'
+                                  }`}
+                                >
+                                  {isActiveSub && <span className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-600 rounded-full"></span>}
+                                  {subCat.name}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* ================= RIGHT CONTENT (Filters & Products) ================= */}
         <div className="flex-1">
           
-          {/* Top Filter Bar (Search, Price, Sort) */}
-          <div className="bg-gray-50 border border-gray-200 p-4 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
+          {/* Top Filter Bar (Search, Price, Sort) - Mobile Optimized */}
+          <div className="bg-gray-50 border border-gray-200 p-3 md:p-4 mb-6 md:mb-8 flex flex-col md:flex-row gap-3 md:gap-4 items-center justify-between shadow-sm rounded-sm">
             
             {/* Search Box */}
             <div className="w-full md:w-1/3 relative">
@@ -211,67 +255,69 @@ const Shop = () => {
                 placeholder="Search products..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border border-gray-300 text-xs inter-normal text-gray-700 py-3 px-4 focus:outline-none focus:border-black bg-white"
+                className="w-full border border-gray-300 text-[11px] md:text-xs inter-normal text-gray-700 py-2.5 md:py-3 px-3 md:px-4 focus:outline-none focus:border-black bg-white rounded-sm"
               />
             </div>
 
-            {/* Price Filter */}
-            <div className="w-full md:w-auto flex items-center gap-2">
-              <input 
-                type="number" 
-                placeholder="Min ৳" 
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-                className="w-24 border border-gray-300 text-xs inter-normal text-gray-700 py-3 px-3 focus:outline-none focus:border-black bg-white text-center"
-              />
-              <span className="text-gray-400 inter-bold">-</span>
-              <input 
-                type="number" 
-                placeholder="Max ৳" 
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-24 border border-gray-300 text-xs inter-normal text-gray-700 py-3 px-3 focus:outline-none focus:border-black bg-white text-center"
-              />
-            </div>
+            <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-3 md:gap-4">
+              {/* Price Filter */}
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <input 
+                  type="number" 
+                  placeholder="Min ৳" 
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-16 md:w-24 border border-gray-300 text-[10px] md:text-xs inter-normal text-gray-700 py-2.5 md:py-3 px-1 md:px-2 focus:outline-none focus:border-black bg-white text-center rounded-sm"
+                />
+                <span className="text-gray-400 inter-bold">-</span>
+                <input 
+                  type="number" 
+                  placeholder="Max ৳" 
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-16 md:w-24 border border-gray-300 text-[10px] md:text-xs inter-normal text-gray-700 py-2.5 md:py-3 px-1 md:px-2 focus:outline-none focus:border-black bg-white text-center rounded-sm"
+                />
+              </div>
 
-            {/* Sort Dropdown */}
-            <div className="w-full md:w-auto flex items-center gap-3">
-              <label className="text-[10px] inter-semibold text-gray-500 uppercase tracking-widest hidden lg:block">Sort By:</label>
-              <select 
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full md:w-auto border border-gray-300 text-xs inter-semibold text-gray-900 uppercase tracking-wider py-3 px-4 focus:outline-none focus:border-black bg-white cursor-pointer"
-              >
-                <option value="default">Featured</option>
-                <option value="newest">Newest Arrivals</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-              </select>
+              {/* Sort Dropdown */}
+              <div className="flex-1 md:w-auto">
+                <select 
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  className="w-full border border-gray-300 text-[9px] md:text-[11px] inter-semibold text-gray-900 uppercase tracking-wider py-2.5 md:py-3 px-2 focus:outline-none focus:border-black bg-white cursor-pointer rounded-sm"
+                >
+                  <option value="default">Featured</option>
+                  <option value="newest">New Arrivals</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                </select>
+              </div>
             </div>
+            
           </div>
 
           {/* Results Count */}
-          <div className="mb-6 flex justify-between items-center">
-            <p className="text-xs inter-semibold text-gray-400 uppercase tracking-widest">
+          <div className="mb-4 md:mb-6 flex justify-between items-center text-center md:text-left">
+            <p className="text-[10px] md:text-xs inter-semibold text-gray-400 uppercase tracking-widest w-full md:w-auto">
               Showing {filteredProducts.length} Products
             </p>
           </div>
 
           {/* ================= PRODUCT GRID ================= */}
           {filteredProducts.length === 0 ? (
-            <div className="py-24 text-center border border-gray-200 bg-gray-50 flex flex-col items-center">
-              <span className="text-5xl mb-4">🔍</span>
-              <h3 className="text-lg inter-bold text-gray-800 uppercase tracking-widest mb-2">No Products Found</h3>
-              <p className="text-sm inter-normal text-gray-500 max-w-md">Try adjusting your filters or search query to find what you are looking for.</p>
+            <div className="py-16 md:py-24 text-center border border-gray-200 bg-gray-50 flex flex-col items-center rounded-sm">
+              <span className="text-4xl md:text-5xl mb-3 md:mb-4">🔍</span>
+              <h3 className="text-base md:text-lg inter-bold text-gray-800 uppercase tracking-widest mb-2">No Products Found</h3>
+              <p className="text-[11px] md:text-sm inter-normal text-gray-500 max-w-md px-4">Try adjusting your filters or search query to find what you are looking for.</p>
               <button 
                 onClick={() => { setSelectedCategory("all"); setSearchQuery(""); setMinPrice(""); setMaxPrice(""); setSortOrder("default"); }}
-                className="mt-6 bg-black text-white px-6 py-3 text-xs inter-bold uppercase tracking-widest hover:bg-red-600 transition-colors cursor-pointer"
+                className="mt-5 md:mt-6 bg-black text-white px-5 py-2.5 md:px-6 md:py-3 text-[10px] md:text-xs inter-bold uppercase tracking-widest hover:bg-red-600 transition-colors cursor-pointer rounded-sm"
               >
                 Reset Filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
               {filteredProducts.map(product => (
                 <ProductCard key={product._id} product={product} />
               ))}

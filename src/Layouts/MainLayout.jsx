@@ -3,11 +3,13 @@ import Navbar from "../components/Navbar";
 import CartDrawer from "../components/Cart/CartDrawyer";
 import Footer from "../components/Footer";
 import MobileBottomNav from "../components/MobileBottomNav"; 
+import ScrollToTop from "../components/ScrollToTop";
 
 const MainLayout = () => {
   return (
     // মোবাইলে নিচের মেনুবারের জন্য pb-16 দেওয়া হলো যাতে কন্টেন্ট ঢাকা না পড়ে
-    <div className="min-h-screen bg-white text-gray-900 pb-16 md:pb-0">
+    <div className="min-h-screen bg-white text-gray-900">
+      <ScrollToTop/>
       <Navbar />
       <CartDrawer/>
       

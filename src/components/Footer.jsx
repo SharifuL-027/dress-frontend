@@ -2,11 +2,11 @@ import { Link } from "react-router";
 
 const Footer = () => {
   return (
-    // মোবাইলে অ্যাপ বটম মেনুর জন্য pb-24 প্যাডিং দেওয়া আছে
-    <footer className="w-full pb-20 md:pb-0 bg-white">
+    // এখান থেকে সাদা প্যাডিং (pb-20 bg-white) রিমুভ করে শুধু w-full রাখা হলো
+    <footer className="w-full">
       
       {/* ============================================== */}
-      {/* FLOATING CONTACT BANNER (Fixed Overlap Issue) */}
+      {/* FLOATING CONTACT BANNER */}
       {/* ============================================== */}
       <div className="w-full max-w-[1500px] mx-auto px-4 md:px-8 relative z-20 mt-16 md:mt-24">
         <div className="bg-red-700 rounded-md shadow-2xl flex flex-col xl:flex-row justify-between items-center p-6 md:p-8 gap-6 md:gap-8">
@@ -62,14 +62,11 @@ const Footer = () => {
       {/* ============================================== */}
       {/* MAIN FOOTER CONTENT */}
       {/* ============================================== */}
-      {/* নেগেটিভ মার্জিন (-mt-16) দিয়ে ফুটারটিকে লাল বক্সের নিচে ঢুকিয়ে দেওয়া হয়েছে, তাই ওভারল্যাপের কোনো চান্স নেই */}
       <div className="bg-[#0a0a0a] pt-28 md:pt-24 -mt-12 md:-mt-16 relative z-10 border-t border-gray-900">
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 pb-12">
           
-          {/* Mobile a Double Column Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
             
-            {/* Column 1: Brand Info (Full width on mobile, half on desktop) */}
             <div className="col-span-2 lg:col-span-2 text-left">
               <Link to="/" className="inline-block bg-white px-4 py-4 mb-6 rounded-sm shadow-md">
                 <img 
@@ -96,7 +93,6 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Column 2: Support Links (1 Column on mobile) */}
             <div className="col-span-1 text-left">
               <h3 className="text-white inter-bold text-[11px] mb-5 uppercase tracking-widest">Support</h3>
               <ul className="space-y-3">
@@ -110,7 +106,6 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Column 3: Services/Categories (1 Column on mobile) */}
             <div className="col-span-1 text-left">
               <h3 className="text-white inter-bold text-[11px] mb-5 uppercase tracking-widest">Services</h3>
               <ul className="space-y-3">
@@ -130,8 +125,9 @@ const Footer = () => {
         {/* ============================================== */}
         {/* COPYRIGHT BOTTOM BAR */}
         {/* ============================================== */}
-        <div className="border-t border-gray-900 bg-[#050505]">
-          <div className="max-w-375 mx-auto px-4 md:px-8 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+        {/* এখানেই pb-24 দেওয়া হয়েছে, ফলে অ্যাপ বটম মেনুর পেছনে এখন আর সাদা অংশ থাকবে না, বরং কালো রঙ দেখা যাবে */}
+        <div className="border-t border-gray-900 bg-[#050505] pb-24 md:pb-0">
+          <div className="max-w-[1500px] mx-auto px-4 md:px-8 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 inter-regular text-[11px] text-center md:text-left">
               Copyright &copy; {new Date().getFullYear()} DRESS TOWN FLAGSHIP. All Right Reserved.
             </p>
