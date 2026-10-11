@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
-
-// Export 라이브러리들
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -31,7 +29,7 @@ const AdminCustomers = () => {
       try {
         await api.delete(`/api/users/${id}`);
         setCustomers(customers.filter((c) => c._id !== id));
-        toast.success("Customer deleted successfully! 🗑️️");
+        toast.success("Customer deleted successfully! 🗑");
       } catch (error) {
         toast.error("Failed to delete customer!");
       }
@@ -98,61 +96,80 @@ const AdminCustomers = () => {
     toast.success("PDF File Downloaded!");
   };
 
-  if (loading) return <div className="p-8 text-center inter-bold text-gray-500 uppercase">Loading Customers...</div>;
+  if (loading) return <div className="p-8 md:p-12 text-center text-[10px] md:text-xs inter-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading Customers...</div>;
 
   return (
-    <div className="w-full bg-white border border-gray-200 p-8 shadow-sm">
-      <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+    <div className="w-full max-w-7xl mx-auto bg-white border border-gray-200 p-4 md:p-8 shadow-sm rounded-sm mb-10">
+      
+      {/* ================= PAGE HEADER & EXPORT BUTTONS ================= */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 pb-4 md:pb-5 border-b border-gray-200 gap-4">
         <div>
-          <h2 className="text-2xl inter-bold text-gray-800 uppercase tracking-widest">Customers List</h2>
-          <p className="text-sm inter-medium text-gray-500 mt-1">Manage all registered users and customers ({customers.length} found).</p>
+          <h2 className="text-xl md:text-2xl inter-bold text-gray-800 uppercase tracking-widest">Customers List</h2>
+          <p className="text-[11px] md:text-sm inter-medium text-gray-500 mt-1 md:mt-1.5">Manage all registered users and customers ({customers.length} found).</p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex w-full sm:w-auto gap-3">
           <button 
             onClick={exportToExcel}
-            className="bg-green-600 hover:bg-green-700 text-white inter-bold text-xs uppercase tracking-widest px-4 py-2 flex items-center gap-2 transition-colors"
+            className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white inter-bold text-[10px] md:text-xs uppercase tracking-widest px-4 py-2.5 md:py-3 rounded-sm shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
           >
-            📊 Excel
+            <span className="text-sm md:text-base">📊</span> Excel
           </button>
           
           <button 
             onClick={exportToPDF}
-            className="bg-red-500 hover:bg-red-600 text-white inter-bold text-xs uppercase tracking-widest px-4 py-2 flex items-center gap-2 transition-colors"
+            className="flex-1 sm:flex-none justify-center bg-red-600 hover:bg-red-700 text-white inter-bold text-[10px] md:text-xs uppercase tracking-widest px-4 py-2.5 md:py-3 rounded-sm shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
           >
-            📄 PDF
+            <span className="text-sm md:text-base">📄</span> PDF
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      {/* ================= CUSTOMER LIST TABLE ================= */}
+      <div className="overflow-x-auto rounded-sm border border-gray-200 shadow-sm">
+        <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
-            <tr className="bg-gray-50 border-y border-gray-200 text-[11px] inter-bold text-gray-400 uppercase tracking-widest">
-              <th className="p-4">Customer Info</th>
-              <th className="p-4">Email Address</th>
-              <th className="p-4">Role</th>
-              <th className="p-4">Joined Date</th>
-              <th className="p-4 text-right">Actions</th>
+            <tr className="bg-gray-50 border-b border-gray-200 text-[9px] md:text-[10px] inter-bold text-gray-500 uppercase tracking-widest">
+              <th className="p-4 md:p-5 whitespace-nowrap">Customer Info</th>
+              <th className="p-4 md:p-5 whitespace-nowrap">Email Address</th>
+              <th className="p-4 md:p-5 whitespace-nowrap">Role</th>
+              <th className="p-4 md:p-5 whitespace-nowrap">Joined Date</th>
+              <th className="p-4 md:p-5 text-right whitespace-nowrap">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-xs md:text-sm">
             {customers.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-8 text-center inter-medium text-gray-500">No customers found.</td>
+                <td colSpan="5" className="p-10 md:p-16 text-center">
+                  <span className="text-3xl md:text-4xl block mb-3 opacity-50">👥</span>
+                  <p className="text-[10px] md:text-[11px] inter-bold text-gray-500 uppercase tracking-widest">No customers found.</p>
+                </td>
               </tr>
             ) : (
               customers.map((user) => (
                 <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="p-4">
-                    <p className="inter-bold text-sm text-gray-800">{user.name}</p>
-                    <p className="text-xs inter-medium text-gray-500 mt-1">ID: #{user._id.slice(-6).toUpperCase()}</p>
+                  
+                  {/* Customer Info */}
+                  <td className="p-4 md:p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 flex items-center justify-center text-[11px] md:text-xs inter-bold text-gray-600 shrink-0">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'G'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="inter-bold text-[13px] md:text-sm text-gray-900 truncate">{user.name}</p>
+                        <p className="text-[10px] md:text-[11px] inter-medium text-gray-500 mt-0.5 truncate">ID: #{user._id.slice(-6).toUpperCase()}</p>
+                      </div>
+                    </div>
                   </td>
-                  <td className="p-4">
-                    <p className="text-sm text-gray-600 inter-medium">{user.email}</p>
+                  
+                  {/* Email */}
+                  <td className="p-4 md:p-5">
+                    <p className="text-xs md:text-sm text-gray-600 inter-medium truncate">{user.email}</p>
                   </td>
-                  <td className="p-4">
-                    <span className={`text-[10px] inter-bold px-2 py-1 uppercase tracking-widest border ${
+                  
+                  {/* Role */}
+                  <td className="p-4 md:p-5">
+                    <span className={`inline-block text-[9px] md:text-[10px] inter-bold px-2 py-1 md:px-2.5 md:py-1.5 uppercase tracking-widest rounded-sm border ${
                       user.role === 'admin' 
                         ? 'bg-blue-50 text-blue-700 border-blue-200' 
                         : 'bg-gray-50 text-gray-600 border-gray-200'
@@ -160,24 +177,31 @@ const AdminCustomers = () => {
                       {user.role === 'admin' ? 'Admin' : 'Customer'}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <p className="text-sm inter-medium text-gray-600">
+                  
+                  {/* Joined Date */}
+                  <td className="p-4 md:p-5">
+                    <p className="text-[11px] md:text-xs inter-medium text-gray-600 whitespace-nowrap">
                       {new Date(user.createdAt).toLocaleDateString('en-GB', {
                         day: 'numeric', month: 'short', year: 'numeric'
                       })}
                     </p>
                   </td>
-                  <td className="p-4 text-right">
+                  
+                  {/* Actions */}
+                  <td className="p-4 md:p-5 text-right">
                     <button
                       onClick={() => handleDelete(user._id)}
                       disabled={user.role === 'admin'}
-                      className={`inter-bold text-xs uppercase tracking-wider transition-colors ${
+                      className={`inter-bold text-[10px] md:text-[11px] uppercase tracking-wider transition-colors bg-gray-50 p-2 md:p-2.5 rounded-full shadow-sm ${
                         user.role === 'admin' 
                           ? 'text-gray-300 cursor-not-allowed' 
-                          : 'text-red-600 hover:text-red-800'
+                          : 'text-red-500 hover:text-white hover:bg-red-600 cursor-pointer'
                       }`}
+                      title={user.role === 'admin' ? "Cannot delete admin" : "Delete Customer"}
                     >
-                      Delete
+                      <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                     </button>
                   </td>
                 </tr>
