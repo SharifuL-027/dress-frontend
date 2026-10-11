@@ -12,7 +12,10 @@ const AdminCategories = () => {
   const [slug, setSlug] = useState("");
   const [parent, setParent] = useState("");
   const [image, setImage] = useState("");
-  const [sortOrder, setSortOrder] = useState(0); // নতুন: পজিশন সেট করার জন্য
+  const [sortOrder, setSortOrder] = useState(0);
+  
+  // Edit State (নতুন: কোন ক্যাটাগরি এডিট হচ্ছে তা ট্র্যাক করার জন্য)
+  const [editId, setEditId] = useState(null);
 
   // ক্যাটাগরি লোড করা
   const fetchCategories = async () => {
@@ -34,11 +37,36 @@ const AdminCategories = () => {
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
-    const generatedSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    setSlug(generatedSlug);
+    
+    // যদি এডিট মোডে না থাকে, তবেই অটো স্লাগ তৈরি হবে
+    if (!editId) {
+      const generatedSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      setSlug(generatedSlug);
+    }
   };
 
-  // নতুন ক্যাটাগরি অ্যাড করা
+  // ক্যাটাগরি এডিট বাটনে ক্লিক করলে ফর্ম ফিলআপ হবে
+  const handleEdit = (category) => {
+    setEditId(category._id);
+    setName(category.name);
+    setSlug(category.slug);
+    setParent(category.parent?._id || category.parent || "");
+    setImage(category.image || "");
+    setSortOrder(category.sortOrder || 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // ক্লিক করলে পেজের উপরে চলে যাবে
+  };
+
+  // ফর্ম ক্লিয়ার করার ফাংশন
+  const resetForm = () => {
+    setEditId(null);
+    setName("");
+    setSlug("");
+    setParent("");
+    setImage("");
+    setSortOrder(0);
+  };
+
+  // নতুন ক্যাটাগরি অ্যাড বা আপডেট করা
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !slug.trim()) return toast.error("Name and Slug are required!");
@@ -50,24 +78,24 @@ const AdminCategories = () => {
         slug,
         parent: parent || null, 
         image,
-        sortOrder // নতুন: পজিশন পাঠানো হচ্ছে
+        sortOrder
       };
 
-      await api.post("/api/categories", payload);
+      if (editId) {
+        // Edit Mode: আপডেট API কল হবে
+        await api.put(`/api/categories/${editId}`, payload);
+        toast.success("Category updated successfully! ✅");
+      } else {
+        // Create Mode: নতুন তৈরি হবে
+        await api.post("/api/categories", payload);
+        toast.success("Category created successfully! 🎉");
+      }
       
-      // নতুন ডেটা লিস্টে আপডেট করা
       fetchCategories(); 
+      resetForm();
       
-      // ফর্ম ক্লিয়ার করা
-      setName("");
-      setSlug("");
-      setParent("");
-      setImage("");
-      setSortOrder(0); // রিসেট করা হলো
-      
-      toast.success("Category created successfully! 🎉");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to create category 😔");
+      toast.error(error.response?.data?.message || "Failed to save category 😔");
     } finally {
       setLoading(false);
     }
@@ -80,6 +108,7 @@ const AdminCategories = () => {
         await api.delete(`/api/categories/${id}`);
         setCategories(categories.filter((cat) => cat._id !== id));
         toast.success("Category deleted successfully! 🗑️");
+        if(editId === id) resetForm(); // এডিট করা অবস্থায় ডিলিট করলে ফর্ম ক্লিয়ার হবে
       } catch (error) {
         toast.error("Failed to delete category!");
       }
@@ -91,39 +120,59 @@ const AdminCategories = () => {
 
   if (fetchLoading) return <div className="p-8 text-center inter-bold text-gray-500 uppercase">Loading Categories...</div>;
 
-  // -------------------------------------------------------------------------
-  // টেবিল সাজানোর লজিক: মেইন ক্যাটাগরির ঠিক নিচেই তার সাব-ক্যাটাগরিগুলো দেখাবে
-  // -------------------------------------------------------------------------
+  // ================= SMART SORTING LOGIC =================
+  const sortCategoriesLogic = (cats) => {
+    return [...cats].sort((a, b) => {
+      const orderA = a.sortOrder || 0;
+      const orderB = b.sortOrder || 0;
+
+      if (orderA > 0 && orderB > 0) return orderA - orderB;
+      if (orderA > 0 && orderB === 0) return -1;
+      if (orderB > 0 && orderA === 0) return 1;
+
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+  };
+
   const mainCategories = categories.filter(cat => !cat.parent);
+  const sortedMainCategories = sortCategoriesLogic(mainCategories);
+
   const displayCategories = [];
 
-  mainCategories.forEach(main => {
-    displayCategories.push(main); // প্রথমে মেইন ক্যাটাগরি
+  sortedMainCategories.forEach(main => {
+    displayCategories.push(main); 
     
-    // এরপর এই মেইন ক্যাটাগরির আন্ডারে থাকা সব সাব-ক্যাটাগরি
     const subCats = categories.filter(cat => {
       const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
       return parentId === main._id;
     });
-    displayCategories.push(...subCats);
+
+    const sortedSubCats = sortCategoriesLogic(subCats);
+    displayCategories.push(...sortedSubCats);
   });
 
-  // যদি কোনো ক্যাটাগরি মিস হয়ে যায় (Orphan), সেগুলো শেষে যুক্ত করা
   const groupedIds = new Set(displayCategories.map(c => c._id));
   const orphans = categories.filter(c => !groupedIds.has(c._id));
-  displayCategories.push(...orphans);
-  // -------------------------------------------------------------------------
+  displayCategories.push(...sortCategoriesLogic(orphans));
+  // =======================================================
 
   return (
     <div className="w-full bg-white border border-gray-200 p-8 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-8">
       
-      {/* Left Side: Add Category Form */}
+      {/* Left Side: Add/Edit Category Form */}
       <div className="md:col-span-1 border-r border-gray-100 md:pr-8">
-        <h2 className="text-xl inter-bold text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-200 pb-4">
-          Add Category
-        </h2>
+        <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+          <h2 className="text-xl inter-bold text-gray-800 uppercase tracking-widest">
+            {editId ? "Edit Category" : "Add Category"}
+          </h2>
+          {editId && (
+            <button onClick={resetForm} className="text-[10px] inter-bold bg-gray-100 px-3 py-1 text-gray-600 hover:bg-gray-200 uppercase tracking-wider cursor-pointer">
+              Cancel Edit
+            </button>
+          )}
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          
           <div>
             <label className={labelClass}>Category Name *</label>
             <input type="text" value={name} onChange={handleNameChange} required className={inputClass} placeholder="e.g. Winter Collection" />
@@ -138,14 +187,13 @@ const AdminCategories = () => {
             <label className={labelClass}>Parent Category</label>
             <select value={parent} onChange={(e) => setParent(e.target.value)} className={inputClass}>
               <option value="">None (Main Category)</option>
-              {mainCategories.map(cat => (
-                <option key={cat._id} value={cat._id}>{cat.name}</option>
+              {sortedMainCategories.map(cat => (
+                <option key={cat._id} value={cat._id} disabled={cat._id === editId}>{cat.name}</option> // নিজে নিজের প্যারেন্ট হতে পারবে না
               ))}
             </select>
             <p className="text-[10px] inter-medium text-gray-400 mt-1">Leave empty to create a Main Category.</p>
           </div>
 
-          {/* ================= NEW FIELD: POSITION ================= */}
           <div>
             <label className={labelClass}>Display Position</label>
             <input 
@@ -156,7 +204,7 @@ const AdminCategories = () => {
               placeholder="e.g. 1" 
               min="0"
             />
-            <p className="text-[10px] inter-medium text-gray-400 mt-1">1 = First, 2 = Second. Leave 0 for default.</p>
+            <p className="text-[10px] inter-medium text-gray-400 mt-1">1 = First, 2 = Second. Leave 0 to show at top (Newest).</p>
           </div>
 
           <div>
@@ -164,8 +212,8 @@ const AdminCategories = () => {
             <input type="text" value={image} onChange={(e) => setImage(e.target.value)} className={inputClass} placeholder="https://example.com/image.jpg" />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-red-500 hover:bg-red-600 text-white inter-bold text-sm uppercase tracking-widest px-6 py-3 transition-colors mt-4 cursor-pointer shadow-sm">
-            {loading ? "Saving..." : "Create Category"}
+          <button type="submit" disabled={loading} className={`w-full text-white inter-bold text-sm uppercase tracking-widest px-6 py-3 transition-colors mt-4 cursor-pointer shadow-sm ${editId ? 'bg-black hover:bg-gray-800' : 'bg-red-500 hover:bg-red-600'}`}>
+            {loading ? "Saving..." : editId ? "Update Category" : "Create Category"}
           </button>
         </form>
       </div>
@@ -185,7 +233,7 @@ const AdminCategories = () => {
               <tr className="bg-gray-50 border-y border-gray-200 text-[11px] inter-bold text-gray-400 uppercase tracking-widest">
                 <th className="p-4">Image</th>
                 <th className="p-4">Category Name</th>
-                <th className="p-4">Position</th> {/* নতুন কলাম */}
+                <th className="p-4">Pos</th>
                 <th className="p-4">Type / Parent</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -198,9 +246,10 @@ const AdminCategories = () => {
               ) : (
                 displayCategories.map((category) => {
                   const isSub = !!category.parent; 
+                  const isEditing = editId === category._id;
                   
                   return (
-                    <tr key={category._id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isSub ? 'bg-gray-50/40' : ''}`}>
+                    <tr key={category._id} className={`border-b border-gray-100 transition-colors ${isEditing ? 'bg-blue-50/50 border-blue-200' : isSub ? 'bg-gray-50/40 hover:bg-gray-50' : 'hover:bg-gray-50'}`}>
                       <td className="p-4">
                         {category.image ? (
                           <img src={category.image} alt={category.name} className="w-10 h-10 object-cover border border-gray-200 rounded" />
@@ -217,14 +266,11 @@ const AdminCategories = () => {
                           </div>
                         </div>
                       </td>
-                      
-                      {/* ================= NEW FIELD DISPLAY: POSITION ================= */}
                       <td className="p-4">
-                        <span className="text-xs inter-bold text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                        <span className="text-[11px] inter-bold text-gray-600 bg-gray-100 border border-gray-200 px-2.5 py-1 rounded">
                           {category.sortOrder > 0 ? `#${category.sortOrder}` : '-'}
                         </span>
                       </td>
-
                       <td className="p-4">
                         {category.parent ? (
                           <span className="text-[10px] inter-bold px-2 py-1 bg-blue-50 text-blue-600 rounded uppercase tracking-wider">
@@ -237,9 +283,14 @@ const AdminCategories = () => {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <button onClick={() => handleDelete(category._id)} className="text-red-600 hover:text-red-800 inter-bold text-[11px] uppercase tracking-wider cursor-pointer">
-                          Delete
-                        </button>
+                        <div className="flex justify-end gap-3">
+                          <button onClick={() => handleEdit(category)} className="text-blue-600 hover:text-blue-800 inter-bold text-[11px] uppercase tracking-wider cursor-pointer">
+                            Edit
+                          </button>
+                          <button onClick={() => handleDelete(category._id)} className="text-red-600 hover:text-red-800 inter-bold text-[11px] uppercase tracking-wider cursor-pointer">
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

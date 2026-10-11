@@ -27,7 +27,6 @@ const Navbar = () => {
   // Mobile States
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  // নতুন স্টেট: মোবাইলের সাইডবারে কোন ক্যাটাগরি ওপেন আছে তা ট্র্যাক করার জন্য
   const [expandedCategory, setExpandedCategory] = useState(null); 
   const mobileSearchRef = useRef(null);
 
@@ -53,7 +52,7 @@ const Navbar = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsMobileSearchOpen(false);
-    setExpandedCategory(null); // পেজ চেঞ্জ হলে ড্রপডাউন বন্ধ হয়ে যাবে
+    setExpandedCategory(null);
   }, [location.pathname]);
 
   // Category & Products fetch logic
@@ -69,26 +68,51 @@ const Navbar = () => {
         const sortedProducts = productsData.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
         setNavProducts(sortedProducts);
 
-        const data = catRes.data;
-        const formattedCategories = data.reduce((acc, current) => {
-          if (!current.parent) {
-            acc.push({ ...current, subCategories: [] });
-          }
-          return acc;
-        }, []);
+        // ===============================================
+        // Categories Sorting (Smart Logic for Navbar)
+        // ===============================================
+        const rawCategories = catRes.data;
+        
+        // 1. মেইন ক্যাটাগরি ফিল্টার এবং সর্ট করা
+        let mainCategories = rawCategories
+          .filter(c => !c.parent)
+          .map(c => ({ ...c, subCategories: [] }));
+        
+        mainCategories.sort((a, b) => {
+          const orderA = a.sortOrder || 0;
+          const orderB = b.sortOrder || 0;
+          if (orderA > 0 && orderB > 0) return orderA - orderB;
+          if (orderA > 0 && orderB === 0) return -1;
+          if (orderB > 0 && orderA === 0) return 1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
-        data.forEach((item) => {
+        // 2. সাব-ক্যাটাগরিগুলোকে মেইন ক্যাটাগরির ভেতরে ঢোকানো
+        rawCategories.forEach((item) => {
           if (item.parent) {
             const parentId = typeof item.parent === 'object' ? item.parent._id : item.parent;
-            const parentIndex = formattedCategories.findIndex(
+            const parentIndex = mainCategories.findIndex(
               (cat) => cat._id.toString() === parentId.toString()
             );
             if (parentIndex > -1) {
-              formattedCategories[parentIndex].subCategories.push(item);
+              mainCategories[parentIndex].subCategories.push(item);
             }
           }
         });
-        setCategories(formattedCategories);
+
+        // 3. সাব-ক্যাটাগরিগুলোকেও পজিশন অনুযায়ী সর্ট করা
+        mainCategories.forEach(mainCat => {
+          mainCat.subCategories.sort((a, b) => {
+            const orderA = a.sortOrder || 0;
+            const orderB = b.sortOrder || 0;
+            if (orderA > 0 && orderB > 0) return orderA - orderB;
+            if (orderA > 0 && orderB === 0) return -1;
+            if (orderB > 0 && orderA === 0) return 1;
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+        });
+
+        setCategories(mainCategories);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching navbar data:", error);
@@ -159,7 +183,6 @@ const Navbar = () => {
     }`;
   };
 
-  // মোবাইল ক্যাটাগরি খোলার লজিক
   const toggleMobileCategory = (categoryId) => {
     if (expandedCategory === categoryId) {
       setExpandedCategory(null);
@@ -171,7 +194,7 @@ const Navbar = () => {
   return (
     <nav className={`sticky top-0 left-0 w-full z-[100] bg-white transition-shadow duration-300 ${isScrolled ? "shadow-md" : ""}`}>
       
-      {/* ================= TIER 1: Top Bar (Desktop Only) ================= */}
+      {/* ================= TIER 1: Top Bar ================= */}
       <div className="bg-[#cf141b] text-white text-[11px] uppercase tracking-wider py-1.5 hidden md:block">
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 flex justify-between items-center">
           <div>Welcome to DressTown</div>
@@ -186,7 +209,6 @@ const Navbar = () => {
       {/* ================= TIER 2: Main Middle Bar ================= */}
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 py-3 lg:py-5 flex justify-between items-center relative">
         
-        {/* Mobile Hamburger Menu Icon */}
         <button 
           className="lg:hidden text-gray-800 p-1"
           onClick={() => setIsMobileMenuOpen(true)}
@@ -194,7 +216,6 @@ const Navbar = () => {
           <FiMenu size={24} />
         </button>
 
-        {/* Logo */}
         <div className="shrink-0 flex-1 lg:flex-none flex justify-center lg:justify-start">
           <Link to="/">
             <img 
@@ -205,7 +226,7 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* ================= PROFESSIONAL SEARCH BAR (Desktop) ================= */}
+        {/* Search Desktop */}
         <div className="hidden lg:flex flex-1 max-w-xl mx-10 relative" ref={searchRef}>
           <form onSubmit={handleSearchSubmit} className="w-full relative">
             <input 
@@ -221,7 +242,6 @@ const Navbar = () => {
             </button>
           </form>
 
-          {/* Desktop Live Search Dropdown Panel */}
           {showSearchDropdown && (
             <div className="absolute top-[110%] left-0 w-full bg-white border border-gray-200 shadow-xl rounded-b-md overflow-hidden z-50">
               {isSearching ? (
@@ -263,10 +283,9 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Right Side Icons (Desktop + Mobile Search Icon) */}
+        {/* Right Side Icons */}
         <div className="flex items-center space-x-4 md:space-x-6 text-gray-800 shrink-0">
           
-          {/* Mobile Search Icon */}
           <button 
             className="lg:hidden p-1 text-gray-800"
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
@@ -274,7 +293,6 @@ const Navbar = () => {
             <FiSearch size={22} />
           </button>
 
-          {/* Profile Dropdown (Desktop Only) */}
           <div className="relative group cursor-pointer h-full hidden lg:flex items-center">
             <div className={`flex items-center space-x-1.5 transition-colors py-2 ${location.pathname.includes('/profile') ? "text-red-600" : "hover:text-red-600"}`}>
               <FiUser size={22} />
@@ -306,7 +324,6 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Wishlist (Desktop Only) */}
           <Link to="/wishlist" className="group py-2 hidden lg:flex">
             <div className={`flex items-center space-x-1.5 transition-colors ${location.pathname === '/wishlist' ? "text-red-600" : "hover:text-red-600"}`}>
               <div className="relative">
@@ -321,7 +338,6 @@ const Navbar = () => {
             </div>
           </Link>
 
-          {/* Cart Icon (Visible on Desktop, hidden on mobile because of bottom nav) */}
           <button onClick={openCart} className="group hidden lg:flex items-center space-x-1.5 hover:text-red-600 transition-colors cursor-pointer py-2">
             <div className="relative">
               <FiShoppingCart size={22} />
@@ -335,7 +351,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ================= MOBILE EXPANDABLE SEARCH BAR ================= */}
+      {/* ================= MOBILE EXPANDABLE SEARCH ================= */}
       <div 
         ref={mobileSearchRef}
         className={`lg:hidden w-full bg-gray-50 border-b border-gray-200 transition-all duration-300 overflow-hidden ${isMobileSearchOpen ? "max-h-[60vh] opacity-100" : "max-h-0 opacity-0 border-none"}`}
@@ -355,7 +371,6 @@ const Navbar = () => {
             </button>
           </form>
 
-          {/* Mobile Search Results */}
           {searchTerm.length > 1 && (
             <div className="mt-2 bg-white border border-gray-200 rounded-sm shadow-sm max-h-[40vh] overflow-y-auto">
               {isSearching ? (
@@ -387,7 +402,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ================= TIER 3: Bottom Navigation with MEGA MENU (Desktop Only) ================= */}
+      {/* ================= MEGA MENU (Desktop) ================= */}
       <div className="hidden lg:block border-t border-b border-gray-100 bg-white">
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 relative">
           
@@ -415,11 +430,9 @@ const Navbar = () => {
                       <div className={getNavStyle(catPath)}>{category.name}</div>
                     </Link>
 
-                    {/* Desktop MEGA MENU */}
                     {hasMegaMenu && (
                       <div className="absolute top-[100%] left-1/2 -translate-x-1/2 w-[450px] bg-white border border-gray-100 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-sm z-50 p-6 flex gap-6 cursor-default">
                         
-                        {/* Subcategories */}
                         {category.subCategories.length > 0 && (
                           <div className={`${catProducts.length > 0 ? "w-1/3 border-r border-gray-100 pr-4" : "w-full"}`}>
                             <h3 className="text-[10px] inter-bold text-gray-400 uppercase tracking-widest mb-4">Categories</h3>
@@ -438,7 +451,6 @@ const Navbar = () => {
                           </div>
                         )}
 
-                        {/* Featured Products */}
                         {catProducts.length > 0 && (
                           <div className={`${category.subCategories.length > 0 ? "w-2/3" : "w-full"}`}>
                             <h3 className="text-[10px] inter-bold text-gray-400 uppercase tracking-widest mb-4">Featured in {category.name}</h3>
@@ -466,7 +478,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ================= MOBILE SIDEBAR MENU (Improved Accordion) ================= */}
+      {/* ================= MOBILE SIDEBAR MENU ================= */}
       <div 
         className={`fixed inset-0 bg-black/50 z-[110] transition-opacity duration-300 lg:hidden ${isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
         onClick={() => setIsMobileMenuOpen(false)}
@@ -475,7 +487,6 @@ const Navbar = () => {
       <div 
         className={`fixed top-0 left-0 h-full w-[80%] max-w-sm bg-white z-[120] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
             <img src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1789818500/DressTown_Logo_Png_oilfhm.png" alt="Logo" className="h-8" />
@@ -485,19 +496,16 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Links */}
         <div className="flex-1 overflow-y-auto py-2">
           <ul className="flex flex-col">
             <li><Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block px-6 py-3.5 text-[11px] inter-bold uppercase tracking-widest text-gray-800 border-b border-gray-50">Home</Link></li>
             <li><Link to="/shop" onClick={() => setIsMobileMenuOpen(false)} className="block px-6 py-3.5 text-[11px] inter-bold uppercase tracking-widest text-gray-800 border-b border-gray-50">Shop All</Link></li>
             <li><Link to="/new-arrivals" onClick={() => setIsMobileMenuOpen(false)} className="block px-6 py-3.5 text-[11px] inter-bold uppercase tracking-widest text-gray-800 border-b border-gray-50">New Arrivals</Link></li>
             
-            {/* Category Header */}
             <li className="px-6 pt-6 pb-2">
               <span className="text-[10px] inter-bold uppercase tracking-[0.2em] text-gray-400">Shop by Category</span>
             </li>
 
-            {/* Smart Collapsible Categories for Mobile Sidebar */}
             {categories.map((category) => {
               const hasSub = category.subCategories.length > 0;
               const isOpen = expandedCategory === category._id;
@@ -523,7 +531,6 @@ const Navbar = () => {
                     )}
                   </div>
                   
-                  {/* Collapsed Sub-items */}
                   {hasSub && (
                     <div className={`overflow-hidden transition-all duration-300 bg-gray-50/50 ${isOpen ? "max-h-96" : "max-h-0"}`}>
                       <ul className="pl-6 pb-3 flex flex-col space-y-1">
@@ -556,7 +563,6 @@ const Navbar = () => {
           </ul>
         </div>
 
-        {/* Footer (Login / Contact) */}
         <div className="p-4 border-t border-gray-100 bg-gray-50 pb-8">
           {!user ? (
             <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-black text-white py-3.5 text-[11px] inter-bold uppercase tracking-widest mb-4">
