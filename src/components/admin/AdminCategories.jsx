@@ -12,6 +12,7 @@ const AdminCategories = () => {
   const [slug, setSlug] = useState("");
   const [parent, setParent] = useState("");
   const [image, setImage] = useState("");
+  const [sortOrder, setSortOrder] = useState(0); // নতুন: পজিশন সেট করার জন্য
 
   // ক্যাটাগরি লোড করা
   const fetchCategories = async () => {
@@ -48,7 +49,8 @@ const AdminCategories = () => {
         name,
         slug,
         parent: parent || null, 
-        image
+        image,
+        sortOrder // নতুন: পজিশন পাঠানো হচ্ছে
       };
 
       await api.post("/api/categories", payload);
@@ -61,6 +63,7 @@ const AdminCategories = () => {
       setSlug("");
       setParent("");
       setImage("");
+      setSortOrder(0); // রিসেট করা হলো
       
       toast.success("Category created successfully! 🎉");
     } catch (error) {
@@ -142,12 +145,26 @@ const AdminCategories = () => {
             <p className="text-[10px] inter-medium text-gray-400 mt-1">Leave empty to create a Main Category.</p>
           </div>
 
+          {/* ================= NEW FIELD: POSITION ================= */}
+          <div>
+            <label className={labelClass}>Display Position</label>
+            <input 
+              type="number" 
+              value={sortOrder} 
+              onChange={(e) => setSortOrder(Number(e.target.value))} 
+              className={inputClass} 
+              placeholder="e.g. 1" 
+              min="0"
+            />
+            <p className="text-[10px] inter-medium text-gray-400 mt-1">1 = First, 2 = Second. Leave 0 for default.</p>
+          </div>
+
           <div>
             <label className={labelClass}>Image URL (Optional)</label>
             <input type="text" value={image} onChange={(e) => setImage(e.target.value)} className={inputClass} placeholder="https://example.com/image.jpg" />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-red-500 hover:bg-red-600 text-white inter-bold text-sm uppercase tracking-widest px-6 py-3 transition-colors mt-4">
+          <button type="submit" disabled={loading} className="w-full bg-red-500 hover:bg-red-600 text-white inter-bold text-sm uppercase tracking-widest px-6 py-3 transition-colors mt-4 cursor-pointer shadow-sm">
             {loading ? "Saving..." : "Create Category"}
           </button>
         </form>
@@ -168,6 +185,7 @@ const AdminCategories = () => {
               <tr className="bg-gray-50 border-y border-gray-200 text-[11px] inter-bold text-gray-400 uppercase tracking-widest">
                 <th className="p-4">Image</th>
                 <th className="p-4">Category Name</th>
+                <th className="p-4">Position</th> {/* নতুন কলাম */}
                 <th className="p-4">Type / Parent</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -175,11 +193,11 @@ const AdminCategories = () => {
             <tbody>
               {displayCategories.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center inter-medium text-gray-500">No categories found.</td>
+                  <td colSpan="5" className="p-8 text-center inter-medium text-gray-500">No categories found.</td>
                 </tr>
               ) : (
                 displayCategories.map((category) => {
-                  const isSub = !!category.parent; // এটি সাব-ক্যাটাগরি কিনা চেক করা হচ্ছে
+                  const isSub = !!category.parent; 
                   
                   return (
                     <tr key={category._id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isSub ? 'bg-gray-50/40' : ''}`}>
@@ -191,7 +209,6 @@ const AdminCategories = () => {
                         )}
                       </td>
                       <td className="p-4">
-                        {/* সাব-ক্যাটাগরি হলে নামের আগে একটি বাঁকা তীর (↳) দেখাবে */}
                         <div className="flex items-center gap-2">
                           {isSub && <span className="text-gray-300 ml-2 inter-bold text-lg">↳</span>}
                           <div>
@@ -200,6 +217,14 @@ const AdminCategories = () => {
                           </div>
                         </div>
                       </td>
+                      
+                      {/* ================= NEW FIELD DISPLAY: POSITION ================= */}
+                      <td className="p-4">
+                        <span className="text-xs inter-bold text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                          {category.sortOrder > 0 ? `#${category.sortOrder}` : '-'}
+                        </span>
+                      </td>
+
                       <td className="p-4">
                         {category.parent ? (
                           <span className="text-[10px] inter-bold px-2 py-1 bg-blue-50 text-blue-600 rounded uppercase tracking-wider">
@@ -212,7 +237,7 @@ const AdminCategories = () => {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <button onClick={() => handleDelete(category._id)} className="text-red-600 hover:text-red-800 inter-bold text-[11px] uppercase tracking-wider">
+                        <button onClick={() => handleDelete(category._id)} className="text-red-600 hover:text-red-800 inter-bold text-[11px] uppercase tracking-wider cursor-pointer">
                           Delete
                         </button>
                       </td>
