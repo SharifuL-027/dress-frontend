@@ -18,7 +18,21 @@ const DynamicCategories = () => {
           api.get('/api/banners?type=Category') 
         ]);
         
-        setCategories(catRes.data);
+        // ===============================================
+        // Categories Sorting (Smart Logic for Home Page)
+        // ===============================================
+        const fetchedCategories = catRes.data;
+        const sortedCategories = fetchedCategories.sort((a, b) => {
+          const orderA = a.sortOrder || 0;
+          const orderB = b.sortOrder || 0;
+          
+          if (orderA > 0 && orderB > 0) return orderA - orderB;
+          if (orderA > 0 && orderB === 0) return -1;
+          if (orderB > 0 && orderA === 0) return 1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        setCategories(sortedCategories);
         setProducts(prodRes.data.products || prodRes.data);
         setBanners(bannerRes.data);
 
@@ -39,6 +53,7 @@ const DynamicCategories = () => {
     );
   }
 
+  // মেইন ক্যাটাগরিগুলো ফিল্টার করা
   const mainCategories = categories.filter(cat => !cat.parent);
 
   return (
@@ -78,11 +93,10 @@ const DynamicCategories = () => {
             {/* ================= PRODUCT GRID (WITH EMBEDDED BANNER) ================= */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 auto-rows-fr">
               
-              {/* ব্যানার থাকলে সেটি গ্রিডের প্রথম আইটেম হিসেবে ২ কলাম ও ২ রো এর জায়গা নেবে */}
+              {/* ব্যানার থাকলে সেটি গ্রিডের প্রথম আইটেম হিসেবে ২ কলাম ও ২ রো এর জায়গা নেবে */}
               {categoryBanner && (
                 <Link 
                   to={categoryBanner.link || `/category/${category.slug}`} 
-                  // col-span-2 এবং row-span-2 দিয়ে ৪টি প্রোডাক্টের সমান জায়গা নেওয়া হয়েছে
                   className="col-span-2 row-span-2 block w-full h-full relative overflow-hidden group rounded-xl bg-gray-50"
                 >
                   <img 
