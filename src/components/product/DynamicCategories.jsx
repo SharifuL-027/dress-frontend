@@ -57,7 +57,7 @@ const DynamicCategories = () => {
   const mainCategories = categories.filter(cat => !cat.parent);
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 md:px-8 space-y-24 mb-24 mt-20 inter-regular">
+    <div className="max-w-375 mx-auto px-4 md:px-8 space-y-24 mb-24 mt-20 inter-regular">
       {mainCategories.map(category => {
         
         const categoryProducts = products.filter(product => 

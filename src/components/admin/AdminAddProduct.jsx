@@ -33,7 +33,7 @@ const AdminAddProduct = () => {
   // =====================================
   // NEW: Variant Management State
   // =====================================
-  const [variants, setVariants] = useState([]); // [{ color: "Red", size: "M", stock: 10 }]
+  const [variants, setVariants] = useState([]); 
   const [newVariant, setNewVariant] = useState({ color: "", size: "", stock: "" });
 
   const handleAddVariant = () => {
@@ -152,10 +152,8 @@ const AdminAddProduct = () => {
 
       const generatedSlug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       
-      // Total stock হিসাব করা
       const totalStock = variants.reduce((acc, curr) => acc + curr.stock, 0);
 
-      // Color এবং Size গুলোর ইউনিক লিস্ট তৈরি করা (যাতে ডিটেইলস পেজে ফিল্টার দেখানো যায়)
       const uniqueColors = [...new Set(variants.map(v => v.color))];
       const uniqueSizes = [...new Set(variants.map(v => v.size))];
 
@@ -164,10 +162,10 @@ const AdminAddProduct = () => {
         slug: generatedSlug,
         images: uploadedImages, 
         video: uploadedVideo || undefined,
-        variants: variants,           // নতুন ভেরিয়েন্ট ডেটা
-        totalStock: totalStock,       // মোট স্টক
-        colors: uniqueColors.join(', '), // পুরোনো ফরম্যাট সাপোর্ট করার জন্য কমা দিয়ে জোড়া লাগানো
-        sizes: uniqueSizes.join(', ')    // পুরোনো ফরম্যাট সাপোর্ট করার জন্য
+        variants: variants,           
+        totalStock: totalStock,       
+        colors: uniqueColors.join(', '), 
+        sizes: uniqueSizes.join(', ')    
       };
 
       await api.post('/api/products', productData); 
@@ -187,33 +185,45 @@ const AdminAddProduct = () => {
     }
   };
 
-  const inputClass = "w-full border border-gray-300 p-3 text-sm inter-medium focus:border-red-500 focus:outline-none transition-colors bg-white";
-  const labelClass = "block text-[11px] inter-bold text-gray-400 uppercase tracking-widest mb-2";
-  const sectionTitleClass = "text-sm inter-bold text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-200 pb-2";
+  // ================= PREMIUN RESPONSIVE CLASSES =================
+  const inputClass = "w-full border border-gray-300 p-3 text-[13px] md:text-sm inter-medium focus:border-red-500 focus:outline-none transition-colors bg-white rounded-sm";
+  const labelClass = "block text-[10px] md:text-[11px] inter-bold text-gray-500 uppercase tracking-widest mb-2";
+  const sectionTitleClass = "text-sm md:text-[15px] inter-bold text-gray-900 uppercase tracking-widest mb-4 md:mb-6 border-b border-gray-200 pb-2 md:pb-3";
+  // ==============================================================
 
   return (
-    <div className="w-full max-w-5xl bg-white border border-gray-200 p-8 shadow-sm">
-      <div className="mb-8 border-b border-gray-200 pb-4">
-        <h2 className="text-2xl inter-bold text-gray-800 uppercase tracking-widest">Add New Product</h2>
-        <p className="text-sm inter-medium text-gray-500 mt-1">Fill all the required details below to list a new item.</p>
+    <div className="w-full max-w-5xl mx-auto bg-white border border-gray-200 p-5 md:p-8 shadow-sm rounded-sm mb-10">
+      
+      <div className="mb-6 md:mb-8 border-b border-gray-200 pb-4">
+        <h2 className="text-xl md:text-2xl inter-bold text-gray-900 uppercase tracking-widest">Add New Product</h2>
+        <p className="text-[11px] md:text-sm inter-medium text-gray-500 mt-1.5">Fill all the required details below to list a new item.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-10">
+      <form onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
         
         {/* --- 1. Basic Information --- */}
         <div>
           <h3 className={sectionTitleClass}>1. Basic Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2"><label className={labelClass}>Product Name *</label><input type="text" name="name" value={formData.name} onChange={handleTextChange} required className={inputClass} placeholder="e.g. Premium Cotton Panjabi" /></div>
-            <div><label className={labelClass}>Product Code / SKU *</label><input type="text" name="sku" value={formData.sku} onChange={handleTextChange} required className={inputClass} placeholder="e.g. PNJ-2026-BLK" /></div>
-            <div><label className={labelClass}>Brand</label><input type="text" name="brand" value={formData.brand} onChange={handleTextChange} className={inputClass} placeholder="e.g. DressTown Exclusives" /></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+            <div className="md:col-span-2">
+              <label className={labelClass}>Product Name *</label>
+              <input type="text" name="name" value={formData.name} onChange={handleTextChange} required className={inputClass} placeholder="e.g. Premium Cotton Panjabi" />
+            </div>
+            <div>
+              <label className={labelClass}>Product Code / SKU *</label>
+              <input type="text" name="sku" value={formData.sku} onChange={handleTextChange} required className={inputClass} placeholder="e.g. PNJ-2026-BLK" />
+            </div>
+            <div>
+              <label className={labelClass}>Brand</label>
+              <input type="text" name="brand" value={formData.brand} onChange={handleTextChange} className={inputClass} placeholder="e.g. DressTown Exclusives" />
+            </div>
           </div>
         </div>
 
         {/* --- 2. Categorization --- */}
         <div>
           <h3 className={sectionTitleClass}>2. Categorization</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
             <div>
               <label className={labelClass}>Main Category *</label>
               <select name="category" value={formData.category} onChange={handleTextChange} required className={inputClass}>
@@ -237,51 +247,74 @@ const AdminAddProduct = () => {
           </div>
         </div>
 
-        {/* --- 3. Pricing & Variants (NEW) --- */}
+        {/* --- 3. Pricing & Variants --- */}
         <div>
           <h3 className={sectionTitleClass}>3. Pricing & Inventory Variants</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div><label className={labelClass}>Regular Price (৳) *</label><input type="number" name="regularPrice" value={formData.regularPrice} onChange={handleTextChange} required className={inputClass} /></div>
-            <div><label className={labelClass}>Discount Price (৳)</label><input type="number" name="discountPrice" value={formData.discountPrice} onChange={handleTextChange} className={inputClass} placeholder="Optional" /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6 mb-6">
+            <div>
+              <label className={labelClass}>Regular Price (৳) *</label>
+              <input type="number" name="regularPrice" value={formData.regularPrice} onChange={handleTextChange} required className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Discount Price (৳)</label>
+              <input type="number" name="discountPrice" value={formData.discountPrice} onChange={handleTextChange} className={inputClass} placeholder="Optional" />
+            </div>
           </div>
 
           {/* Variant Manager */}
-          <div className="bg-gray-50 border border-gray-200 p-6">
-            <h4 className="text-[11px] inter-bold text-gray-800 uppercase tracking-widest mb-4">Add Product Variants (Color, Size & Stock)</h4>
+          <div className="bg-gray-50 border border-gray-200 p-4 md:p-6 rounded-sm">
+            <h4 className="text-[11px] md:text-xs inter-bold text-gray-800 uppercase tracking-widest mb-4 md:mb-5">Add Product Variants (Color, Size & Stock)</h4>
             
-            <div className="flex flex-wrap gap-4 items-end mb-6">
-              <div className="flex-1 min-w-[150px]"><label className={labelClass}>Color</label><input type="text" value={newVariant.color} onChange={(e) => setNewVariant({ ...newVariant, color: e.target.value })} placeholder="e.g. Black" className={inputClass} /></div>
-              <div className="flex-1 min-w-[150px]"><label className={labelClass}>Size</label><input type="text" value={newVariant.size} onChange={(e) => setNewVariant({ ...newVariant, size: e.target.value })} placeholder="e.g. M" className={inputClass} /></div>
-              <div className="flex-1 min-w-[150px]"><label className={labelClass}>Stock Qty</label><input type="number" value={newVariant.stock} onChange={(e) => setNewVariant({ ...newVariant, stock: e.target.value })} placeholder="e.g. 10" className={inputClass} /></div>
-              <button type="button" onClick={handleAddVariant} className="bg-gray-900 text-white inter-bold text-sm uppercase tracking-widest px-6 h-[46px] hover:bg-red-600 transition-colors">Add</button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end mb-6">
+              <div className="w-full">
+                <label className={labelClass}>Color</label>
+                <input type="text" value={newVariant.color} onChange={(e) => setNewVariant({ ...newVariant, color: e.target.value })} placeholder="e.g. Black" className={inputClass} />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>Size</label>
+                <input type="text" value={newVariant.size} onChange={(e) => setNewVariant({ ...newVariant, size: e.target.value })} placeholder="e.g. M" className={inputClass} />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>Stock Qty</label>
+                <input type="number" value={newVariant.stock} onChange={(e) => setNewVariant({ ...newVariant, stock: e.target.value })} placeholder="e.g. 10" className={inputClass} />
+              </div>
+              <button type="button" onClick={handleAddVariant} className="w-full bg-gray-900 text-white inter-bold text-[11px] md:text-sm uppercase tracking-widest h-[46px] hover:bg-red-600 transition-colors rounded-sm shadow-sm cursor-pointer">
+                Add Variant
+              </button>
             </div>
 
             {/* Variants Table */}
             {variants.length > 0 && (
-              <table className="w-full text-left text-sm border-collapse bg-white">
-                <thead>
-                  <tr className="bg-gray-100 uppercase text-[10px] tracking-widest text-gray-500">
-                    <th className="p-3 border border-gray-200 inter-bold">Color</th>
-                    <th className="p-3 border border-gray-200 inter-bold">Size</th>
-                    <th className="p-3 border border-gray-200 inter-bold">Stock</th>
-                    <th className="p-3 border border-gray-200 text-center inter-bold">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {variants.map((v, idx) => (
-                    <tr key={idx}>
-                      <td className="p-3 border border-gray-200 inter-bold">{v.color}</td>
-                      <td className="p-3 border border-gray-200 inter-bold">{v.size}</td>
-                      <td className="p-3 border border-gray-200 inter-bold text-red-600">{v.stock} pcs</td>
-                      <td className="p-3 border border-gray-200 text-center"><button type="button" onClick={() => handleRemoveVariant(idx)} className="text-red-500 inter-bold hover:underline">Remove</button></td>
+              <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm">
+                <table className="w-full text-left text-xs md:text-sm border-collapse bg-white min-w-[500px]">
+                  <thead>
+                    <tr className="bg-gray-100 uppercase text-[9px] md:text-[10px] tracking-widest text-gray-500">
+                      <th className="p-3 md:p-4 border-b border-gray-200 inter-bold">Color</th>
+                      <th className="p-3 md:p-4 border-b border-gray-200 inter-bold">Size</th>
+                      <th className="p-3 md:p-4 border-b border-gray-200 inter-bold">Stock</th>
+                      <th className="p-3 md:p-4 border-b border-gray-200 text-center inter-bold">Action</th>
                     </tr>
-                  ))}
-                  <tr className="bg-gray-50">
-                    <td colSpan="2" className="p-3 border border-gray-200 inter-bold text-right uppercase text-[11px] tracking-widest">Total Stock:</td>
-                    <td colSpan="2" className="p-3 border border-gray-200 inter-bold text-red-600">{variants.reduce((acc, curr) => acc + curr.stock, 0)} pcs</td>
-                  </tr>
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {variants.map((v, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                        <td className="p-3 md:p-4 border-b border-gray-100 inter-bold text-gray-800">{v.color}</td>
+                        <td className="p-3 md:p-4 border-b border-gray-100 inter-bold text-gray-800">{v.size}</td>
+                        <td className="p-3 md:p-4 border-b border-gray-100 inter-bold text-red-600">{v.stock} pcs</td>
+                        <td className="p-3 md:p-4 border-b border-gray-100 text-center">
+                          <button type="button" onClick={() => handleRemoveVariant(idx)} className="text-[10px] md:text-[11px] uppercase tracking-widest text-red-500 inter-bold hover:text-red-700 cursor-pointer">
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-red-50/30">
+                      <td colSpan="2" className="p-3 md:p-4 border-t border-gray-200 inter-bold text-right uppercase text-[10px] md:text-[11px] tracking-widest text-gray-600">Total Stock:</td>
+                      <td colSpan="2" className="p-3 md:p-4 border-t border-gray-200 inter-bold text-red-600 text-[13px] md:text-sm">{variants.reduce((acc, curr) => acc + curr.stock, 0)} pcs</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
@@ -289,7 +322,7 @@ const AdminAddProduct = () => {
         {/* --- 4. Product Specifications --- */}
         <div>
           <h3 className={sectionTitleClass}>4. Specifications</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
             <div><label className={labelClass}>Fabric / Material</label><input type="text" name="fabric" value={formData.fabric} onChange={handleTextChange} className={inputClass} placeholder="e.g. 100% Cotton" /></div>
             <div><label className={labelClass}>GSM</label><input type="text" name="gsm" value={formData.gsm} onChange={handleTextChange} className={inputClass} placeholder="e.g. 160 GSM" /></div>
             <div><label className={labelClass}>Fit Type</label><input type="text" name="fitType" value={formData.fitType} onChange={handleTextChange} className={inputClass} placeholder="e.g. Slim Fit, Regular" /></div>
@@ -302,10 +335,16 @@ const AdminAddProduct = () => {
         {/* --- 5. Detailed Description --- */}
         <div>
           <h3 className={sectionTitleClass}>5. Details & Policies</h3>
-          <div className="space-y-6">
-            <div><label className={labelClass}>Product Description</label><textarea name="description" value={formData.description} onChange={handleTextChange} rows="3" className={inputClass}></textarea></div>
-            <div><label className={labelClass}>Key Features (Bullet points)</label><textarea name="keyFeatures" value={formData.keyFeatures} onChange={handleTextChange} rows="3" className={inputClass} placeholder="- 100% Export Quality&#10;- Color Guarantee"></textarea></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-5 md:space-y-6">
+            <div>
+              <label className={labelClass}>Product Description</label>
+              <textarea name="description" value={formData.description} onChange={handleTextChange} rows="3" className={inputClass}></textarea>
+            </div>
+            <div>
+              <label className={labelClass}>Key Features (Bullet points)</label>
+              <textarea name="keyFeatures" value={formData.keyFeatures} onChange={handleTextChange} rows="3" className={inputClass} placeholder="- 100% Export Quality&#10;- Color Guarantee"></textarea>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
               <div><label className={labelClass}>Size Chart Info</label><textarea name="sizeChart" value={formData.sizeChart} onChange={handleTextChange} rows="2" className={inputClass} placeholder="M: Chest 38, Length 28..."></textarea></div>
               <div><label className={labelClass}>Washing Instructions</label><textarea name="washingInstructions" value={formData.washingInstructions} onChange={handleTextChange} rows="2" className={inputClass}></textarea></div>
               <div><label className={labelClass}>Delivery Information</label><textarea name="deliveryInfo" value={formData.deliveryInfo} onChange={handleTextChange} rows="2" className={inputClass}></textarea></div>
@@ -317,32 +356,35 @@ const AdminAddProduct = () => {
         {/* --- 6. Media Upload --- */}
         <div>
           <h3 className={sectionTitleClass}>6. Product Media</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="border border-gray-300 p-6 bg-gray-50 text-center relative group hover:border-red-500 transition-colors">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <div className="border-2 border-dashed border-gray-300 p-6 bg-gray-50 text-center relative group hover:border-red-500 hover:bg-red-50/20 transition-all rounded-sm cursor-pointer">
               <input type="file" accept="image/*" multiple onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
               <div className="flex flex-col items-center justify-center gap-2">
                 <span className="text-3xl">📸</span>
-                <p className="text-sm inter-bold text-gray-700">Upload Images *</p>
-                <p className="text-[11px] inter-medium text-gray-400 uppercase tracking-wider">Min 1, Max 6 Images</p>
+                <p className="text-[13px] md:text-sm inter-bold text-gray-700">Upload Images *</p>
+                <p className="text-[10px] md:text-[11px] inter-medium text-gray-400 uppercase tracking-wider">Min 1, Max 6 Images</p>
               </div>
             </div>
-            <div className="border border-gray-300 p-6 bg-gray-50 text-center relative group hover:border-red-500 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 p-6 bg-gray-50 text-center relative group hover:border-red-500 hover:bg-red-50/20 transition-all rounded-sm cursor-pointer">
               <input type="file" accept="video/*" onChange={handleVideoChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
               <div className="flex flex-col items-center justify-center gap-2">
                 <span className="text-3xl">🎥</span>
-                <p className="text-sm inter-bold text-gray-700">{video ? video.name : "Upload Video"}</p>
-                <p className="text-[11px] inter-medium text-gray-400 uppercase tracking-wider">Optional, Max 1 File</p>
+                <p className="text-[13px] md:text-sm inter-bold text-gray-700 truncate w-full px-4">{video ? video.name : "Upload Video"}</p>
+                <p className="text-[10px] md:text-[11px] inter-medium text-gray-400 uppercase tracking-wider">Optional, Max 1 File</p>
               </div>
             </div>
           </div>
+          
           {imagePreviews.length > 0 && (
-            <div className="mt-6">
-              <p className="text-[11px] inter-bold text-gray-400 uppercase tracking-widest mb-3">Selected Images ({imagePreviews.length}/6)</p>
+            <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-sm">
+              <p className="text-[10px] md:text-[11px] inter-bold text-gray-500 uppercase tracking-widest mb-4">Selected Images ({imagePreviews.length}/6)</p>
               <div className="flex flex-wrap gap-4">
                 {imagePreviews.map((src, index) => (
-                  <div key={index} className="relative w-24 h-24 border border-gray-200 group">
+                  <div key={index} className="relative w-20 h-24 md:w-24 md:h-28 border border-gray-200 group rounded-sm overflow-hidden shadow-sm">
                     <img src={src} alt="Preview" className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => removeImage(index)} className="absolute top-0 right-0 bg-red-500 text-white w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs inter-bold">X</button>
+                    <button type="button" onClick={() => removeImage(index)} className="absolute top-1 right-1 bg-red-600/90 hover:bg-red-700 text-white w-6 h-6 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-[10px] inter-bold rounded-sm cursor-pointer shadow-md">
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>
@@ -351,8 +393,8 @@ const AdminAddProduct = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="pt-8 mt-8 border-t border-gray-200 flex gap-4">
-          <button type="submit" disabled={loading} className="bg-red-500 hover:bg-red-600 text-white inter-bold text-sm uppercase tracking-widest px-8 py-4 w-full md:w-auto transition-colors">
+        <div className="pt-6 md:pt-8 mt-6 md:mt-8 border-t border-gray-200 flex justify-end">
+          <button type="submit" disabled={loading} className="bg-red-600 hover:bg-red-700 text-white inter-bold text-xs md:text-sm uppercase tracking-widest px-8 py-4 w-full md:w-auto transition-colors shadow-md rounded-sm cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed">
             {loading ? "Publishing Product..." : "Publish Product"}
           </button>
         </div>

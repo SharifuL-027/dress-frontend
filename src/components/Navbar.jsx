@@ -196,7 +196,7 @@ const Navbar = () => {
       
       {/* ================= TIER 1: Top Bar ================= */}
       <div className="bg-[#cf141b] text-white text-[11px] uppercase tracking-wider py-1.5 hidden md:block">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-8 flex justify-between items-center">
+        <div className="max-w-375 mx-auto px-4 md:px-8 flex justify-between items-center">
           <div>Welcome to DressTown</div>
           <div className="flex space-x-6">
             <Link to={user ? "/my-orders" : "/track-order"} className="hover:text-gray-300 transition-colors">Track Order</Link>
@@ -207,7 +207,7 @@ const Navbar = () => {
       </div>
 
       {/* ================= TIER 2: Main Middle Bar ================= */}
-      <div className="max-w-[1500px] mx-auto px-4 md:px-8 py-3 lg:py-5 flex justify-between items-center relative">
+      <div className="max-w-375 mx-auto px-4 md:px-8 py-3 lg:py-5 flex justify-between items-center relative">
         
         <button 
           className="lg:hidden text-gray-800 p-1"
@@ -221,7 +221,7 @@ const Navbar = () => {
             <img 
               src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1789818500/DressTown_Logo_Png_oilfhm.png" 
               alt="DressTown Logo" 
-              className="h-8 md:h-12 w-auto object-contain" 
+              className="h-12 md:h-12 w-auto object-contain" 
             />
           </Link>
         </div>
@@ -252,7 +252,7 @@ const Navbar = () => {
                     <span className="text-[10px] inter-bold uppercase tracking-widest text-gray-500">Products</span>
                     <span className="text-[10px] inter-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">{searchResults.length} Found</span>
                   </div>
-                  <ul className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                  <ul className="max-h-87.5 overflow-y-auto custom-scrollbar">
                     {searchResults.map((product) => (
                       <li key={product._id} className="border-b border-gray-100 last:border-b-0">
                         <button onClick={() => handleResultClick(product._id)} className="w-full text-left flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors cursor-pointer group">
@@ -563,20 +563,34 @@ const Navbar = () => {
           </ul>
         </div>
 
+        {/* Footer (Login / Contact / Admin) */}
         <div className="p-4 border-t border-gray-100 bg-gray-50 pb-8">
+          
+          {/* Admin Panel Button (Sudhumatro Admin der jonno) */}
+          {user?.role === 'admin' && (
+            <Link 
+              to="/admin/dashboard" 
+              onClick={() => setIsMobileMenuOpen(false)} 
+              className="flex items-center justify-center gap-2 w-full bg-red-600 hover:bg-red-700 text-white py-3.5 text-[11px] inter-bold uppercase tracking-widest mb-3 transition-colors shadow-sm"
+            >
+              Admin Panel
+            </Link>
+          )}
+
           {!user ? (
-            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-black text-white py-3.5 text-[11px] inter-bold uppercase tracking-widest mb-4">
+            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-black text-white py-3.5 text-[11px] inter-bold uppercase tracking-widest mb-4 hover:bg-gray-800 transition-colors">
               <FiUser /> Sign In / Register
             </Link>
           ) : (
-            <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-black text-white py-3.5 text-[11px] inter-bold uppercase tracking-widest mb-4">
+            <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full bg-black text-white py-3.5 text-[11px] inter-bold uppercase tracking-widest mb-4 hover:bg-gray-800 transition-colors">
               <FiUser /> My Account
             </Link>
           )}
+          
           <div className="flex gap-4 justify-center">
-            <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-[10px] inter-bold uppercase text-gray-500 hover:text-red-600">Contact Us</Link>
+            <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-[10px] inter-bold uppercase text-gray-500 hover:text-red-600 transition-colors">Contact Us</Link>
             <span className="text-gray-300">|</span>
-            <Link to="/store-location" onClick={() => setIsMobileMenuOpen(false)} className="text-[10px] inter-bold uppercase text-gray-500 hover:text-red-600">Store Locator</Link>
+            <Link to="/store-location" onClick={() => setIsMobileMenuOpen(false)} className="text-[10px] inter-bold uppercase text-gray-500 hover:text-red-600 transition-colors">Store Locator</Link>
           </div>
         </div>
       </div>
