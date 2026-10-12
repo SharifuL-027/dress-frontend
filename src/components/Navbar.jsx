@@ -221,7 +221,7 @@ const Navbar = () => {
             <img 
               src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1789818500/DressTown_Logo_Png_oilfhm.png" 
               alt="DressTown Logo" 
-              className="h-12 md:h-12 w-auto object-contain" 
+              className="h-12 md:h-16 w-auto object-contain" 
             />
           </Link>
         </div>
