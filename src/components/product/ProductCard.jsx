@@ -57,7 +57,7 @@ const ProductCard = ({ product }) => {
   const hoverImage = product.images?.[1]?.url || mainImage;
 
   return (
-    <div className="bg-white group transition-all duration-300 hover:shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] flex flex-col relative rounded-lg md:rounded-xl overflow-hidden border border-gray-100/60">
+    <div className="bg-white group transition-all duration-300 hover:shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] flex flex-col relative rounded-none overflow-hidden border border-gray-100/60">
       
       {/* ========================================== */}
       {/* PRODUCT IMAGE SECTION */}

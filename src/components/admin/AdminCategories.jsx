@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axios";
+import axios from "axios";
 import toast from "react-hot-toast";
 
 const AdminCategories = () => {
@@ -7,17 +8,21 @@ const AdminCategories = () => {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
 
-  // ফর্ম স্টেট
+  // Form States
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [parent, setParent] = useState("");
-  const [image, setImage] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
   
+  // Image Upload States
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [existingImageUrl, setExistingImageUrl] = useState("");
+
   // Edit State
   const [editId, setEditId] = useState(null);
 
-  // ক্যাটাগরি লোড করা
+  // Fetch Categories
   const fetchCategories = async () => {
     try {
       const { data } = await api.get("/api/categories");
@@ -33,60 +38,84 @@ const AdminCategories = () => {
     fetchCategories();
   }, []);
 
-  // Name লিখলে অটোমেটিক Slug তৈরি হওয়ার ফাংশন
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
-    
-    // যদি এডিট মোডে না থাকে, তবেই অটো স্লাগ তৈরি হবে
     if (!editId) {
       const generatedSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       setSlug(generatedSlug);
     }
   };
 
-  // ক্যাটাগরি এডিট বাটনে ক্লিক করলে ফর্ম ফিলআপ হবে
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleEdit = (category) => {
     setEditId(category._id);
     setName(category.name);
     setSlug(category.slug);
     setParent(category.parent?._id || category.parent || "");
-    setImage(category.image || "");
     setSortOrder(category.sortOrder || 0);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // ক্লিক করলে পেজের উপরে চলে যাবে
+    
+    const imgUrl = category.image?.url || category.image || "";
+    setExistingImageUrl(imgUrl);
+    setImagePreview(imgUrl || null);
+    setImageFile(null);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ফর্ম ক্লিয়ার করার ফাংশন
   const resetForm = () => {
     setEditId(null);
     setName("");
     setSlug("");
     setParent("");
-    setImage("");
     setSortOrder(0);
+    setImageFile(null);
+    setImagePreview(null);
+    setExistingImageUrl("");
   };
 
-  // নতুন ক্যাটাগরি অ্যাড বা আপডেট করা
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !slug.trim()) return toast.error("Name and Slug are required!");
     
     setLoading(true);
     try {
+      let finalImageUrl = existingImageUrl;
+
+      if (imageFile) {
+        const cloudName = "wtbwxhmc"; 
+        const uploadPreset = "dresstown"; 
+
+        const imageFormData = new FormData();
+        imageFormData.append("file", imageFile);
+        imageFormData.append("upload_preset", uploadPreset);
+
+        const cloudinaryRes = await axios.post(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          imageFormData
+        );
+        finalImageUrl = cloudinaryRes.data.secure_url;
+      }
+
       const payload = {
         name,
         slug,
         parent: parent || null, 
-        image,
+        image: finalImageUrl,
         sortOrder
       };
 
       if (editId) {
-        // Edit Mode: আপডেট API কল হবে
         await api.put(`/api/categories/${editId}`, payload);
         toast.success("Category updated successfully! ✅");
       } else {
-        // Create Mode: নতুন তৈরি হবে
         await api.post("/api/categories", payload);
         toast.success("Category created successfully! 🎉");
       }
@@ -101,7 +130,7 @@ const AdminCategories = () => {
     }
   };
 
-  // ক্যাটাগরি ডিলিট করা
+  // Safe Delete (Only deletes the specific category clicked, doesn't touch products)
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
@@ -115,16 +144,14 @@ const AdminCategories = () => {
     }
   };
 
-  // ================= SMART SORTING LOGIC =================
+  // Sorting Logic for Display
   const sortCategoriesLogic = (cats) => {
     return [...cats].sort((a, b) => {
       const orderA = a.sortOrder || 0;
       const orderB = b.sortOrder || 0;
-
       if (orderA > 0 && orderB > 0) return orderA - orderB;
       if (orderA > 0 && orderB === 0) return -1;
       if (orderB > 0 && orderA === 0) return 1;
-
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
     });
   };
@@ -133,15 +160,12 @@ const AdminCategories = () => {
   const sortedMainCategories = sortCategoriesLogic(mainCategories);
 
   const displayCategories = [];
-
   sortedMainCategories.forEach(main => {
     displayCategories.push(main); 
-    
     const subCats = categories.filter(cat => {
       const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
       return parentId === main._id;
     });
-
     const sortedSubCats = sortCategoriesLogic(subCats);
     displayCategories.push(...sortedSubCats);
   });
@@ -149,12 +173,9 @@ const AdminCategories = () => {
   const groupedIds = new Set(displayCategories.map(c => c._id));
   const orphans = categories.filter(c => !groupedIds.has(c._id));
   displayCategories.push(...sortCategoriesLogic(orphans));
-  // =======================================================
 
-  // ================= PREMIUN RESPONSIVE CLASSES =================
   const inputClass = "w-full border border-gray-300 p-3 text-[13px] md:text-sm inter-medium focus:border-red-500 focus:outline-none transition-colors bg-white rounded-sm";
   const labelClass = "block text-[10px] md:text-[11px] inter-bold text-gray-500 uppercase tracking-widest mb-1.5 md:mb-2";
-  // ==============================================================
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-8 bg-gray-50/50 min-h-screen">
@@ -175,7 +196,7 @@ const AdminCategories = () => {
                 {editId ? "Edit Category" : "Add Category"}
               </h3>
               {editId && (
-                <button onClick={resetForm} className="text-[9px] md:text-[10px] inter-bold bg-gray-100 px-3 py-1.5 text-gray-600 hover:bg-gray-200 uppercase tracking-wider cursor-pointer rounded-sm">
+                <button type="button" onClick={resetForm} className="text-[9px] md:text-[10px] inter-bold bg-gray-100 px-3 py-1.5 text-gray-600 hover:bg-gray-200 uppercase tracking-wider cursor-pointer rounded-sm">
                   Cancel Edit
                 </button>
               )}
@@ -205,20 +226,31 @@ const AdminCategories = () => {
 
               <div>
                 <label className={labelClass}>Display Position</label>
-                <input 
-                  type="number" 
-                  value={sortOrder} 
-                  onChange={(e) => setSortOrder(Number(e.target.value))} 
-                  className={inputClass} 
-                  placeholder="e.g. 1" 
-                  min="0"
-                />
-                <p className="text-[9px] md:text-[10px] inter-medium text-gray-400 mt-1.5">1 = First, 2 = Second. Leave 0 to show at top (Newest).</p>
+                <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className={inputClass} placeholder="e.g. 1" min="0" />
+                <p className="text-[9px] md:text-[10px] inter-medium text-gray-400 mt-1.5">1 = First, 2 = Second. Leave 0 to show at top.</p>
               </div>
 
+              {/* IMAGE UPLOAD SECTION */}
               <div>
-                <label className={labelClass}>Image URL (Optional)</label>
-                <input type="text" value={image} onChange={(e) => setImage(e.target.value)} className={inputClass} placeholder="https://example.com/image.jpg" />
+                <label className={labelClass}>Category Image (For Sub-categories)</label>
+                <div className="border-2 border-dashed border-gray-300 p-4 md:p-6 text-center relative group hover:border-red-500 transition-colors bg-gray-50 rounded-sm cursor-pointer">
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                  
+                  {imagePreview ? (
+                    <div className="relative group/preview">
+                      <img src={imagePreview} alt="Preview" className="max-h-24 md:max-h-32 mx-auto object-contain rounded-sm" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity">
+                        <span className="text-white text-[10px] inter-bold uppercase tracking-widest border border-white px-3 py-1 rounded-sm">Change Image</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <span className="text-2xl md:text-3xl text-gray-400">🖼️</span>
+                      <p className="text-xs md:text-sm inter-bold text-gray-700">Upload Image</p>
+                      <p className="text-[9px] md:text-[10px] inter-medium text-gray-400 uppercase tracking-wider">Recommended: 1:1 Square (e.g. 800x800px)</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button 
@@ -226,7 +258,7 @@ const AdminCategories = () => {
                 disabled={loading} 
                 className={`w-full text-white inter-bold text-[10px] md:text-[11px] uppercase tracking-[0.2em] py-3.5 md:py-4 transition-colors cursor-pointer mt-2 md:mt-4 rounded-sm shadow-sm ${editId ? 'bg-black hover:bg-gray-800' : 'bg-red-600 hover:bg-red-700'}`}
               >
-                {loading ? "Saving..." : editId ? "Update Category" : "Create Category"}
+                {loading ? "Working..." : editId ? "Update Category" : "Create Category"}
               </button>
             </form>
           </div>
@@ -267,12 +299,14 @@ const AdminCategories = () => {
                       const isSub = !!category.parent; 
                       const isEditing = editId === category._id;
                       
+                      const imgUrl = category.image?.url || category.image;
+
                       return (
                         <tr key={category._id} className={`border-b border-gray-100 transition-colors ${isEditing ? 'bg-blue-50/50 border-blue-200' : isSub ? 'bg-gray-50/40 hover:bg-gray-50' : 'hover:bg-gray-50'}`}>
                           
                           <td className="p-3 md:p-4">
-                            {category.image ? (
-                              <img src={category.image} alt={category.name} className="w-8 h-8 md:w-10 md:h-10 object-cover border border-gray-200 rounded-sm" />
+                            {imgUrl ? (
+                              <img src={imgUrl} alt={category.name} className="w-8 h-8 md:w-10 md:h-10 object-cover border border-gray-200 rounded-sm" />
                             ) : (
                               <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 border border-gray-200 text-gray-400 flex items-center justify-center text-[10px] md:text-xs inter-medium rounded-sm">N/A</div>
                             )}

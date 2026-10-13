@@ -18,14 +18,10 @@ const DynamicCategories = () => {
           api.get('/api/banners?type=Category') 
         ]);
         
-        // ===============================================
-        // Categories Sorting (Smart Logic for Home Page)
-        // ===============================================
         const fetchedCategories = catRes.data;
         const sortedCategories = fetchedCategories.sort((a, b) => {
           const orderA = a.sortOrder || 0;
           const orderB = b.sortOrder || 0;
-          
           if (orderA > 0 && orderB > 0) return orderA - orderB;
           if (orderA > 0 && orderB === 0) return -1;
           if (orderB > 0 && orderA === 0) return 1;
@@ -37,7 +33,7 @@ const DynamicCategories = () => {
         setBanners(bannerRes.data);
 
       } catch (error) {
-        console.error("Failed to load category products and banners", error);
+        console.error("Failed to load data", error);
       } finally {
         setLoading(false);
       }
@@ -47,90 +43,108 @@ const DynamicCategories = () => {
 
   if (loading) {
     return (
-      <div className="text-center py-20 text-gray-400 inter-bold uppercase tracking-widest animate-pulse">
-        Loading Categories...
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-red-600 rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // মেইন ক্যাটাগরিগুলো ফিল্টার করা
   const mainCategories = categories.filter(cat => !cat.parent);
 
+  const getSubCatImage = (name) => {
+    const n = name.toLowerCase();
+    if(n.includes('t-shirt') || n.includes('polo')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('pant') || n.includes('trouser') || n.includes('pajama')) return "https://images.unsplash.com/photo-1624378439575-d10c550f250f?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('kurti') || n.includes('tops')) return "https://images.unsplash.com/photo-1583391733959-b903e67c8052?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('cap') || n.includes('belt') || n.includes('wallet')) return "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=800&auto=format&fit=crop";
+    return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop";
+  };
+
   return (
-    <div className="max-w-375 mx-auto px-4 md:px-8 space-y-24 mb-24 mt-20 inter-regular">
-      {mainCategories.map(category => {
+    <div className="w-full flex flex-col gap-6 md:gap-10 pb-24">
+      {mainCategories.map((mainCategory) => {
         
+        // 1. Get exact 6 products to match Fabrilife's 5-column layout perfectly
         const categoryProducts = products.filter(product => 
-          product.category?._id === category._id || product.category === category._id
-        ).slice(0, 10); 
+          product.category?._id === mainCategory._id || product.category === mainCategory._id
+        ).slice(0, 6); 
 
-        if (categoryProducts.length === 0) return null;
+        // 2. Get Sub-categories
+        const subCategories = categories.filter(cat => {
+          const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
+          return parentId === mainCategory._id;
+        });
 
-        // এই ক্যাটাগরির জন্য ব্যানার খোঁজা
         const categoryBanner = banners.find(b => 
-          b.category?._id === category._id || b.category === category._id
+          b.category?._id === mainCategory._id || b.category === mainCategory._id
         );
+        const mainImageUrl = categoryBanner?.image?.url || mainCategory.image?.url || getSubCatImage(mainCategory.name);
+
+        if (categoryProducts.length === 0 && subCategories.length === 0) return null;
 
         return (
-          <section key={category._id} className="relative">
+          <section key={mainCategory._id} className="max-w-[1500px] mx-auto w-full px-3 md:px-6">
             
-            {/* ================= SECTION TITLE ================= */}
-            <div className="flex justify-between items-end mb-6 border-b border-gray-200 pb-3">
-              <div>
-                <h2 className="text-2xl md:text-3xl inter-bold text-gray-900 tracking-tight uppercase">
-                  {category.name}
-                </h2>
-                <div className="h-1 w-16 bg-red-600 mt-2 rounded-full"></div>
-              </div>
-              <Link 
-                to={`/category/${category.slug}`} 
-                className="text-xs md:text-sm inter-bold text-gray-500 hover:text-red-600 uppercase tracking-wider transition-colors hidden sm:block"
-              >
-                View All &rarr;
-              </Link>
-            </div>
-            
-            {/* ================= PRODUCT GRID (WITH EMBEDDED BANNER) ================= */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 auto-rows-fr">
-              
-              {/* ব্যানার থাকলে সেটি গ্রিডের প্রথম আইটেম হিসেবে ২ কলাম ও ২ রো এর জায়গা নেবে */}
-              {categoryBanner && (
-                <Link 
-                  to={categoryBanner.link || `/category/${category.slug}`} 
-                  className="col-span-2 row-span-2 block w-full h-full relative overflow-hidden group rounded-xl bg-gray-50"
-                >
-                  <img 
-                    src={categoryBanner.image.url} 
-                    alt={categoryBanner.title || category.name} 
-                    className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
-                  />
-                  {/* Subtle Dark Overlay on Hover */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500"></div>
-                  
-                  {/* Option: ব্যানারের ওপর হালকা টেক্সট দেখাতে চাইলে নিচের কোডটি রাখতে পারেন */}
-                  <div className="absolute bottom-6 left-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 hidden md:block">
-                    <span className="bg-white text-black px-4 py-2 text-[11px] inter-bold uppercase tracking-widest shadow-md">
-                      Shop {category.name} Collection
-                    </span>
-                  </div>
-                </Link>
-              )}
+            {/* ================= FABRILIFE LAYOUT 1: BIG BANNER + 6 PRODUCTS ================= */}
+            {categoryProducts.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 mb-4">
+                
+                {/* BIG BANNER (Left Side - Spans 2 Cols, Strict Portrait Ratio) */}
+                <div className="col-span-2 lg:col-span-2 row-span-1 md:row-span-2 aspect-[3/4] md:aspect-auto md:h-full">
+                  <Link 
+                    to={categoryBanner?.link || `/category/${mainCategory.slug}`} 
+                    className="block w-full h-full relative overflow-hidden group"
+                  >
+                    <img 
+                      src={mainImageUrl} 
+                      alt={mainCategory.name} 
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent"></div>
+                    <div className="absolute bottom-6 left-0 w-full text-center px-4">
+                      <h3 className="text-white inter-bold text-xl md:text-3xl uppercase drop-shadow-md">
+                        {categoryBanner?.title || mainCategory.name}
+                      </h3>
+                    </div>
+                  </Link>
+                </div>
 
-              {/* বাকি প্রোডাক্টগুলো */}
-              {categoryProducts.map(product => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-            
-            {/* Mobile View All Button */}
-            <div className="mt-6 text-center sm:hidden">
-              <Link 
-                to={`/category/${category.slug}`} 
-                className="inline-block px-6 py-3 border border-gray-300 text-xs inter-bold text-gray-700 hover:bg-gray-900 hover:text-white hover:border-gray-900 uppercase tracking-widest transition-all"
-              >
-                View All {category.name}
-              </Link>
-            </div>
+                {/* 6 PRODUCT CARDS (Right Side) */}
+                {categoryProducts.map((product) => (
+                  <div key={product._id} className="col-span-1">
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ================= FABRILIFE LAYOUT 2: SUB-CATEGORY 3-COLUMN GRID ================= */}
+            {subCategories.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-4">
+                {subCategories.map((sub) => (
+                  <Link 
+                    key={sub._id}
+                    to={`/category/${sub.slug}`}
+                    className="group relative aspect-square overflow-hidden bg-gray-100"
+                  >
+                    <img 
+                      src={sub.image?.url || sub.image || getSubCatImage(sub.name)} 
+                      alt={sub.name}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+                    {/* Dark gradient for bold white text readability */}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    {/* Big Sub-category Name */}
+                    <div className="absolute bottom-4 md:bottom-6 left-0 w-full text-center px-4">
+                      <span className="text-white inter-bold text-sm md:text-xl lg:text-2xl tracking-wide drop-shadow-md">
+                        {sub.name}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
 
           </section>
         );
