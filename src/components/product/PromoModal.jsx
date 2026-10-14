@@ -54,7 +54,7 @@ const PromoModal = () => {
 
       {/* Modal Content (উপর থেকে নিচে স্লাইড করে আসবে) */}
       <div 
-        className={`relative bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden transform transition-all duration-700 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${
+        className={`relative bg-white w-full max-w-2xl rounded-none shadow-2xl overflow-hidden transform transition-all duration-700 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${
           isOpen ? "translate-y-0 opacity-100 scale-100" : "-translate-y-full opacity-0 scale-90"
         }`}
       >

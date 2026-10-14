@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
 import api from "../../api/axios"; 
 import ProductCard from "../product/ProductCard"; 
-import { FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi"; // আইকন ইম্পোর্ট করা হলো
+import { FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi"; 
 
 const CategoryPage = () => {
   const { slug } = useParams(); 
@@ -23,12 +23,17 @@ const CategoryPage = () => {
   // Mobile Responsiveness States
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState({});
+  const [expandedSubMenu, setExpandedSubMenu] = useState({}); // For 3rd Level
 
   const toggleMenu = (id) => {
     setExpandedMenu(prev => ({ ...prev, [id]: !prev[id] }));
   };
+  
+  const toggleSubMenu = (id) => {
+    setExpandedSubMenu(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
-  // ১. Data fetch ebong sidebar structure toiri kora
+  // ১. Data fetch ebong 3-Level sidebar structure toiri kora
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -44,16 +49,24 @@ const CategoryPage = () => {
         setAllCategories(fetchedCategories);
         setAllProducts(fetchedProducts);
 
-        // Sidebar er jonno tree-structure (Main -> Sub) toiri kora
+        // Sidebar 3-Level Structure Build
         const mainCats = fetchedCategories.filter(c => !c.parent);
+        
         const structured = mainCats.map(main => {
-          return {
-            ...main,
-            subCats: fetchedCategories.filter(c => {
-              const parentId = typeof c.parent === 'object' ? c.parent?._id : c.parent;
-              return parentId === main._id;
-            })
-          };
+          const subCats = fetchedCategories.filter(c => {
+            const parentId = typeof c.parent === 'object' ? c.parent?._id : c.parent;
+            return parentId === main._id;
+          });
+
+          const subCatsWithSubSubs = subCats.map(sub => {
+            const subSubCats = fetchedCategories.filter(c => {
+               const parentId = typeof c.parent === 'object' ? c.parent?._id : c.parent;
+               return parentId === sub._id;
+            });
+            return { ...sub, subSubCats };
+          });
+
+          return { ...main, subCats: subCatsWithSubSubs };
         });
         
         setStructuredCategories(structured);
@@ -66,21 +79,42 @@ const CategoryPage = () => {
     fetchData();
   }, []);
 
-  // ২. Filtering ebong sorting logic
+  // ২. 3-Level Filtering ebong sorting logic
   useEffect(() => {
     if (allCategories.length === 0 || allProducts.length === 0) return;
 
     let result = [...allProducts];
 
-    // ক) URL Slug onujayi Category Filter Kora
+    // ক) URL Slug onujayi Category Filter Kora (3-Level Logic)
     const activeCat = allCategories.find(c => c.slug === slug);
     setCurrentCategory(activeCat || null);
 
     if (activeCat) {
+      let allowedIds = [activeCat._id];
+      
+      // Find all child categories recursively (Sub and Sub-Subs)
+      const getChildrenIds = (parentId) => {
+         let childrenIds = [];
+         const children = allCategories.filter(c => {
+            const pId = typeof c.parent === 'object' ? c.parent?._id : c.parent;
+            return pId === parentId;
+         });
+         
+         children.forEach(child => {
+            childrenIds.push(child._id);
+            childrenIds = [...childrenIds, ...getChildrenIds(child._id)];
+         });
+         return childrenIds;
+      };
+
+      allowedIds = [...allowedIds, ...getChildrenIds(activeCat._id)];
+
       result = result.filter(product => {
         const pCatId = typeof product.category === 'object' ? product.category?._id : product.category;
         const pSubCatId = typeof product.subCategory === 'object' ? product.subCategory?._id : product.subCategory;
-        return String(pCatId) === String(activeCat._id) || String(pSubCatId) === String(activeCat._id);
+        const pSubSubCatId = typeof product.subSubCategory === 'object' ? product.subSubCategory?._id : product.subSubCategory;
+        
+        return allowedIds.includes(pCatId) || allowedIds.includes(pSubCatId) || allowedIds.includes(pSubSubCatId);
       });
     }
 
@@ -117,7 +151,11 @@ const CategoryPage = () => {
   }, [slug, allCategories, allProducts, searchQuery, minPrice, maxPrice, sortOrder]);
 
 
-  if (loading) return <div className="h-screen flex justify-center items-center text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest">Loading Store...</div>;
+  if (loading) return (
+    <div className="h-screen flex justify-center items-center">
+      <div className="w-8 h-8 border-2 border-gray-200 border-t-red-600 rounded-full animate-spin"></div>
+    </div>
+  );
 
   return (
     <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-6 md:mt-24 mb-20 font-sans">
@@ -126,7 +164,7 @@ const CategoryPage = () => {
       <div className="mb-4 md:mb-6 text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest flex flex-wrap items-center gap-2">
         <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
         <span>/</span>
-        <span className="text-gray-600">Shop</span>
+        <Link to="/shop" className="hover:text-gray-900 transition-colors">Shop</Link>
         <span>/</span>
         <span className="text-gray-900 truncate max-w-[150px] md:max-w-none">{currentCategory ? currentCategory.name : 'All Products'}</span>
       </div>
@@ -142,26 +180,33 @@ const CategoryPage = () => {
 
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
         
-        {/* ---------------- LEFT SIDEBAR (Categories Tree) ---------------- */}
-        <div className={`w-full lg:w-65 shrink-0 transition-all duration-300 ease-in-out origin-top ${isMobileSidebarOpen ? "block mb-4" : "hidden lg:block"}`}>
+        {/* ---------------- LEFT SIDEBAR (3-Level Categories Tree) ---------------- */}
+        <div className={`w-full lg:w-[260px] shrink-0 transition-all duration-300 ease-in-out origin-top ${isMobileSidebarOpen ? "block mb-4" : "hidden lg:block"}`}>
           <div className="sticky top-24 bg-white border border-gray-200 p-5 md:p-6 shadow-sm rounded-sm">
             <h3 className="text-[11px] md:text-sm font-extrabold text-gray-900 uppercase tracking-widest mb-4 md:mb-6 border-b border-gray-200 pb-3">
               Categories
             </h3>
             
-            <div className="space-y-4">
+            <div className="space-y-2">
               {structuredCategories.map(mainCat => {
                 const isActiveMain = slug === mainCat.slug;
                 const hasSub = mainCat.subCats && mainCat.subCats.length > 0;
-                const isOpen = expandedMenu[mainCat._id] || isActiveMain; // Active থাকলে বাই-ডিফল্ট ওপেন থাকবে
+                
+                // Automatically open if any of its children is active
+                const isChildActive = mainCat.subCats.some(sub => 
+                  sub.slug === slug || (sub.subSubCats && sub.subSubCats.some(subSub => subSub.slug === slug))
+                );
+                
+                const isOpen = expandedMenu[mainCat._id] || isActiveMain || isChildActive; 
                 
                 return (
-                  <div key={mainCat._id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+                  <div key={mainCat._id} className="pb-1 border-b border-gray-50 last:border-0 last:pb-0">
                     
-                    <div className="flex justify-between items-center">
+                    {/* Level 1: Main Category */}
+                    <div className="flex justify-between items-center py-2">
                       <Link 
                         to={`/category/${mainCat.slug}`} 
-                        onClick={() => setIsMobileSidebarOpen(false)} // ক্লিক করলে মোবাইলে মেনু বন্ধ হবে
+                        onClick={() => setIsMobileSidebarOpen(false)} 
                         className={`flex-1 text-[11px] md:text-xs font-extrabold uppercase tracking-widest transition-colors ${
                           isActiveMain ? 'text-red-600' : 'text-gray-900 hover:text-red-600'
                         }`}
@@ -172,36 +217,76 @@ const CategoryPage = () => {
                       {hasSub && (
                         <button 
                           onClick={() => toggleMenu(mainCat._id)} 
-                          className="p-2 -mr-2 text-gray-400 hover:text-gray-900 transition-colors"
+                          className="p-1 -mr-1 text-gray-400 hover:text-gray-900 transition-colors"
                         >
                           {isOpen ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
                         </button>
                       )}
                     </div>
                     
-                    {/* Sub Categories (Collapsible) */}
+                    {/* Level 2: Sub Categories (Collapsible) */}
                     {hasSub && (
-                      <ul className={`pl-4 border-l-2 border-gray-100 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 mt-2 space-y-2.5' : 'max-h-0'}`}>
-                        {mainCat.subCats.map(subCat => {
-                          const isActiveSub = slug === subCat.slug;
-                          return (
-                            <li key={subCat._id}>
-                              <Link 
-                                to={`/category/${subCat.slug}`} 
-                                onClick={() => setIsMobileSidebarOpen(false)}
-                                className={`block text-[10px] md:text-[11px] font-bold uppercase tracking-wider transition-all relative ${
-                                  isActiveSub 
-                                    ? 'text-gray-900 translate-x-1' 
-                                    : 'text-gray-500 hover:text-gray-900 hover:translate-x-1'
-                                }`}
-                              >
-                                {isActiveSub && <span className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-600 rounded-full"></span>}
-                                {subCat.name}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-auto opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <ul className="pl-4 mt-1 space-y-2 pb-3 border-l-2 border-gray-100">
+                          {mainCat.subCats.map(subCat => {
+                            const isActiveSub = slug === subCat.slug;
+                            const hasSubSub = subCat.subSubCats && subCat.subSubCats.length > 0;
+                            
+                            const isSubChildActive = subCat.subSubCats?.some(subSub => subSub.slug === slug);
+                            const isSubOpen = expandedSubMenu[subCat._id] || isActiveSub || isSubChildActive;
+
+                            return (
+                              <li key={subCat._id}>
+                                <div className="flex justify-between items-center">
+                                  <Link 
+                                    to={`/category/${subCat.slug}`} 
+                                    onClick={() => !hasSubSub && setIsMobileSidebarOpen(false)}
+                                    className={`flex-1 block text-[10px] md:text-[11px] font-bold uppercase tracking-wider transition-all relative ${
+                                      isActiveSub 
+                                        ? 'text-red-600 translate-x-1' 
+                                        : 'text-gray-500 hover:text-gray-900 hover:translate-x-1'
+                                    }`}
+                                  >
+                                    {isActiveSub && <span className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-600 rounded-full"></span>}
+                                    {subCat.name}
+                                  </Link>
+
+                                  {hasSubSub && (
+                                    <button 
+                                      onClick={() => toggleSubMenu(subCat._id)} 
+                                      className="p-1 -mr-1 text-gray-300 hover:text-red-600 transition-colors"
+                                    >
+                                      {isSubOpen ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Level 3: Sub-Sub Categories */}
+                                {hasSubSub && isSubOpen && (
+                                   <ul className="pl-4 mt-2 space-y-2 mb-2 border-l border-gray-100">
+                                      {subCat.subSubCats.map(subSubCat => {
+                                         const isActiveSubSub = slug === subSubCat.slug;
+                                         return (
+                                           <li key={subSubCat._id}>
+                                              <Link 
+                                                to={`/category/${subSubCat.slug}`} 
+                                                onClick={() => setIsMobileSidebarOpen(false)}
+                                                className={`block text-[9px] md:text-[10px] font-medium uppercase tracking-wider transition-all ${
+                                                  isActiveSubSub ? 'text-red-600 font-bold' : 'text-gray-400 hover:text-gray-700'
+                                                }`}
+                                              >
+                                                - {subSubCat.name}
+                                              </Link>
+                                           </li>
+                                         )
+                                      })}
+                                   </ul>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
                     )}
                   </div>
                 );

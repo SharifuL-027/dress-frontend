@@ -12,6 +12,7 @@ const AdminAddProduct = () => {
     sku: "",
     category: "", 
     subCategory: "", 
+    subSubCategory: "", // NEW FIELD FOR 3-LEVEL CATEGORY
     gender: "Unisex",
     brand: "",
     regularPrice: "",
@@ -31,7 +32,7 @@ const AdminAddProduct = () => {
   });
 
   // =====================================
-  // NEW: Variant Management State
+  // Variant Management State
   // =====================================
   const [variants, setVariants] = useState([]); 
   const [newVariant, setNewVariant] = useState({ color: "", size: "", stock: "" });
@@ -42,7 +43,6 @@ const AdminAddProduct = () => {
       return;
     }
     
-    // চেক করা যে এই কালার-সাইজ কম্বিনেশন আগে থেকেই আছে কিনা
     const exists = variants.find(v => v.color.toLowerCase() === newVariant.color.toLowerCase() && v.size.toLowerCase() === newVariant.size.toLowerCase());
     if (exists) {
       toast.error("This color and size combination already exists.");
@@ -50,7 +50,7 @@ const AdminAddProduct = () => {
     }
 
     setVariants([...variants, { ...newVariant, stock: Number(newVariant.stock) }]);
-    setNewVariant({ color: "", size: "", stock: "" }); // ইনপুট ক্লিয়ার
+    setNewVariant({ color: "", size: "", stock: "" }); 
   };
 
   const handleRemoveVariant = (indexToRemove) => {
@@ -74,18 +74,30 @@ const AdminAddProduct = () => {
     fetchCategories();
   }, []);
 
+  // 1. Get Main Categories
   const mainCategories = categories.filter(cat => !cat.parent);
   
+  // 2. Get Sub Categories based on selected Main Category
   const availableSubCategories = categories.filter(cat => {
     if (!cat.parent || !formData.category) return false;
-    const parentId = cat.parent._id ? cat.parent._id : cat.parent;
+    const parentId = typeof cat.parent === 'object' ? cat.parent._id : cat.parent;
     return String(parentId) === String(formData.category);
+  });
+
+  // 3. Get Sub-Sub Categories based on selected Sub Category
+  const availableSubSubCategories = categories.filter(cat => {
+    if (!cat.parent || !formData.subCategory) return false;
+    const parentId = typeof cat.parent === 'object' ? cat.parent._id : cat.parent;
+    return String(parentId) === String(formData.subCategory);
   });
 
   const handleTextChange = (e) => {
     const { name, value } = e.target;
+    
     if (name === "category") {
-      setFormData(prev => ({ ...prev, category: value, subCategory: "" }));
+      setFormData(prev => ({ ...prev, category: value, subCategory: "", subSubCategory: "" }));
+    } else if (name === "subCategory") {
+      setFormData(prev => ({ ...prev, subCategory: value, subSubCategory: "" }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -123,6 +135,7 @@ const AdminAddProduct = () => {
       toast.error("Please add at least 1 product variant (Color/Size/Stock).");
       return;
     }
+    if(!formData.category) return toast.error("Main Category is required.");
 
     setLoading(true);
 
@@ -153,16 +166,16 @@ const AdminAddProduct = () => {
       const generatedSlug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
       
       const totalStock = variants.reduce((acc, curr) => acc + curr.stock, 0);
-
       const uniqueColors = [...new Set(variants.map(v => v.color))];
       const uniqueSizes = [...new Set(variants.map(v => v.size))];
 
+      // Final Product Payload for 3-Level
       const productData = {
         ...formData,
         slug: generatedSlug,
         images: uploadedImages, 
         video: uploadedVideo || undefined,
-        variants: variants,           
+        variants: variants,          
         totalStock: totalStock,       
         colors: uniqueColors.join(', '), 
         sizes: uniqueSizes.join(', ')    
@@ -172,7 +185,7 @@ const AdminAddProduct = () => {
       
       toast.success("Product published successfully! 🎉");
       
-      setFormData({ name: "", sku: "", category: "", subCategory: "", gender: "Unisex", brand: "", regularPrice: "", discountPrice: "", fabric: "", gsm: "", fitType: "", sleeveType: "", pattern: "", description: "", keyFeatures: "", sizeChart: "", washingInstructions: "Hand wash preferred. Do not bleach.", origin: "Bangladesh", deliveryInfo: "Inside Dhaka: 2-3 Days | Outside Dhaka: 3-5 Days", returnPolicy: "7 Days Return & Exchange Policy Applicable." }); 
+      setFormData({ name: "", sku: "", category: "", subCategory: "", subSubCategory: "", gender: "Unisex", brand: "", regularPrice: "", discountPrice: "", fabric: "", gsm: "", fitType: "", sleeveType: "", pattern: "", description: "", keyFeatures: "", sizeChart: "", washingInstructions: "Hand wash preferred. Do not bleach.", origin: "Bangladesh", deliveryInfo: "Inside Dhaka: 2-3 Days | Outside Dhaka: 3-5 Days", returnPolicy: "7 Days Return & Exchange Policy Applicable." }); 
       setVariants([]);
       setImages([]);
       setImagePreviews([]);
@@ -220,22 +233,29 @@ const AdminAddProduct = () => {
           </div>
         </div>
 
-        {/* --- 2. Categorization --- */}
+        {/* --- 2. Categorization (3-Level) --- */}
         <div>
           <h3 className={sectionTitleClass}>2. Categorization</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
             <div>
               <label className={labelClass}>Main Category *</label>
               <select name="category" value={formData.category} onChange={handleTextChange} required className={inputClass}>
-                <option value="">Select Category</option>
+                <option value="">Select Main Category</option>
                 {mainCategories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
               </select>
             </div>
             <div>
               <label className={labelClass}>Subcategory</label>
-              <select name="subCategory" value={formData.subCategory} onChange={handleTextChange} className={inputClass}>
-                <option value="">{!formData.category ? "Select Main Category First" : availableSubCategories.length === 0 ? "No subcategories found" : "Select Subcategory"}</option>
+              <select name="subCategory" value={formData.subCategory} onChange={handleTextChange} className={inputClass} disabled={!formData.category}>
+                <option value="">{!formData.category ? "Select Main First" : availableSubCategories.length === 0 ? "No Subcategory" : "Select Subcategory"}</option>
                 {availableSubCategories.map(subCat => <option key={subCat._id} value={subCat._id}>{subCat.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Sub-Subcategory</label>
+              <select name="subSubCategory" value={formData.subSubCategory} onChange={handleTextChange} className={inputClass} disabled={!formData.subCategory}>
+                <option value="">{!formData.subCategory ? "Select Sub First" : availableSubSubCategories.length === 0 ? "No Sub-Subcategory" : "Select Sub-Subcategory"}</option>
+                {availableSubSubCategories.map(subSubCat => <option key={subSubCat._id} value={subSubCat._id}>{subSubCat.name}</option>)}
               </select>
             </div>
             <div>
