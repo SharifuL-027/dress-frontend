@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import api from "../../api/axios"; 
-import ProductCard from "./ProductCard"; 
+import ProductCard from "../product/ProductCard"; // Update path if needed
 
 const DynamicCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -51,35 +51,61 @@ const DynamicCategories = () => {
 
   const mainCategories = categories.filter(cat => !cat.parent);
 
+  // Updated with new category keywords (Winter, Ethnic, Innerwear etc.)
   const getSubCatImage = (name) => {
     const n = name.toLowerCase();
-    if(n.includes('t-shirt') || n.includes('polo')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop";
-    if(n.includes('pant') || n.includes('trouser') || n.includes('pajama')) return "https://images.unsplash.com/photo-1624378439575-d10c550f250f?q=80&w=800&auto=format&fit=crop";
-    if(n.includes('kurti') || n.includes('tops')) return "https://images.unsplash.com/photo-1583391733959-b903e67c8052?q=80&w=800&auto=format&fit=crop";
-    if(n.includes('cap') || n.includes('belt') || n.includes('wallet')) return "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('t-shirt') || n.includes('polo') || n.includes('shirt') || n.includes('top')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('pant') || n.includes('trouser') || n.includes('jeans') || n.includes('short') || n.includes('bottom') || n.includes('legging')) return "https://images.unsplash.com/photo-1624378439575-d10c550f250f?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('winter') || n.includes('hoodie') || n.includes('jacket') || n.includes('sweater') || n.includes('sweatshirt')) return "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('ethnic') || n.includes('panjabi') || n.includes('kurti') || n.includes('pajama')) return "https://images.unsplash.com/photo-1583391733959-b903e67c8052?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('innerwear') || n.includes('nightwear') || n.includes('undergarment')) return "https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=800&auto=format&fit=crop";
+    if(n.includes('boy') || n.includes('girl') || n.includes('kid')) return "https://images.unsplash.com/photo-1519238263530-99abca9665ae?q=80&w=800&auto=format&fit=crop";
+    
     return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop";
+  };
+
+  // Helper to find all sub and sub-sub categories for a main category
+  const getDescendantIds = (parentId) => {
+    let ids = [];
+    const children = categories.filter(c => {
+       const pId = typeof c.parent === 'object' ? c.parent?._id : c.parent;
+       return pId === parentId;
+    });
+    children.forEach(child => {
+       ids.push(child._id);
+       ids = [...ids, ...getDescendantIds(child._id)];
+    });
+    return ids;
   };
 
   return (
     <div className="w-full flex flex-col gap-6 md:gap-10 pb-24">
       {mainCategories.map((mainCategory) => {
         
-        // 1. Get exact 6 products to match Fabrilife's 5-column layout perfectly
-        const categoryProducts = products.filter(product => 
-          product.category?._id === mainCategory._id || product.category === mainCategory._id
-        ).slice(0, 6); 
+        // 1. 3-Level Robust Product Filtering
+        const allowedCategoryIds = [mainCategory._id, ...getDescendantIds(mainCategory._id)];
+        
+        const categoryProducts = products.filter(product => {
+          const pCatId = typeof product.category === 'object' ? product.category?._id : product.category;
+          const pSubCatId = typeof product.subCategory === 'object' ? product.subCategory?._id : product.subCategory;
+          const pSubSubCatId = typeof product.subSubCategory === 'object' ? product.subSubCategory?._id : product.subSubCategory;
+          
+          return allowedCategoryIds.includes(pCatId) || allowedCategoryIds.includes(pSubCatId) || allowedCategoryIds.includes(pSubSubCatId);
+        }).slice(0, 6); // Keep exactly 6 for layout
 
-        // 2. Get Sub-categories
+        // 2. Get ONLY Sub-categories (Level 2) for the visual grid
         const subCategories = categories.filter(cat => {
           const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
           return parentId === mainCategory._id;
         });
 
+        // 3. Setup Banner
         const categoryBanner = banners.find(b => 
           b.category?._id === mainCategory._id || b.category === mainCategory._id
         );
         const mainImageUrl = categoryBanner?.image?.url || mainCategory.image?.url || getSubCatImage(mainCategory.name);
 
+        // Hide section if no products AND no sub-categories
         if (categoryProducts.length === 0 && subCategories.length === 0) return null;
 
         return (
@@ -93,18 +119,21 @@ const DynamicCategories = () => {
                 <div className="col-span-2 lg:col-span-2 row-span-1 md:row-span-2 aspect-[3/4] md:aspect-auto md:h-full">
                   <Link 
                     to={categoryBanner?.link || `/category/${mainCategory.slug}`} 
-                    className="block w-full h-full relative overflow-hidden group"
+                    className="block w-full h-full relative overflow-hidden group rounded-sm shadow-sm"
                   >
                     <img 
                       src={mainImageUrl} 
                       alt={mainCategory.name} 
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
-                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     <div className="absolute bottom-6 left-0 w-full text-center px-4">
-                      <h3 className="text-white inter-bold text-xl md:text-3xl uppercase drop-shadow-md">
+                      <h3 className="text-white inter-bold text-2xl md:text-4xl uppercase tracking-wide drop-shadow-lg">
                         {categoryBanner?.title || mainCategory.name}
                       </h3>
+                      <span className="inline-block mt-3 text-[10px] md:text-xs inter-bold text-white uppercase tracking-widest border border-white px-4 py-1.5 hover:bg-white hover:text-black transition-colors">
+                        Explore All
+                      </span>
                     </div>
                   </Link>
                 </div>
@@ -125,7 +154,7 @@ const DynamicCategories = () => {
                   <Link 
                     key={sub._id}
                     to={`/category/${sub.slug}`}
-                    className="group relative aspect-square overflow-hidden bg-gray-100"
+                    className="group relative aspect-square overflow-hidden bg-gray-100 rounded-sm shadow-sm"
                   >
                     <img 
                       src={sub.image?.url || sub.image || getSubCatImage(sub.name)} 
@@ -135,9 +164,9 @@ const DynamicCategories = () => {
                     {/* Dark gradient for bold white text readability */}
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
                     
-                    {/* Big Sub-category Name */}
+                    {/* Sub-category Name */}
                     <div className="absolute bottom-4 md:bottom-6 left-0 w-full text-center px-4">
-                      <span className="text-white inter-bold text-sm md:text-xl lg:text-2xl tracking-wide drop-shadow-md">
+                      <span className="text-white inter-bold text-sm md:text-xl lg:text-2xl uppercase tracking-wide drop-shadow-md">
                         {sub.name}
                       </span>
                     </div>
