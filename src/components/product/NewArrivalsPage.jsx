@@ -159,7 +159,7 @@ const NewArrivalsPage = () => {
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-6 md:mt-24 mb-24 font-sans">
+    <div className="max-w-375 mx-auto px-4 md:px-8 mt-6 md:mt-24 mb-24 font-sans">
       
       {/* ---------------- PAGE HEADER ---------------- */}
       <div className="mb-6 md:mb-10 text-center mt-4 md:mt-0">
@@ -184,7 +184,7 @@ const NewArrivalsPage = () => {
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
         
         {/* ================= LEFT SIDEBAR (3-Level Categories) ================= */}
-        <div className={`w-full lg:w-[260px] shrink-0 transition-all duration-300 ease-in-out origin-top ${isMobileSidebarOpen ? "block mb-4" : "hidden lg:block"}`}>
+        <div className={`w-full lg:w-65 shrink-0 transition-all duration-300 ease-in-out origin-top ${isMobileSidebarOpen ? "block mb-4" : "hidden lg:block"}`}>
           <div className="sticky top-28 bg-white border border-gray-200 p-5 md:p-6 shadow-sm rounded-sm">
             <h3 className="text-[12px] md:text-sm font-extrabold text-gray-900 uppercase tracking-widest mb-4 md:mb-6 border-b border-gray-200 pb-3">
               Categories
