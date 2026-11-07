@@ -201,7 +201,7 @@ const Navbar = () => {
           <div className="flex space-x-6">
             <Link to={user ? "/my-orders" : "/track-order"} className="hover:text-gray-300 transition-colors">Track Order</Link>
             <Link to="/contact" className="hover:text-gray-300 transition-colors">Contact Us</Link>
-            <Link to="/store-location" className="hover:text-gray-300 transition-colors">Store Location</Link>
+          
           </div>
         </div>
       </div>
@@ -589,8 +589,7 @@ const Navbar = () => {
           
           <div className="flex gap-4 justify-center">
             <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-[10px] inter-bold uppercase text-gray-500 hover:text-red-600 transition-colors">Contact Us</Link>
-            <span className="text-gray-300">|</span>
-            <Link to="/store-location" onClick={() => setIsMobileMenuOpen(false)} className="text-[10px] inter-bold uppercase text-gray-500 hover:text-red-600 transition-colors">Store Locator</Link>
+           
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router"; 
 import api from "../../api/axios"; 
-import ProductCard from "../product/ProductCard";
+import ProductCard from "../../components/product/ProductCard";
 import { FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi"; 
 
 const Shop = () => {
@@ -22,10 +22,15 @@ const Shop = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [sortOrder, setSortOrder] = useState("default");
 
+  // Infinite Scroll States
+  const [visibleCount, setVisibleCount] = useState(20); 
+  const productsPerLoad = 20; 
+  const observerTarget = useRef(null);
+
   // Mobile Responsiveness States
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState({});
-  const [expandedSubMenu, setExpandedSubMenu] = useState({}); // For 3rd Level
+  const [expandedSubMenu, setExpandedSubMenu] = useState({});
 
   const toggleMenu = (id) => {
     setExpandedMenu(prev => ({ ...prev, [id]: !prev[id] }));
@@ -86,14 +91,12 @@ const Shop = () => {
   useEffect(() => {
     let result = [...products];
 
-    // 1. 3-Level Category Filter Logic
     if (selectedCategory !== "all") {
       const activeCat = allCategories.find(c => c.slug === selectedCategory);
       
       if (activeCat) {
         let allowedIds = [activeCat._id];
         
-        // Find all child categories recursively (Sub and Sub-Subs)
         const getChildrenIds = (parentId) => {
            let childrenIds = [];
            const children = allCategories.filter(c => {
@@ -120,7 +123,6 @@ const Shop = () => {
       }
     }
 
-    // 2. Search Query Filter
     if (searchQuery.trim() !== "") {
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,7 +131,6 @@ const Shop = () => {
       );
     }
 
-    // 3. Min Price Filter
     if (minPrice !== "") {
       result = result.filter(product => {
         const price = product.discountPrice || product.regularPrice;
@@ -137,7 +138,6 @@ const Shop = () => {
       });
     }
 
-    // 4. Max Price Filter
     if (maxPrice !== "") {
       result = result.filter(product => {
         const price = product.discountPrice || product.regularPrice;
@@ -145,7 +145,6 @@ const Shop = () => {
       });
     }
 
-    // 5. Sorting Logic
     if (sortOrder === "price-low") {
       result.sort((a, b) => (a.discountPrice || a.regularPrice) - (b.discountPrice || b.regularPrice));
     } else if (sortOrder === "price-high") {
@@ -155,7 +154,41 @@ const Shop = () => {
     }
 
     setFilteredProducts(result);
+    setVisibleCount(productsPerLoad); // Reset visible count on filter change
   }, [selectedCategory, searchQuery, minPrice, maxPrice, sortOrder, products, allCategories]);
+
+
+  // ================= INFINITE SCROLL LOGIC =================
+  const currentProducts = filteredProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProducts.length;
+
+  const handleObserver = useCallback((entries) => {
+    const target = entries[0];
+    if (target.isIntersecting && hasMore) {
+      // যখন ইউজার পেজের নিচে পৌঁছাবে, তখন আরও ২০টি লোড হবে
+      setVisibleCount((prev) => prev + productsPerLoad);
+    }
+  }, [hasMore]);
+
+  useEffect(() => {
+    const option = {
+      root: null,
+      rootMargin: "20px",
+      threshold: 0
+    };
+    const observer = new IntersectionObserver(handleObserver, option);
+    
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [handleObserver, currentProducts]);
+
 
   if (loading) {
     return (
@@ -166,15 +199,15 @@ const Shop = () => {
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-6 md:mt-24 mb-24 inter-normal">
+    <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-6 md:mt-16 mb-24 font-sans">
       
       {/* ---------------- PAGE HEADER ---------------- */}
       <div className="mb-6 md:mb-10 text-center mt-4 md:mt-0">
-        <h1 className="text-2xl md:text-4xl inter-bold text-black uppercase tracking-[0.15em]">
+        <h1 className="text-2xl md:text-4xl font-extrabold text-black uppercase tracking-[0.15em]">
           Shop All Products
         </h1>
         <div className="w-16 md:w-24 h-1 bg-red-600 mx-auto mt-3 md:mt-4 mb-2 md:mb-3"></div>
-        <p className="text-[10px] md:text-xs text-gray-500 inter-normal uppercase tracking-widest">
+        <p className="text-[10px] md:text-xs text-gray-500 font-medium uppercase tracking-widest">
           Explore our complete collection
         </p>
       </div>
@@ -188,21 +221,22 @@ const Shop = () => {
         <span className="text-lg leading-none">{isMobileSidebarOpen ? "−" : "+"}</span>
       </button>
 
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
         
-        {/* ================= LEFT SIDEBAR (3-Level Categories) ================= */}
+        {/* ================= LEFT SIDEBAR ================= */}
         <div className={`w-full lg:w-[260px] shrink-0 transition-all duration-300 ease-in-out origin-top ${isMobileSidebarOpen ? "block mb-4" : "hidden lg:block"}`}>
-          <div className="sticky top-28 bg-white border border-gray-200 p-5 md:p-6 shadow-sm rounded-sm">
-            <h3 className="text-[12px] md:text-sm inter-bold text-gray-900 uppercase tracking-widest mb-4 md:mb-6 border-b border-gray-200 pb-3">
+          <div className="sticky top-24 bg-white border border-gray-200 p-5 md:p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] rounded-xl">
+            <h3 className="text-[13px] md:text-sm font-extrabold text-gray-900 uppercase tracking-widest mb-4 md:mb-6 border-b border-gray-100 pb-4">
               Categories
             </h3>
             
-            <div className="space-y-2">
-              <div className="pb-1 border-b border-gray-50">
+            <div className="space-y-1">
+              
+              <div className="pb-3 border-b border-gray-100 mb-2">
                 <button 
                   onClick={() => { setSelectedCategory("all"); setIsMobileSidebarOpen(false); }}
-                  className={`w-full text-left py-2 text-[11px] md:text-xs inter-bold uppercase tracking-widest transition-colors cursor-pointer ${
-                    selectedCategory === "all" ? 'text-red-600' : 'text-gray-800 hover:text-red-600'
+                  className={`w-full text-left py-1.5 px-2 rounded-md transition-colors cursor-pointer text-[12px] md:text-[13px] font-extrabold uppercase tracking-wide ${
+                    selectedCategory === "all" ? 'bg-red-50 text-red-600' : 'text-gray-800 hover:bg-gray-50 hover:text-red-600'
                   }`}
                 >
                   All Products
@@ -212,17 +246,20 @@ const Shop = () => {
               {structuredCategories.map(mainCat => {
                 const isActiveMain = selectedCategory === mainCat.slug;
                 const hasSub = mainCat.subCats && mainCat.subCats.length > 0;
-                const isOpen = expandedMenu[mainCat._id] || false; 
+                
+                const isChildActive = mainCat.subCats.some(sub => 
+                  sub.slug === selectedCategory || (sub.subSubCats && sub.subSubCats.some(subSub => subSub.slug === selectedCategory))
+                );
+                const isOpen = expandedMenu[mainCat._id] || isActiveMain || isChildActive; 
 
                 return (
-                  <div key={mainCat._id} className="pb-1 border-b border-gray-50 last:border-0 last:pb-0">
+                  <div key={mainCat._id} className="pb-2 border-b border-gray-50 last:border-0 last:pb-0 pt-2 first:pt-0">
                     
-                    {/* Level 1: Main Category */}
-                    <div className="flex justify-between items-center py-2">
+                    <div className="flex justify-between items-center py-1.5 hover:bg-gray-50 rounded-md px-1 transition-colors group">
                       <button 
                         onClick={() => { setSelectedCategory(mainCat.slug); !hasSub && setIsMobileSidebarOpen(false); }}
-                        className={`flex-1 text-left text-[11px] md:text-xs inter-bold uppercase tracking-widest transition-colors cursor-pointer ${
-                          isActiveMain ? 'text-red-600' : 'text-gray-900 hover:text-red-600'
+                        className={`flex-1 text-left text-[12px] md:text-[13px] font-extrabold uppercase tracking-wide transition-colors cursor-pointer ${
+                          isActiveMain ? 'text-red-600' : 'text-gray-800 group-hover:text-red-600'
                         }`}
                       >
                         {mainCat.name}
@@ -231,67 +268,69 @@ const Shop = () => {
                       {hasSub && (
                         <button 
                           onClick={() => toggleMenu(mainCat._id)} 
-                          className="p-1 -mr-1 text-gray-400 hover:text-red-600 transition-colors"
+                          className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-all cursor-pointer"
                         >
-                          {isOpen ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+                          {isOpen ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
                         </button>
                       )}
                     </div>
                     
-                    {/* Level 2: Sub Categories */}
                     {hasSub && (
-                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-auto opacity-100' : 'max-h-0 opacity-0'}`}>
-                        <ul className="pl-4 mt-1 space-y-2 pb-3 border-l-2 border-gray-100">
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-screen opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                        <ul className="pl-3 ml-1 space-y-1 pb-2 border-l-2 border-gray-100">
                           
                           {mainCat.subCats.map(subCat => {
                             const isActiveSub = selectedCategory === subCat.slug;
                             const hasSubSub = subCat.subSubCats && subCat.subSubCats.length > 0;
-                            const isSubOpen = expandedSubMenu[subCat._id] || false;
+                            
+                            const isSubChildActive = subCat.subSubCats?.some(subSub => subSub.slug === selectedCategory);
+                            const isSubOpen = expandedSubMenu[subCat._id] || isActiveSub || isSubChildActive;
 
                             return (
-                              <li key={subCat._id}>
-                                <div className="flex justify-between items-center">
+                              <li key={subCat._id} className="mt-1">
+                                <div className="flex justify-between items-center py-1 hover:bg-gray-50 rounded-md px-2 group transition-colors">
                                   <button 
                                     onClick={() => { setSelectedCategory(subCat.slug); !hasSubSub && setIsMobileSidebarOpen(false); }}
-                                    className={`flex-1 text-left block text-[10px] md:text-[11px] inter-bold uppercase tracking-wider transition-all relative ${
+                                    className={`flex-1 text-left block text-[11px] md:text-[12px] font-bold uppercase tracking-wider transition-all relative cursor-pointer ${
                                       isActiveSub 
                                         ? 'text-red-600 translate-x-1' 
-                                        : 'text-gray-500 hover:text-gray-900 hover:translate-x-1'
+                                        : 'text-gray-500 group-hover:text-gray-900 group-hover:translate-x-1'
                                     }`}
                                   >
-                                    {isActiveSub && <span className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-600 rounded-full"></span>}
+                                    {isActiveSub && <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-600 rounded-full shadow-[0_0_5px_rgba(220,38,38,0.5)]"></span>}
                                     {subCat.name}
                                   </button>
 
                                   {hasSubSub && (
                                     <button 
                                       onClick={() => toggleSubMenu(subCat._id)} 
-                                      className="p-1 -mr-1 text-gray-300 hover:text-red-600 transition-colors"
+                                      className="p-1 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                                     >
-                                      {isSubOpen ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+                                      {isSubOpen ? <FiChevronUp size={12} /> : <FiChevronDown size={12} />}
                                     </button>
                                   )}
                                 </div>
 
-                                {/* Level 3: Sub-Sub Categories */}
-                                {hasSubSub && isSubOpen && (
-                                   <ul className="pl-4 mt-2 space-y-2 mb-2 border-l border-gray-100">
-                                      {subCat.subSubCats.map(subSubCat => {
-                                         const isActiveSubSub = selectedCategory === subSubCat.slug;
-                                         return (
-                                           <li key={subSubCat._id}>
-                                              <button 
-                                                onClick={() => { setSelectedCategory(subSubCat.slug); setIsMobileSidebarOpen(false); }}
-                                                className={`w-full text-left block text-[9px] md:text-[10px] inter-medium uppercase tracking-wider transition-all ${
-                                                  isActiveSubSub ? 'text-red-600 font-bold' : 'text-gray-400 hover:text-gray-700'
-                                                }`}
-                                              >
-                                                - {subSubCat.name}
-                                              </button>
-                                           </li>
-                                         )
-                                      })}
-                                   </ul>
+                                {hasSubSub && (
+                                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-[500px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
+                                      <ul className="pl-4 ml-2 space-y-1 border-l border-gray-200">
+                                         {subCat.subSubCats.map(subSubCat => {
+                                            const isActiveSubSub = selectedCategory === subSubCat.slug;
+                                            return (
+                                              <li key={subSubCat._id}>
+                                                 <button 
+                                                   onClick={() => { setSelectedCategory(subSubCat.slug); setIsMobileSidebarOpen(false); }}
+                                                   className={`w-full text-left block py-1 text-[10px] md:text-[11px] font-semibold uppercase tracking-wider transition-all hover:pl-1 cursor-pointer ${
+                                                     isActiveSubSub ? 'text-red-600' : 'text-gray-400 hover:text-gray-800'
+                                                   }`}
+                                                 >
+                                                   <span className="mr-1 text-gray-300 opacity-50">-</span> {subSubCat.name}
+                                                 </button>
+                                              </li>
+                                            )
+                                         })}
+                                      </ul>
+                                   </div>
                                 )}
                               </li>
                             );
@@ -306,45 +345,47 @@ const Shop = () => {
           </div>
         </div>
 
-        {/* ================= RIGHT CONTENT (Filters & Products) ================= */}
-        <div className="flex-1">
+        {/* ================= RIGHT CONTENT ================= */}
+        <div className="flex-1 w-full">
           
-          <div className="bg-gray-50 border border-gray-200 p-3 md:p-4 mb-6 md:mb-8 flex flex-col md:flex-row gap-3 md:gap-4 items-center justify-between shadow-sm rounded-sm">
+          <div className="bg-white border border-gray-100 p-4 md:p-5 mb-6 md:mb-8 flex flex-col md:flex-row gap-4 items-center justify-between shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] rounded-xl">
             
-            <div className="w-full md:w-1/3 relative">
+            <div className="w-full md:w-[35%] relative">
               <input 
                 type="text" 
                 placeholder="Search products..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border border-gray-300 text-[11px] md:text-xs inter-normal text-gray-700 py-2.5 md:py-3 px-3 md:px-4 focus:outline-none focus:border-black bg-white rounded-sm"
+                className="w-full border border-gray-200 text-[11px] md:text-xs font-bold text-gray-700 py-3 px-4 focus:outline-none focus:border-gray-900 bg-gray-50/50 focus:bg-white transition-colors rounded-lg"
               />
             </div>
 
-            <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-3 md:gap-4">
-              <div className="flex items-center gap-1.5 md:gap-2">
+            <div className="w-full md:w-auto flex flex-col sm:flex-row items-center justify-between md:justify-end gap-3 md:gap-4">
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <input 
                   type="number" 
                   placeholder="Min ৳" 
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-16 md:w-24 border border-gray-300 text-[10px] md:text-xs inter-normal text-gray-700 py-2.5 md:py-3 px-1 md:px-2 focus:outline-none focus:border-black bg-white text-center rounded-sm"
+                  className="w-full sm:w-20 md:w-24 border border-gray-200 text-[11px] md:text-xs font-bold text-gray-700 py-3 px-2 focus:outline-none focus:border-gray-900 bg-gray-50/50 focus:bg-white text-center rounded-lg transition-colors"
                 />
-                <span className="text-gray-400 inter-bold">-</span>
+                <span className="text-gray-300 font-bold">-</span>
                 <input 
                   type="number" 
                   placeholder="Max ৳" 
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-16 md:w-24 border border-gray-300 text-[10px] md:text-xs inter-normal text-gray-700 py-2.5 md:py-3 px-1 md:px-2 focus:outline-none focus:border-black bg-white text-center rounded-sm"
+                  className="w-full sm:w-20 md:w-24 border border-gray-200 text-[11px] md:text-xs font-bold text-gray-700 py-3 px-2 focus:outline-none focus:border-gray-900 bg-gray-50/50 focus:bg-white text-center rounded-lg transition-colors"
                 />
               </div>
 
-              <div className="flex-1 md:w-auto">
+              <div className="w-full sm:w-[160px] md:w-[180px]">
                 <select 
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
-                  className="w-full border border-gray-300 text-[9px] md:text-[11px] inter-semibold text-gray-900 uppercase tracking-wider py-2.5 md:py-3 px-2 focus:outline-none focus:border-black bg-white cursor-pointer rounded-sm"
+                  className="w-full border border-gray-200 text-[10px] md:text-[11px] font-bold text-gray-900 uppercase tracking-wider py-3 px-3 focus:outline-none focus:border-gray-900 bg-gray-50/50 hover:bg-white cursor-pointer rounded-lg transition-colors appearance-none"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1rem' }}
                 >
                   <option value="default">Featured</option>
                   <option value="newest">New Arrivals</option>
@@ -357,30 +398,39 @@ const Shop = () => {
           </div>
 
           <div className="mb-4 md:mb-6 flex justify-between items-center text-center md:text-left">
-            <p className="text-[10px] md:text-xs inter-semibold text-gray-400 uppercase tracking-widest w-full md:w-auto">
-              Showing {filteredProducts.length} Products
+            <p className="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-widest w-full md:w-auto">
+              Showing {currentProducts.length} of {filteredProducts.length} Products
             </p>
           </div>
 
           {/* ================= PRODUCT GRID ================= */}
           {filteredProducts.length === 0 ? (
-            <div className="py-16 md:py-24 text-center border border-gray-200 bg-gray-50 flex flex-col items-center rounded-sm">
-              <span className="text-4xl md:text-5xl mb-3 md:mb-4">🔍</span>
-              <h3 className="text-base md:text-lg inter-bold text-gray-800 uppercase tracking-widest mb-2">No Products Found</h3>
-              <p className="text-[11px] md:text-sm inter-normal text-gray-500 max-w-md px-4">Try adjusting your filters or search query to find what you are looking for.</p>
+            <div className="py-20 text-center border border-gray-100 bg-white shadow-sm rounded-xl">
+              <span className="text-5xl mb-4 block opacity-50">🔍</span>
+              <h3 className="text-lg font-extrabold text-gray-800 uppercase tracking-widest mb-2">No Products Found</h3>
+              <p className="text-xs text-gray-500 max-w-md mx-auto px-4">Try adjusting your filters or search query to find what you are looking for.</p>
               <button 
                 onClick={() => { setSelectedCategory("all"); setSearchQuery(""); setMinPrice(""); setMaxPrice(""); setSortOrder("default"); }}
-                className="mt-5 md:mt-6 bg-black text-white px-5 py-2.5 md:px-6 md:py-3 text-[10px] md:text-xs inter-bold uppercase tracking-widest hover:bg-red-600 transition-colors cursor-pointer rounded-sm"
+                className="mt-6 bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition-colors cursor-pointer rounded-md shadow-md"
               >
                 Reset Filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-              {filteredProducts.map(product => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {currentProducts.map(product => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+
+              {/* Invisible Target for Intersection Observer (Infinite Scroll) */}
+              <div ref={observerTarget} className="w-full h-10 mt-8 flex items-center justify-center">
+                {hasMore && (
+                  <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
+                )}
+              </div>
+            </>
           )}
 
         </div>

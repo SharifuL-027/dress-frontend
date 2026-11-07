@@ -5,7 +5,6 @@ import toast from "react-hot-toast";
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
-  const [filteredCategories, setFilteredCategories] = useState([]); // Filtered categories store korar jonno
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
 
@@ -27,7 +26,6 @@ const AdminCategories = () => {
     try {
       const { data } = await api.get("/api/categories");
       setCategories(data);
-      setFilteredCategories(data);
     } catch (error) {
       toast.error("Failed to load categories!");
     } finally {
@@ -38,22 +36,6 @@ const AdminCategories = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
-
-  // Filtering Logic (Search by Name or Slug)
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-        setFilteredCategories(categories);
-        return;
-    }
-
-    const query = searchQuery.toLowerCase();
-    const result = categories.filter(cat => 
-        cat.name.toLowerCase().includes(query) || 
-        cat.slug.toLowerCase().includes(query)
-    );
-    setFilteredCategories(result);
-  }, [searchQuery, categories]);
-
 
   // Clean Slug Generator
   const generateCleanSlug = (text) => {
@@ -155,7 +137,7 @@ const AdminCategories = () => {
     }
   };
 
-  // 3-LEVEL LOGIC (Unchanged)
+  // 3-LEVEL LOGIC
   const sortCategoriesLogic = (cats) => {
     return [...cats].sort((a, b) => {
       const orderA = a.sortOrder || 0;
@@ -167,13 +149,13 @@ const AdminCategories = () => {
     });
   };
 
-  const mainCategories = filteredCategories.filter(cat => !cat.parent);
+  const mainCategories = categories.filter(cat => !cat.parent);
   const sortedMainCategories = sortCategoriesLogic(mainCategories);
 
   const displayCategories = [];
   sortedMainCategories.forEach(main => {
     displayCategories.push({ ...main, level: 1 }); 
-    const subCats = filteredCategories.filter(cat => {
+    const subCats = categories.filter(cat => {
       const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
       return parentId === main._id;
     });
@@ -181,7 +163,7 @@ const AdminCategories = () => {
     
     sortedSubCats.forEach(sub => {
         displayCategories.push({ ...sub, level: 2, parentName: main.name });
-        const subSubCats = filteredCategories.filter(cat => {
+        const subSubCats = categories.filter(cat => {
             const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
             return parentId === sub._id;
         });
@@ -193,15 +175,23 @@ const AdminCategories = () => {
   });
 
   const groupedIds = new Set(displayCategories.map(c => c._id));
-  const orphans = filteredCategories.filter(c => !groupedIds.has(c._id));
+  const orphans = categories.filter(c => !groupedIds.has(c._id));
   if(orphans.length > 0) {
      displayCategories.push(...sortCategoriesLogic(orphans).map(o => ({...o, level: 4})));
   }
 
-  // Dropdown options should still use the full 'categories' array, not 'filteredCategories'
+  // ================= SEARCH FILTER LOGIC =================
+  const filteredCategories = displayCategories.filter(category => {
+    const searchLower = searchQuery.toLowerCase();
+    const nameMatch = category.name?.toLowerCase().includes(searchLower);
+    const slugMatch = category.slug?.toLowerCase().includes(searchLower);
+    const parentMatch = category.parentName?.toLowerCase().includes(searchLower);
+    
+    return nameMatch || slugMatch || parentMatch;
+  });
+
   const dropdownOptions = [];
-  const allMainCategories = categories.filter(cat => !cat.parent);
-  sortCategoriesLogic(allMainCategories).forEach(main => {
+  sortedMainCategories.forEach(main => {
       dropdownOptions.push({ id: main._id, name: main.name, type: 'Main' });
       const subCats = categories.filter(cat => {
         const parentId = typeof cat.parent === 'object' ? cat.parent?._id : cat.parent;
@@ -302,24 +292,25 @@ const AdminCategories = () => {
           </div>
         </div>
 
-        {/* ================= RIGHT: CATEGORY LIST ================= */}
+        {/* ================= RIGHT: CATEGORY LIST & SEARCH ================= */}
         <div className="flex-1 w-full">
           <div className="bg-white border border-gray-100 p-6 md:p-8 shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)] rounded-xl">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 border-b border-gray-100 pb-4 gap-4">
-              <h3 className="text-sm md:text-base inter-bold text-gray-900 uppercase tracking-wider whitespace-nowrap">
+            
+            {/* Header and Search Box */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-100 pb-4 gap-4">
+              <h3 className="text-sm md:text-base inter-bold text-gray-900 uppercase tracking-wider shrink-0">
                 Category List 
-                <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full ml-3 text-[10px] align-middle">{filteredCategories.length} items</span>
+                <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full ml-3 text-[10px] align-middle">{categories.length} items</span>
               </h3>
-              
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
+
+              <div className="w-full sm:w-[250px] md:w-[300px] relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                 <input 
                   type="text" 
                   placeholder="Search categories..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border border-gray-300 py-2 pl-9 pr-3 text-xs inter-medium focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none rounded-md bg-gray-50/50"
+                  className="w-full border border-gray-200 py-2.5 pl-10 pr-4 text-xs inter-medium focus:border-gray-900 focus:outline-none rounded-md bg-gray-50/50 focus:bg-white transition-colors"
                 />
               </div>
             </div>
@@ -343,7 +334,7 @@ const AdminCategories = () => {
                           <p className="mt-3 text-xs inter-bold text-gray-400 uppercase tracking-widest">Loading...</p>
                         </td>
                       </tr>
-                    ) : displayCategories.length === 0 ? (
+                    ) : filteredCategories.length === 0 ? (
                       <tr>
                         <td colSpan="4" className="p-16 text-center">
                           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200">
@@ -353,26 +344,24 @@ const AdminCategories = () => {
                             {searchQuery ? "No matching categories found" : "No categories found"}
                           </p>
                           <p className="text-[11px] text-gray-400 inter-medium mt-1">
-                             {searchQuery ? "Try a different search term." : "Start by adding a new main category."}
+                            {searchQuery ? `We couldn't find any category matching "${searchQuery}"` : "Start by adding a new main category."}
                           </p>
-                          {searchQuery && (
-                            <button 
-                              onClick={() => setSearchQuery("")}
-                              className="mt-4 text-xs inter-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider"
-                            >
-                              Clear Search
-                            </button>
-                          )}
                         </td>
                       </tr>
                     ) : (
-                      displayCategories.map((category) => {
+                      filteredCategories.map((category) => {
                         const level = category.level;
                         const isEditing = editId === category._id;
                         const imgUrl = category.image?.url || category.image;
 
+                        // Highlight background if it's a search result
+                        const isSearchResult = searchQuery && (
+                          category.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          category.slug?.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+
                         return (
-                          <tr key={category._id} className={`transition-colors ${isEditing ? 'bg-blue-50/30' : level > 1 ? 'bg-gray-50/20 hover:bg-gray-50' : 'hover:bg-gray-50'}`}>
+                          <tr key={category._id} className={`transition-colors ${isEditing ? 'bg-blue-50/30' : isSearchResult ? 'bg-yellow-50/30' : level > 1 ? 'bg-gray-50/20 hover:bg-gray-50' : 'hover:bg-gray-50'}`}>
                             
                             <td className="p-4">
                               {imgUrl ? (
@@ -385,8 +374,8 @@ const AdminCategories = () => {
                             <td className="p-4">
                               <div className="flex items-center gap-3">
                                 {/* Visual Hierarchy Indicators */}
-                                {level === 2 && <span className="text-gray-300 inter-bold text-xl ml-2">↳</span>}
-                                {level === 3 && <span className="text-red-300 inter-bold text-xl ml-8">↳</span>}
+                                {!searchQuery && level === 2 && <span className="text-gray-300 inter-bold text-xl ml-2">↳</span>}
+                                {!searchQuery && level === 3 && <span className="text-red-300 inter-bold text-xl ml-8">↳</span>}
                                 
                                 <div>
                                   <p className={`inter-bold text-xs md:text-sm ${level === 1 ? 'text-gray-900' : level === 2 ? 'text-gray-700' : 'text-gray-500'}`}>
