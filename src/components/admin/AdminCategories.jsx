@@ -24,7 +24,7 @@ const AdminCategories = () => {
 
   const fetchCategories = async () => {
     try {
-      const { data } = await api.get("/api/categories");
+      const { data } = await api.get("/categories");
       setCategories(data);
     } catch (error) {
       toast.error("Failed to load categories!");
@@ -109,10 +109,10 @@ const AdminCategories = () => {
       const payload = { name, slug, parent: parent || null, image: finalImageUrl, sortOrder };
 
       if (editId) {
-        await api.put(`/api/categories/${editId}`, payload);
+        await api.put(`/categories/${editId}`, payload);
         toast.success("Category updated successfully! ✅");
       } else {
-        await api.post("/api/categories", payload);
+        await api.post("/categories", payload);
         toast.success("Category created successfully! 🎉");
       }
       fetchCategories(); 
@@ -127,7 +127,7 @@ const AdminCategories = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
-        await api.delete(`/api/categories/${id}`);
+        await api.delete(`/categories/${id}`);
         setCategories(categories.filter((cat) => cat._id !== id));
         toast.success("Category deleted successfully! 🗑️");
         if(editId === id) resetForm(); 

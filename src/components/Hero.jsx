@@ -29,7 +29,7 @@ const Hero = () => {
   useEffect(() => {
     const fetchHeroBanners = async () => {
       try {
-        const { data } = await api.get('/api/banners?type=Hero');
+        const { data } = await api.get('/banners?type=Hero');
         setBanners(data);
       } catch (error) {
         console.error("Error fetching hero banners:", error);

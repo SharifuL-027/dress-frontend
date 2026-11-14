@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data } = await api.get('/api/users/profile');
+        const { data } = await api.get('/users/profile');
         setUser(data); // User login thakle data set hobe
       } catch (error) {
         setUser(null); // Login na thakle null thakbe
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      await api.post('/api/auth/logout'); // Backend e logout api thakle call hobe
+      await api.post('/auth/logout'); // Backend e logout api thakle call hobe
       setUser(null);
     } catch (error) {
       console.error("Logout failed", error);

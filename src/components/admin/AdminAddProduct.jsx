@@ -65,7 +65,7 @@ const AdminAddProduct = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await api.get('/api/categories');
+        const { data } = await api.get('/categories');
         setCategories(data);
       } catch (error) {
         console.error("Failed to load categories", error);
@@ -181,7 +181,7 @@ const AdminAddProduct = () => {
         sizes: uniqueSizes.join(', ')    
       };
 
-      await api.post('/api/products', productData); 
+      await api.post('/products', productData); 
       
       toast.success("Product published successfully! 🎉");
       

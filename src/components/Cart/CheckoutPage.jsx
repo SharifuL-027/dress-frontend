@@ -17,7 +17,7 @@ const CheckoutPage = () => {
   useEffect(() => {
     const fetchDeliverySettings = async () => {
       try {
-        const { data } = await api.get('/api/delivery');
+        const { data } = await api.get('/delivery');
         
         setDeliveryOptions(data);
         
@@ -77,7 +77,7 @@ const CheckoutPage = () => {
 
     try {
       // ব্যাকএন্ডের API তে প্রোমো কোড পাঠিয়ে চেক করা হচ্ছে
-      const { data } = await api.post('/api/promo/validate', { 
+      const { data } = await api.post('/promo/validate', { 
         code: promoCode.trim() 
       });
       
@@ -140,8 +140,11 @@ const CheckoutPage = () => {
         totalPrice: total
       };
 
-      const { data } = await api.post('/api/orders', orderData);
+      const { data } = await api.post('/orders', orderData);
 
+      const existingGuestOrders = JSON.parse(localStorage.getItem('guestOrders')) || [];
+      localStorage.setItem('guestOrders', JSON.stringify([data._id, ...existingGuestOrders]));
+      
       toast.success("🎉 Order placed successfully!");
       
       if (clearCart) {

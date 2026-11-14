@@ -11,7 +11,7 @@ const NewArrivals = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await api.get('/api/products'); 
+        const { data } = await api.get('/products'); 
         
         // Backend er response formatting onujayi
         const allProducts = data.products || data;

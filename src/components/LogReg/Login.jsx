@@ -18,7 +18,7 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const { data } = await api.post('/api/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email, password });
       login(data); // Context e user set kora
       navigate('/'); // Home e pathiye deya
     } catch (err) {

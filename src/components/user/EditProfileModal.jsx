@@ -30,7 +30,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdateSuccess }) => {
     try {
       setLoading(true);
       // ব্যাকএন্ডের প্রোফাইল আপডেট API (আপনার রাউট অনুযায়ী পরিবর্তন হতে পারে)
-      const { data } = await api.put('/api/users/profile', formData);
+      const { data } = await api.put('/users/profile', formData);
       
       toast.success("Profile updated successfully!");
       onUpdateSuccess(data); // প্রোফাইল পেজে নতুন ডাটা আপডেট করা

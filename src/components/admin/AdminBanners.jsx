@@ -28,8 +28,8 @@ const AdminBanners = () => {
     setFetchLoading(true);
     try {
       const [bannerRes, catRes] = await Promise.all([
-        api.get('/api/banners'),
-        api.get('/api/categories')
+        api.get('/banners'),
+        api.get('/categories')
       ]);
       setBanners(bannerRes.data);
       // শুধুমাত্র মেইন ক্যাটাগরিগুলো ফিল্টার করছি
@@ -95,7 +95,7 @@ const AdminBanners = () => {
         image: uploadedImage
       };
 
-      await api.post('/api/banners', bannerData);
+      await api.post('/banners', bannerData);
       
       toast.success("Banner added successfully! 🎉");
       
@@ -120,7 +120,7 @@ const AdminBanners = () => {
     if (!window.confirm("Are you sure you want to delete this banner?")) return;
 
     try {
-      await api.delete(`/api/banners/${id}`);
+      await api.delete(`/banners/${id}`);
       toast.success("Banner deleted successfully!");
       setBanners(banners.filter(banner => banner._id !== id));
     } catch (error) {
@@ -238,7 +238,7 @@ const AdminBanners = () => {
                 {banners.map((banner) => (
                   <div key={banner._id} className="border border-gray-200 bg-white group hover:shadow-md transition-all duration-300 relative rounded-sm overflow-hidden">
                     
-                    <div className="aspect-[21/9] md:aspect-video w-full overflow-hidden bg-gray-100 relative">
+                    <div className="aspect-21/9 md:aspect-video w-full overflow-hidden bg-gray-100 relative">
                       <img 
                         src={banner.image.url} 
                         alt={banner.title} 

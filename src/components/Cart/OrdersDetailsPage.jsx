@@ -4,15 +4,15 @@ import api from "../../api/axios";
 import toast from "react-hot-toast";
 
 const OrderDetailsPage = () => {
-  const { id } = useParams(); // URL থেকে অর্ডার আইডি নেওয়া হচ্ছে
+  const { id } = useParams(); // URL থেকে অর্ডার আইডি নেওয়া হচ্ছে
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        // ব্যাকএন্ড থেকে নির্দিষ্ট অর্ডারের ডেটা আনা (আপনার API রুট অনুযায়ী এটি অ্যাডজাস্ট করে নিতে পারেন)
-        const { data } = await api.get(`/api/orders/${id}`);
+        // এখান থেকে /api সরিয়ে দেওয়া হয়েছে যাতে ডাবল /api/api/ না হয়
+        const { data } = await api.get(`/orders/${id}`);
         setOrder(data);
         setLoading(false);
       } catch (err) {
@@ -22,7 +22,7 @@ const OrderDetailsPage = () => {
       }
     };
 
-    fetchOrderDetails();
+    if (id) fetchOrderDetails();
   }, [id]);
 
   if (loading) {
@@ -84,10 +84,21 @@ const OrderDetailsPage = () => {
           <h3 className="text-xs inter-bold text-gray-400 uppercase tracking-widest mb-3 pb-2 border-b border-gray-100">
             Shipping Address
           </h3>
-          <p className="text-xs inter-bold text-gray-900 uppercase mb-1">{shippingAddress.fullName || order.user?.name || "Customer"}</p>
+          <p className="text-xs inter-bold text-gray-900 uppercase mb-1">
+            {shippingAddress.fullName || order.user?.name || "Guest Customer"}
+          </p>
           <p className="text-xs text-gray-600 mb-1">{shippingAddress.address || "N/A"}</p>
-          <p className="text-xs text-gray-600 mb-1">{shippingAddress.city || ""}, {shippingAddress.postalCode || ""}</p>
-          <p className="text-xs text-gray-600 mt-2"><span className="inter-bold text-gray-800">Phone:</span> {shippingAddress.phone || "N/A"}</p>
+          <p className="text-xs text-gray-600 mb-1">
+            {shippingAddress.city || ""} {shippingAddress.postalCode ? `, ${shippingAddress.postalCode}` : ""}
+          </p>
+          <p className="text-xs text-gray-600 mt-2">
+            <span className="inter-bold text-gray-800">Phone:</span> {shippingAddress.phone || "N/A"}
+          </p>
+          {shippingAddress.notes && (
+            <p className="text-xs text-gray-500 mt-1.5 italic">
+              <span className="inter-bold text-gray-700 not-italic">Note:</span> {shippingAddress.notes}
+            </p>
+          )}
         </div>
 
         {/* Payment Info */}
@@ -95,7 +106,9 @@ const OrderDetailsPage = () => {
           <h3 className="text-xs inter-bold text-gray-400 uppercase tracking-widest mb-3 pb-2 border-b border-gray-100">
             Payment Information
           </h3>
-          <p className="text-xs text-gray-600 mb-2"><span className="inter-bold text-gray-800 uppercase">Method:</span> {order.paymentMethod || "Cash on Delivery"}</p>
+          <p className="text-xs text-gray-600 mb-2">
+            <span className="inter-bold text-gray-800 uppercase">Method:</span> {order.paymentMethod || "Cash on Delivery"}
+          </p>
           <p className="text-xs text-gray-600 mb-2">
             <span className="inter-bold text-gray-800 uppercase">Status:</span>{" "}
             <span className={order.isPaid ? "text-green-600 inter-bold" : "text-orange-600 inter-bold"}>
@@ -118,6 +131,12 @@ const OrderDetailsPage = () => {
               <span>Shipping Fee:</span>
               <span className="inter-bold text-gray-900">৳{order.shippingPrice || 0}</span>
             </div>
+            {order.discountApplied > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Discount:</span>
+                <span className="inter-bold">-৳{order.discountApplied}</span>
+              </div>
+            )}
             <div className="flex justify-between pt-2 border-t border-gray-100 text-sm inter-bold text-red-600">
               <span>Total:</span>
               <span>৳{order.totalPrice || order.totalAmount}</span>
@@ -138,10 +157,19 @@ const OrderDetailsPage = () => {
             <div key={idx} className="flex items-center justify-between gap-4 py-3 border-b border-gray-50 last:border-0">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-20 bg-gray-100 border border-gray-200 shrink-0 overflow-hidden">
-                  <img src={item.image || item.images?.[0]?.url || 'https://via.placeholder.com/100'} alt={item.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={item.image || item.images?.[0]?.url || 'https://placehold.co/100x120'} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
                 <div>
-                  <h4 className="text-xs inter-bold text-gray-900 uppercase">{item.name}</h4>
+                  <Link 
+                    to={`/product/${item.product}`}
+                    className="text-xs inter-bold text-gray-900 hover:text-red-600 uppercase transition-colors"
+                  >
+                    {item.name}
+                  </Link>
                   <p className="text-[11px] text-gray-500 mt-1 uppercase">
                     Size: <span className="inter-bold text-gray-800">{item.size || 'N/A'}</span> | Color: <span className="inter-bold text-gray-800">{item.color || 'N/A'}</span>
                   </p>

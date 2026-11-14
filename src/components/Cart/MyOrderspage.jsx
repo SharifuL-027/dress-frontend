@@ -8,18 +8,47 @@ const MyOrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // ব্যাকএন্ড থেকে ডাইনামিক অর্ডার ডেটা ফেচ করা
-  useEffect(() => {
+  // ব্যাকএন্ড থেকে ডাইনামিক অর্ডার ডেটা ফেচ করা (Logged-in + Guest উভয়ের জন্য)
+ useEffect(() => {
     const fetchMyOrders = async () => {
       try {
-        const { data } = await api.get('/api/orders/myorders');
+        // ১. প্রথমে লগইন করা ইউজারের অর্ডার আনার চেষ্টা করবে
+        const { data } = await api.get('/orders/myorders');
         setOrders(data);
-        setLoading(false);
       } catch (err) {
-        console.error("Error fetching orders:", err);
-        setError(true);
+        // ২. যদি 401 হয় (Guest User), তবে localStorage থেকে অর্ডার আনবে
+        if (err.response && err.response.status === 401) {
+          const rawGuestOrders = JSON.parse(localStorage.getItem('guestOrders')) || [];
+          
+          // অবজেক্ট বা স্ট্রিং যাই সেভ থাকুক, সেখান থেকে শুধু সলিড ID (string) বের করে নেওয়া
+          const validOrderIds = rawGuestOrders
+            .map(item => (typeof item === 'object' && item !== null ? item._id : item))
+            .filter(id => typeof id === 'string' && id.length === 24);
+
+          if (validOrderIds.length > 0) {
+            try {
+              const orderRequests = validOrderIds.map(id => api.get(`/orders/${id}`));
+              const responses = await Promise.allSettled(orderRequests);
+              
+              const fetchedOrders = responses
+                .filter(res => res.status === 'fulfilled')
+                .map(res => res.value.data);
+                
+              setOrders(fetchedOrders);
+            } catch (guestErr) {
+              console.error("Error fetching guest orders:", guestErr);
+              setOrders([]);
+            }
+          } else {
+            setOrders([]);
+          }
+        } else {
+          console.error("Error fetching orders:", err);
+          setError(true);
+          toast.error("Failed to load your orders!");
+        }
+      } finally {
         setLoading(false);
-        toast.error("Failed to load your orders!");
       }
     };
 
@@ -66,7 +95,7 @@ const MyOrdersPage = () => {
       <div className="h-screen flex justify-center items-center flex-col gap-4">
         <span className="text-4xl">⚠️</span>
         <h2 className="text-sm ubuntu-bold text-red-600 uppercase tracking-widest">Something went wrong!</h2>
-        <button onClick={() => window.location.reload()} className="bg-black text-white px-6 py-2 text-[11px] uppercase tracking-widest">Try Again</button>
+        <button onClick={() => window.location.reload()} className="bg-black text-white px-6 py-2 text-[11px] uppercase tracking-widest cursor-pointer">Try Again</button>
       </div>
     );
   }

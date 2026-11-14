@@ -21,8 +21,8 @@ const AdminSettings = () => {
     const fetchData = async () => {
       try {
         const [delRes, promoRes] = await Promise.all([
-          api.get('/api/delivery'),
-          api.get('/api/promo')
+          api.get('/delivery'),
+          api.get('/promo')
         ]);
         setDeliveryList(delRes.data);
         setPromoList(promoRes.data);
@@ -40,7 +40,7 @@ const AdminSettings = () => {
     if (!deliveryForm.area || deliveryForm.cost === "") return toast.error("Please fill all fields!");
     
     try {
-      const { data } = await api.post('/api/delivery', { 
+      const { data } = await api.post('/delivery', { 
         area: deliveryForm.area, 
         cost: Number(deliveryForm.cost) 
       });
@@ -54,7 +54,7 @@ const AdminSettings = () => {
 
   const handleDeleteDelivery = async (id) => {
     try {
-      await api.delete(`/api/delivery/${id}`);
+      await api.delete(`/delivery/${id}`);
       setDeliveryList(deliveryList.filter(item => item._id !== id));
       toast.success("Delivery area deleted!");
     } catch (error) {
@@ -70,7 +70,7 @@ const AdminSettings = () => {
     }
 
     try {
-      const { data } = await api.post('/api/promo', {
+      const { data } = await api.post('/promo', {
         ...promoForm,
         code: promoForm.code.toUpperCase(),
         discountValue: Number(promoForm.discountValue),
@@ -86,7 +86,7 @@ const AdminSettings = () => {
 
   const handleDeletePromo = async (id) => {
     try {
-      await api.delete(`/api/promo/${id}`);
+      await api.delete(`/promo/${id}`);
       setPromoList(promoList.filter(item => item._id !== id));
       toast.success("Promo code deleted!");
     } catch (error) {

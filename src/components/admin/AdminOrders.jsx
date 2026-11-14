@@ -6,6 +6,7 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
+  const [searchQuery, setSearchQuery] = useState(""); // সার্চ স্টেট যোগ করা হলো
 
   // Modal State
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -13,7 +14,7 @@ const AdminOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data } = await api.get("/api/orders");
+      const { data } = await api.get("/orders");
       setOrders(data);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to load orders!");
@@ -28,7 +29,7 @@ const AdminOrders = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await api.put(`/api/orders/${id}/status`, { status: newStatus });
+      await api.put(`/orders/${id}/status`, { status: newStatus });
       toast.success(`Order marked as ${newStatus}`);
       setOrders(orders.map(order => order._id === id ? { ...order, status: newStatus } : order));
       
@@ -52,6 +53,11 @@ const AdminOrders = () => {
     }
   };
 
+  // কাস্টমারের নাম বের করার হেল্পার ফাংশন (Guest + Registered উভয়ের জন্য)
+  const getCustomerName = (order) => {
+    return order.shippingAddress?.fullName || order.user?.name || "Guest Customer";
+  };
+
   // মডাল ওপেন ও ক্লোজ ফাংশন
   const openModal = (order) => {
     setSelectedOrder(order);
@@ -65,12 +71,30 @@ const AdminOrders = () => {
 
   if (loading) return <div className="p-8 text-center inter-bold text-gray-500 uppercase">Loading Orders...</div>;
 
+  // ট্যাব এবং সার্চ কুয়েরি অনুযায়ী অর্ডার ফিল্টারিং
   const filteredOrders = orders.filter(order => {
-    if (activeTab === "All") return true;
-    if (activeTab === "Pending") return order.status === "Pending" || order.status === "Processing";
-    if (activeTab === "Shipped") return order.status === "Shipped";
-    if (activeTab === "Delivered") return order.status === "Delivered";
-    return true;
+    // ১. ট্যাব ফিল্টার
+    let matchesTab = true;
+    if (activeTab === "Pending") matchesTab = order.status === "Pending" || order.status === "Processing";
+    else if (activeTab === "Shipped") matchesTab = order.status === "Shipped";
+    else if (activeTab === "Delivered") matchesTab = order.status === "Delivered";
+
+    // ২. সার্চ ফিল্টার (Name, Phone, Order ID)
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return matchesTab;
+
+    const customerName = getCustomerName(order).toLowerCase();
+    const customerPhone = (order.shippingAddress?.phone || "").toLowerCase();
+    const shortOrderId = order._id.slice(-6).toLowerCase();
+    const fullOrderId = order._id.toLowerCase();
+
+    const matchesSearch = 
+      customerName.includes(query) || 
+      customerPhone.includes(query) || 
+      shortOrderId.includes(query) ||
+      fullOrderId.includes(query);
+
+    return matchesTab && matchesSearch;
   });
 
   const totalOrdersCount = orders.length;
@@ -118,12 +142,40 @@ const AdminOrders = () => {
 
       {/* Filtered Order Table */}
       <div className="w-full bg-white border border-gray-200 p-8 shadow-sm">
-        <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-gray-200 pb-4">
           <div>
             <h2 className="text-2xl inter-bold text-gray-800 uppercase tracking-widest">
               {activeTab === "All" ? "All Orders" : `${activeTab} Orders`}
             </h2>
             <p className="text-sm inter-medium text-gray-500 mt-1">Showing {filteredOrders.length} results.</p>
+          </div>
+
+          {/* Customer / Order Search Bar */}
+          <div className="relative w-full md:w-80">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, phone, or ID..."
+              className="w-full border border-gray-300 pl-10 pr-8 py-2.5 text-xs inter-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:border-black transition-colors bg-gray-50/50"
+            />
+            <svg
+              className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+            </svg>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black text-sm cursor-pointer"
+                title="Clear search"
+              >
+                &times;
+              </button>
+            )}
           </div>
         </div>
 
@@ -140,7 +192,11 @@ const AdminOrders = () => {
             </thead>
             <tbody>
               {filteredOrders.length === 0 ? (
-                <tr><td colSpan="5" className="p-8 text-center inter-medium text-gray-500">No {activeTab.toLowerCase()} orders found.</td></tr>
+                <tr>
+                  <td colSpan="5" className="p-8 text-center inter-medium text-gray-500">
+                    {searchQuery ? `No orders matching "${searchQuery}".` : `No ${activeTab.toLowerCase()} orders found.`}
+                  </td>
+                </tr>
               ) : (
                 filteredOrders.map((order) => (
                   <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
@@ -149,7 +205,14 @@ const AdminOrders = () => {
                       <p className="text-xs inter-medium text-gray-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </td>
                     <td className="p-4">
-                      <p className="inter-bold text-sm text-gray-800">{order.user?.name || "Unknown User"}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="inter-bold text-sm text-gray-800">{getCustomerName(order)}</p>
+                        {!order.user && (
+                          <span className="px-1.5 py-0.5 text-[9px] inter-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200 rounded">
+                            Guest
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs inter-medium text-gray-500 mt-1">{order.shippingAddress?.phone}</p>
                     </td>
                     <td className="p-4">
@@ -173,7 +236,7 @@ const AdminOrders = () => {
                       {/* View Details Button */}
                       <button 
                         onClick={() => openModal(order)}
-                        className="bg-gray-800 text-white px-4 py-2 text-xs inter-bold uppercase tracking-widest hover:bg-black transition-colors"
+                        className="bg-gray-800 text-white px-4 py-2 text-xs inter-bold uppercase tracking-widest hover:bg-black transition-colors cursor-pointer"
                       >
                         View Details
                       </button>
@@ -194,9 +257,16 @@ const AdminOrders = () => {
             {/* Modal Header */}
             <div className="flex justify-between items-center bg-gray-50 p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-xl inter-bold text-gray-800 uppercase tracking-widest">
-                  Order #{selectedOrder._id.slice(-6).toUpperCase()}
-                </h2>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-xl inter-bold text-gray-800 uppercase tracking-widest">
+                    Order #{selectedOrder._id.slice(-6).toUpperCase()}
+                  </h2>
+                  {!selectedOrder.user && (
+                    <span className="px-2 py-0.5 text-[10px] inter-bold uppercase tracking-wider bg-gray-200 text-gray-700 rounded">
+                      Guest Order
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm inter-medium text-gray-500 mt-1">
                   Placed on: {new Date(selectedOrder.createdAt).toLocaleString()}
                 </p>
@@ -210,13 +280,24 @@ const AdminOrders = () => {
               {/* Left Column: Customer & Shipping */}
               <div>
                 <h3 className="text-[11px] inter-bold text-gray-400 uppercase tracking-widest mb-4 border-b pb-2">Customer Details</h3>
-                <p className="text-sm text-gray-800 inter-medium"><span className="inter-bold">Name:</span> {selectedOrder.user?.name || 'N/A'}</p>
-                <p className="text-sm text-gray-800 inter-medium mt-2"><span className="inter-bold">Email:</span> {selectedOrder.user?.email || 'N/A'}</p>
-                <p className="text-sm text-gray-800 inter-medium mt-2"><span className="inter-bold">Phone:</span> {selectedOrder.shippingAddress?.phone}</p>
+                <p className="text-sm text-gray-800 inter-medium">
+                  <span className="inter-bold">Name:</span> {getCustomerName(selectedOrder)}
+                </p>
+                <p className="text-sm text-gray-800 inter-medium mt-2">
+                  <span className="inter-bold">Email:</span> {selectedOrder.user?.email || 'Guest (No Email)'}
+                </p>
+                <p className="text-sm text-gray-800 inter-medium mt-2">
+                  <span className="inter-bold">Phone:</span> {selectedOrder.shippingAddress?.phone || 'N/A'}
+                </p>
 
                 <h3 className="text-[11px] inter-bold text-gray-400 uppercase tracking-widest mt-8 mb-4 border-b pb-2">Shipping Address</h3>
-                <p className="text-sm inter-medium text-gray-800">{selectedOrder.shippingAddress?.address}</p>
-                <p className="text-sm inter-medium text-gray-800 mt-1">{selectedOrder.shippingAddress?.city}</p>
+                <p className="text-sm inter-medium text-gray-800">{selectedOrder.shippingAddress?.address || 'N/A'}</p>
+                <p className="text-sm inter-medium text-gray-800 mt-1">{selectedOrder.shippingAddress?.city || 'N/A'}</p>
+                {selectedOrder.shippingAddress?.notes && (
+                  <p className="text-sm inter-medium text-gray-600 mt-2 bg-yellow-50 border border-yellow-200 p-2.5">
+                    <span className="inter-bold text-gray-800">Delivery Note:</span> {selectedOrder.shippingAddress.notes}
+                  </p>
+                )}
               </div>
 
               {/* Right Column: Order Info & Payment */}

@@ -13,9 +13,9 @@ const DynamicCategories = () => {
     const fetchData = async () => {
       try {
         const [catRes, prodRes, bannerRes] = await Promise.all([
-          api.get('/api/categories'),
-          api.get('/api/products'),
-          api.get('/api/banners?type=Category') 
+          api.get('/categories'),
+          api.get('/products'),
+          api.get('/banners?type=Category') 
         ]);
         
         const fetchedCategories = catRes.data;

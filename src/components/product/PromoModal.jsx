@@ -13,7 +13,7 @@ const PromoModal = () => {
     if (!hasSeenPromo) {
       const fetchPromoBanner = async () => {
         try {
-          const { data } = await api.get('/api/banners?type=Promo');
+          const { data } = await api.get('/banners?type=Promo');
           // যদি প্রোমো ব্যানার থাকে, তবে প্রথমটি সেট করবো
           if (data && data.length > 0) {
             setPromoBanner(data[0]);

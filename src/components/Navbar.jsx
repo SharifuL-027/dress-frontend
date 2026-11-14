@@ -60,8 +60,8 @@ const Navbar = () => {
     const fetchData = async () => {
       try {
         const [catRes, prodRes] = await Promise.all([
-          api.get('/api/categories'),
-          api.get('/api/products')
+          api.get('/categories'),
+          api.get('/products')
         ]);
         
         const productsData = prodRes.data.products || prodRes.data;

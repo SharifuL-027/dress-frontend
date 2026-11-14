@@ -9,7 +9,7 @@ const CategoryBentoGrid = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await api.get('/api/categories');
+        const { data } = await api.get('/categories');
         // শুধুমাত্র প্রথম ৩টি মেইন ক্যাটাগরি নেওয়া হলো Fabrilife লেআউটের জন্য
         const mainCats = data.filter(cat => !cat.parent).slice(0, 3);
         setCategories(mainCats);

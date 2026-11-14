@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // .env theke base URL nibe
+  // যেহেতু .env তে ইতিমধ্যেই http://localhost:5000/api দেওয়া আছে, তাই এখানে আর + '/api' লাগবে না
   baseURL: import.meta.env.VITE_API_URL, 
-  withCredentials: true, // HTTP-Only Cookie (JWT) pathanor jonno eta oboshshoi true thakte hobe
+  withCredentials: true,
 });
 
 export default api;

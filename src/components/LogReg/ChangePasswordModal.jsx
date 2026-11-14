@@ -35,7 +35,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
 
     try {
       setLoading(true);
-      await api.put('/api/users/change-password', {
+      await api.put('/users/change-password', {
         currentPassword: passwords.currentPassword,
         newPassword: passwords.newPassword
       });

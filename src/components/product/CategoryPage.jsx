@@ -40,8 +40,8 @@ const CategoryPage = () => {
       setLoading(true);
       try {
         const [catRes, prodRes] = await Promise.all([
-          api.get('/api/categories'),
-          api.get('/api/products')
+          api.get('/categories'),
+          api.get('/products')
         ]);
         
         const fetchedCategories = catRes.data;

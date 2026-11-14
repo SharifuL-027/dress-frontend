@@ -28,7 +28,7 @@ const ProductDetails = () => {
   useEffect(() => {
     const fetchProductData = async () => {
       try {
-        const { data } = await api.get(`/api/products/${id}`);
+        const { data } = await api.get(`/products/${id}`);
         setProduct(data);
         
         if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
@@ -36,7 +36,7 @@ const ProductDetails = () => {
 
         const categoryId = data.category?._id || data.category;
         if (categoryId) {
-          const relatedRes = await api.get('/api/products');
+          const relatedRes = await api.get('/products');
           const allProducts = relatedRes.data.products || relatedRes.data;
           
           const filteredRelated = allProducts.filter(p => 

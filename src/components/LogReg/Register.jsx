@@ -19,7 +19,7 @@ const Register = () => {
     setLoading(true);
     
     try {
-      const { data } = await api.post('/api/auth/register', { name, email, password });
+      const { data } = await api.post('/auth/register', { name, email, password });
       login(data); // Account toiri korar por sathe sathe auto-login
       navigate('/');
     } catch (err) {

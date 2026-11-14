@@ -18,8 +18,8 @@ const AdminProducts = () => {
     const fetchData = async () => {
       try {
         const [prodRes, catRes] = await Promise.all([
-          api.get("/api/products"),
-          api.get("/api/categories")
+          api.get("/products"),
+          api.get("/categories")
         ]);
         
         // Handling products array correctly whether wrapped in object or not
@@ -72,7 +72,7 @@ const AdminProducts = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        await api.delete(`/api/products/${id}`);
+        await api.delete(`/products/${id}`);
         // Update both states after deletion
         setProducts(products.filter((product) => product._id !== id));
         setFilteredProducts(filteredProducts.filter((product) => product._id !== id));
