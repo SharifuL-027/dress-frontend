@@ -24,7 +24,8 @@ const AdminLayout = () => {
     { name: "Orders", path: "/admin/orders" },
     { name: "Customers", path: "/admin/users" },
     { name: "Banners", path: "/admin/banners" },
-    { name: "Settings", path: "/admin/settings" },
+    { name: "Promo & Delivery Charge", path: "/admin/settings" },
+    { name: "All Settings", path: "/admin/allsettings"}
   ];
 
   return (

@@ -25,6 +25,7 @@ import AdminSettings from "../components/admin/AdminSettings";
 import ContactPage from "../components/contact/ContactPage";
 import StoreLocation from "../components/contact/StoreLocation";
 import OrderDetailsPage from "../components/Cart/OrdersDetailsPage";
+import AdminSiteSettings from "../components/admin/AdminSiteSettings";
 
 const router = createBrowserRouter([
   // 1. PUBLIC & CUSTOMER ROUTES (Navbar ebong Footer soho)
@@ -111,7 +112,9 @@ const router = createBrowserRouter([
           { path: "/admin/orders", element: <AdminOrders />, },
           { path: "/admin/users", element: <AdminCustomers />, },
           { path: "/admin/banners", element: <AdminBanners/> },
-          { path: "/admin/settings", element: <AdminSettings/> }
+          { path: "/admin/settings", element: <AdminSettings/> },
+          { path: "/admin/allsettings", element: <AdminSiteSettings/> },
+          
         ]
       }
     ]

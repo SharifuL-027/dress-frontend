@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { useAuth } from "../context/AuthContext"; 
 import { useCart } from "../context/CartContext"; 
 import { FiMenu, FiX, FiSearch, FiUser, FiHeart, FiShoppingCart, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -29,7 +30,7 @@ const Navbar = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState(null); 
   const mobileSearchRef = useRef(null);
-
+  const { settings } = useSiteSettings();
   // Scroll logic
   useEffect(() => {
     const handleScroll = () => {
@@ -195,19 +196,18 @@ const Navbar = () => {
     <nav className={`sticky top-0 left-0 w-full z-[100] bg-white transition-shadow duration-300 ${isScrolled ? "shadow-md" : ""}`}>
       
       {/* ================= TIER 1: Top Bar ================= */}
-      <div className="bg-[#cf141b] text-white text-[11px] uppercase tracking-wider py-1.5 hidden md:block">
-        <div className="max-w-375 mx-auto px-4 md:px-8 flex justify-between items-center">
-          <div>Welcome to DressTown</div>
-          <div className="flex space-x-6">
-            <Link to={user ? "/my-orders" : "/track-order"} className="hover:text-gray-300 transition-colors">Track Order</Link>
-            <Link to="/contact" className="hover:text-gray-300 transition-colors">Contact Us</Link>
-          
-          </div>
-        </div>
-      </div>
+     <div className="bg-[#cf141b] text-white text-[11px] uppercase tracking-wider py-1.5 hidden md:block">
+    <div className="max-w-375 mx-auto px-4 md:px-8 flex justify-between items-center">
+    <div>{settings.topBarText}</div>
+    <div className="flex space-x-6">
+      <Link to="/my-orders" className="hover:text-gray-300 transition-colors">Track Order</Link>
+      <Link to="/contact" className="hover:text-gray-300 transition-colors">Contact Us</Link>
+    </div>
+  </div>
+</div>
 
       {/* ================= TIER 2: Main Middle Bar ================= */}
-      <div className="max-w-375 mx-auto px-4 md:px-8 py-3 lg:py-5 flex justify-between items-center relative">
+      <div className="max-w-375 mx-auto px-4 md:px-8 py-3 lg:py-2 flex justify-between items-center relative">
         
         <button 
           className="lg:hidden text-gray-800 p-1"
@@ -217,13 +217,9 @@ const Navbar = () => {
         </button>
 
         <div className="shrink-0 flex-1 lg:flex-none flex justify-center lg:justify-start">
-          <Link to="/">
-            <img 
-              src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1789818500/DressTown_Logo_Png_oilfhm.png" 
-              alt="DressTown Logo" 
-              className="h-12 md:h-16 w-auto object-contain" 
-            />
-          </Link>
+          <a href="/">
+  <img src={settings.logoUrl} alt="DressTown Logo" className="h-12 md:h-20 w-auto object-contain" />
+</a>
         </div>
 
         {/* Search Desktop */}

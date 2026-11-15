@@ -6,11 +6,15 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
-  const [searchQuery, setSearchQuery] = useState(""); // সার্চ স্টেট যোগ করা হলো
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Modal State
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Advance Payment State
+  const [advanceInput, setAdvanceInput] = useState("");
+  const [savingAdvance, setSavingAdvance] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -29,16 +33,58 @@ const AdminOrders = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await api.put(`/orders/${id}/status`, { status: newStatus });
+      const { data } = await api.put(`/orders/${id}/status`, { status: newStatus });
       toast.success(`Order marked as ${newStatus}`);
       setOrders(orders.map(order => order._id === id ? { ...order, status: newStatus } : order));
       
-      // যদি মডাল ওপেন থাকে, সেখানেও রিয়েল-টাইম স্ট্যাটাস আপডেট করা
       if (selectedOrder && selectedOrder._id === id) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update status!");
+    }
+  };
+
+  // অগ্রিম টাকা (Advance Paid) সেভ করার ফাংশন
+  const handleSaveAdvance = async () => {
+    if (!selectedOrder) return;
+
+    const advanceValue = Number(advanceInput);
+    if (isNaN(advanceValue) || advanceValue < 0) {
+      return toast.error("Please enter a valid amount!");
+    }
+    if (advanceValue > selectedOrder.totalPrice) {
+      return toast.error("Advance amount cannot exceed Grand Total!");
+    }
+
+    setSavingAdvance(true);
+    try {
+      const { data } = await api.put(`/orders/${selectedOrder._id}/status`, {
+        status: selectedOrder.status,
+        advancePaid: advanceValue,
+      });
+
+      const updatedIsPaid = data.isPaid ?? (advanceValue >= selectedOrder.totalPrice);
+
+      // মেইন অর্ডার লিস্ট এবং মডাল স্টেট আপডেট করা
+      setOrders(
+        orders.map((order) =>
+          order._id === selectedOrder._id
+            ? { ...order, advancePaid: advanceValue, isPaid: updatedIsPaid }
+            : order
+        )
+      );
+      setSelectedOrder({
+        ...selectedOrder,
+        advancePaid: advanceValue,
+        isPaid: updatedIsPaid,
+      });
+
+      toast.success(`Advance ৳${advanceValue} updated! Due balance adjusted.`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update advance payment!");
+    } finally {
+      setSavingAdvance(false);
     }
   };
 
@@ -53,33 +99,31 @@ const AdminOrders = () => {
     }
   };
 
-  // কাস্টমারের নাম বের করার হেল্পার ফাংশন (Guest + Registered উভয়ের জন্য)
   const getCustomerName = (order) => {
     return order.shippingAddress?.fullName || order.user?.name || "Guest Customer";
   };
 
-  // মডাল ওপেন ও ক্লোজ ফাংশন
   const openModal = (order) => {
     setSelectedOrder(order);
+    setAdvanceInput(order.advancePaid ?? 0);
     setIsModalOpen(true);
   };
   
   const closeModal = () => {
     setSelectedOrder(null);
+    setAdvanceInput("");
     setIsModalOpen(false);
   };
 
   if (loading) return <div className="p-8 text-center inter-bold text-gray-500 uppercase">Loading Orders...</div>;
 
-  // ট্যাব এবং সার্চ কুয়েরি অনুযায়ী অর্ডার ফিল্টারিং
   const filteredOrders = orders.filter(order => {
-    // ১. ট্যাব ফিল্টার
     let matchesTab = true;
     if (activeTab === "Pending") matchesTab = order.status === "Pending" || order.status === "Processing";
     else if (activeTab === "Shipped") matchesTab = order.status === "Shipped";
     else if (activeTab === "Delivered") matchesTab = order.status === "Delivered";
+    else if (activeTab === "Cancelled") matchesTab = order.status === "Cancelled";
 
-    // ২. সার্চ ফিল্টার (Name, Phone, Order ID)
     const query = searchQuery.toLowerCase().trim();
     if (!query) return matchesTab;
 
@@ -101,12 +145,13 @@ const AdminOrders = () => {
   const pendingOrdersCount = orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
   const shippedOrdersCount = orders.filter(o => o.status === 'Shipped').length;
   const deliveredOrdersCount = orders.filter(o => o.status === 'Delivered').length;
+  const cancelledOrdersCount = orders.filter(o => o.status === 'Cancelled').length;
 
   return (
     <div className="w-full relative">
       
-      {/* 4 Clickable State Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* 5 Clickable State Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
         <div onClick={() => setActiveTab("All")} className={`cursor-pointer border p-6 shadow-sm transition-all ${activeTab === "All" ? "bg-gray-800 border-gray-800 text-white" : "bg-white border-gray-200 hover:border-gray-800 border-l-4 border-l-gray-800"}`}>
           <div className="flex items-center justify-between">
             <p className={`text-[11px] inter-bold uppercase tracking-widest ${activeTab === "All" ? "text-gray-300" : "text-gray-400"}`}>All Orders</p>
@@ -137,6 +182,14 @@ const AdminOrders = () => {
             <span className="text-xl">✅</span>
           </div>
           <h3 className={`text-3xl inter-bold mt-2 ${activeTab === "Delivered" ? "text-white" : "text-gray-800"}`}>{deliveredOrdersCount}</h3>
+        </div>
+
+        <div onClick={() => setActiveTab("Cancelled")} className={`cursor-pointer border p-6 shadow-sm transition-all ${activeTab === "Cancelled" ? "bg-red-600 border-red-600 text-white" : "bg-white border-gray-200 hover:border-red-600 border-l-4 border-l-red-600"}`}>
+          <div className="flex items-center justify-between">
+            <p className={`text-[11px] inter-bold uppercase tracking-widest ${activeTab === "Cancelled" ? "text-red-100" : "text-gray-400"}`}>Cancelled</p>
+            <span className="text-xl">❌</span>
+          </div>
+          <h3 className={`text-3xl inter-bold mt-2 ${activeTab === "Cancelled" ? "text-white" : "text-gray-800"}`}>{cancelledOrdersCount}</h3>
         </div>
       </div>
 
@@ -185,7 +238,7 @@ const AdminOrders = () => {
               <tr className="bg-gray-50 border-y border-gray-200 text-[11px] inter-bold text-gray-400 uppercase tracking-widest">
                 <th className="p-4">Order ID & Date</th>
                 <th className="p-4">Customer Info</th>
-                <th className="p-4">Total Amount</th>
+                <th className="p-4">Amount & Due</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Action</th>
               </tr>
@@ -198,51 +251,62 @@ const AdminOrders = () => {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order) => (
-                  <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="p-4">
-                      <p className="inter-bold text-sm text-gray-800">#{order._id.slice(-6).toUpperCase()}</p>
-                      <p className="text-xs inter-medium text-gray-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <p className="inter-bold text-sm text-gray-800">{getCustomerName(order)}</p>
-                        {!order.user && (
-                          <span className="px-1.5 py-0.5 text-[9px] inter-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200 rounded">
-                            Guest
-                          </span>
+                filteredOrders.map((order) => {
+                  const advance = Number(order.advancePaid || 0);
+                  const dueAmount = Math.max(0, Number(order.totalPrice || 0) - advance);
+
+                  return (
+                    <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="p-4">
+                        <p className="inter-bold text-sm text-gray-800">#{order._id.slice(-6).toUpperCase()}</p>
+                        <p className="text-xs inter-medium text-gray-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <p className="inter-bold text-sm text-gray-800">{getCustomerName(order)}</p>
+                          {!order.user && (
+                            <span className="px-1.5 py-0.5 text-[9px] inter-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200 rounded">
+                              Guest
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs inter-medium text-gray-500 mt-1">{order.shippingAddress?.phone}</p>
+                      </td>
+                      <td className="p-4">
+                        <p className="inter-bold text-sm text-gray-800">Total: ৳ {order.totalPrice}</p>
+                        {advance > 0 ? (
+                          <div className="mt-1 space-y-0.5">
+                            <p className="text-[11px] inter-bold text-emerald-600">Adv: - ৳ {advance}</p>
+                            <p className="text-[11px] inter-bold text-red-600">Due: ৳ {dueAmount}</p>
+                          </div>
+                        ) : (
+                          <p className="text-[10px] inter-medium text-gray-400 uppercase tracking-widest mt-1">{order.paymentMethod}</p>
                         )}
-                      </div>
-                      <p className="text-xs inter-medium text-gray-500 mt-1">{order.shippingAddress?.phone}</p>
-                    </td>
-                    <td className="p-4">
-                      <p className="inter-bold text-sm text-red-500">৳ {order.totalPrice}</p>
-                      <p className="text-[10px] inter-medium text-gray-400 uppercase tracking-widest mt-1">{order.paymentMethod}</p>
-                    </td>
-                    <td className="p-4">
-                      <select 
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        className={`text-xs inter-bold px-3 py-1.5 uppercase border cursor-pointer outline-none ${getStatusColor(order.status)}`}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </td>
-                    <td className="p-4 text-right">
-                      {/* View Details Button */}
-                      <button 
-                        onClick={() => openModal(order)}
-                        className="bg-gray-800 text-white px-4 py-2 text-xs inter-bold uppercase tracking-widest hover:bg-black transition-colors cursor-pointer"
-                      >
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="p-4">
+                        <select 
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          className={`text-xs inter-bold px-3 py-1.5 uppercase border cursor-pointer outline-none ${getStatusColor(order.status)}`}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Processing">Processing</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="Delivered">Delivered</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button 
+                          onClick={() => openModal(order)}
+                          className="bg-gray-800 text-white px-4 py-2 text-xs inter-bold uppercase tracking-widest hover:bg-black transition-colors cursor-pointer"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -307,16 +371,16 @@ const AdminOrders = () => {
                   <div className="flex justify-between text-sm items-center">
                     <span className="inter-bold text-gray-800">Status:</span>
                     <select 
-                        value={selectedOrder.status}
-                        onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
-                        className={`text-xs inter-bold px-3 py-1.5 uppercase border cursor-pointer outline-none ${getStatusColor(selectedOrder.status)}`}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
+                      value={selectedOrder.status}
+                      onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
+                      className={`text-xs inter-bold px-3 py-1.5 uppercase border cursor-pointer outline-none ${getStatusColor(selectedOrder.status)}`}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="inter-bold text-gray-800">Payment Method:</span>
@@ -328,6 +392,35 @@ const AdminOrders = () => {
                       {selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
                     </span>
                   </div>
+                </div>
+
+                {/* Advance Payment Input Box */}
+                <div className="mt-6 bg-emerald-50/70 border border-emerald-200 p-4">
+                  <label className="block text-[10px] inter-bold text-emerald-800 uppercase tracking-widest mb-2">
+                    Add / Update Advance Paid (৳)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max={selectedOrder.totalPrice}
+                      value={advanceInput}
+                      onChange={(e) => setAdvanceInput(e.target.value)}
+                      placeholder="e.g. 200"
+                      className="w-full border border-emerald-300 bg-white px-3 py-2 text-sm inter-bold text-gray-800 focus:outline-none focus:border-emerald-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveAdvance}
+                      disabled={savingAdvance}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs inter-bold uppercase tracking-widest transition-colors cursor-pointer shrink-0 disabled:bg-gray-400"
+                    >
+                      {savingAdvance ? "Saving..." : "Apply"}
+                    </button>
+                  </div>
+                  <p className="text-[11px] inter-medium text-emerald-700 mt-1.5">
+                    This amount will be deducted from the Grand Total.
+                  </p>
                 </div>
               </div>
 
@@ -374,9 +467,9 @@ const AdminOrders = () => {
               </div>
             </div>
 
-            {/* Final Calculation Summary */}
+            {/* Final Calculation Summary (With Advance Deduction & Due Balance) */}
             <div className="px-6 pb-8 flex justify-end">
-              <div className="w-full md:w-1/2 lg:w-1/3 space-y-3 bg-gray-50 p-6 border border-gray-200">
+              <div className="w-full md:w-1/2 lg:w-5/12 space-y-3 bg-gray-50 p-6 border border-gray-200">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 inter-medium">Items Subtotal:</span>
                   <span className="inter-bold text-gray-800">৳ {selectedOrder.itemsPrice || 0}</span>
@@ -387,9 +480,23 @@ const AdminOrders = () => {
                   <span className="inter-bold text-gray-800">+ ৳ {selectedOrder.shippingPrice || 0}</span>
                 </div>
                 
-                <div className="flex justify-between text-base mt-2">
-                  <span className="inter-bold text-gray-800 uppercase tracking-widest">Grand Total:</span>
-                  <span className="inter-bold text-red-600">৳ {selectedOrder.totalPrice || 0}</span>
+                <div className="flex justify-between text-sm">
+                  <span className="inter-bold text-gray-800 uppercase tracking-wider">Grand Total:</span>
+                  <span className="inter-bold text-gray-900">৳ {selectedOrder.totalPrice || 0}</span>
+                </div>
+
+                {/* Advance Paid Line */}
+                <div className="flex justify-between text-sm text-emerald-700 border-b border-gray-200 pb-3">
+                  <span className="inter-bold">Advance Paid:</span>
+                  <span className="inter-bold">- ৳ {selectedOrder.advancePaid || 0}</span>
+                </div>
+
+                {/* Remaining Due Balance */}
+                <div className="flex justify-between text-base pt-1">
+                  <span className="inter-bold text-gray-900 uppercase tracking-widest">Due Balance:</span>
+                  <span className="inter-bold text-red-600">
+                    ৳ {Math.max(0, (selectedOrder.totalPrice || 0) - (selectedOrder.advancePaid || 0))}
+                  </span>
                 </div>
               </div>
             </div>
