@@ -68,7 +68,7 @@ const Hero = () => {
   // ডিফল্ট স্ট্যাটিক ছবি 
   if (banners.length === 0) {
     return (
-      <div className="relative w-full aspect-[4/3] sm:aspect-video md:h-[550px] lg:h-[600px] bg-gray-100">
+      <div className="relative w-full aspect-4/3 sm:aspect-video md:h-137.5 lg:h-150 bg-gray-100">
         <div 
           className="absolute inset-0 w-full h-full bg-cover bg-top sm:bg-center bg-no-repeat"
           style={{ backgroundImage: "url('https://res.cloudinary.com/dsrs8hryx/image/upload/v1791007439/Sunlit_South_Asian_Family_Portrait_skjr0z.png')" }}
@@ -78,7 +78,7 @@ const Hero = () => {
   }
 
   return (
-    <div className="relative w-full aspect-[4/3] sm:aspect-video md:h-[550px] lg:h-[600px] xl:h-[70vh] bg-gray-100 overflow-hidden group">
+    <div className="relative w-full aspect-4/3 sm:aspect-video md:h-137.5 lg:h-150 xl:h-[70vh] bg-gray-100 overflow-hidden group">
       
       {/* ================= BANNERS ================= */}
       {banners.map((banner, index) => (

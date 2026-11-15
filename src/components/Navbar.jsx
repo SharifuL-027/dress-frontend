@@ -31,6 +31,7 @@ const Navbar = () => {
   const [expandedCategory, setExpandedCategory] = useState(null); 
   const mobileSearchRef = useRef(null);
   const { settings } = useSiteSettings();
+
   // Scroll logic
   useEffect(() => {
     const handleScroll = () => {
@@ -101,7 +102,7 @@ const Navbar = () => {
           }
         });
 
-        // 3. সাব-ক্যাটাগরিগুলোকেও পজিশন অনুযায়ী সর্ট করা
+        // 3. সাব-ক্যাটাগরিগুলোকেও পজিশন অনুযায়ী সর্ট করা
         mainCategories.forEach(mainCat => {
           mainCat.subCategories.sort((a, b) => {
             const orderA = a.sortOrder || 0;
@@ -177,7 +178,7 @@ const Navbar = () => {
 
   const getNavStyle = (path) => {
     const isActive = location.pathname === path;
-    return `relative text-[12px] md:text-[13px] font-bold uppercase tracking-wide transition-colors duration-300 py-3 ${
+    return `relative text-[12px] md:text-[13px] font-bold uppercase tracking-wide transition-colors duration-300 py-3.5 ${
       isActive ? "text-red-600" : "text-gray-800 hover:text-red-600"
     } after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-red-600 after:transition-transform after:duration-300 after:origin-left ${
       isActive ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100"
@@ -196,15 +197,15 @@ const Navbar = () => {
     <nav className={`sticky top-0 left-0 w-full z-[100] bg-white transition-shadow duration-300 ${isScrolled ? "shadow-md" : ""}`}>
       
       {/* ================= TIER 1: Top Bar ================= */}
-     <div className="bg-[#cf141b] text-white text-[11px] uppercase tracking-wider py-1.5 hidden md:block">
-    <div className="max-w-375 mx-auto px-4 md:px-8 flex justify-between items-center">
-    <div>{settings.topBarText}</div>
-    <div className="flex space-x-6">
-      <Link to="/my-orders" className="hover:text-gray-300 transition-colors">Track Order</Link>
-      <Link to="/contact" className="hover:text-gray-300 transition-colors">Contact Us</Link>
-    </div>
-  </div>
-</div>
+      <div className="bg-[#cf141b] text-white text-[11px] uppercase tracking-wider py-1.5 hidden md:block">
+        <div className="max-w-375 mx-auto px-4 md:px-8 flex justify-between items-center">
+          <div>{settings.topBarText}</div>
+          <div className="flex space-x-6">
+            <Link to="/my-orders" className="hover:text-gray-300 transition-colors">Track Order</Link>
+            <Link to="/contact" className="hover:text-gray-300 transition-colors">Contact Us</Link>
+          </div>
+        </div>
+      </div>
 
       {/* ================= TIER 2: Main Middle Bar ================= */}
       <div className="max-w-375 mx-auto px-4 md:px-8 py-3 lg:py-2 flex justify-between items-center relative">
@@ -218,8 +219,8 @@ const Navbar = () => {
 
         <div className="shrink-0 flex-1 lg:flex-none flex justify-center lg:justify-start">
           <a href="/">
-  <img src={settings.logoUrl} alt="DressTown Logo" className="h-12 md:h-20 w-auto object-contain" />
-</a>
+            <img src={settings.logoUrl} alt="DressTown Logo" className="h-12 md:h-20 w-auto object-contain" />
+          </a>
         </div>
 
         {/* Search Desktop */}
@@ -325,7 +326,7 @@ const Navbar = () => {
               <div className="relative">
                 <FiHeart size={22} />
                 {wishlist?.length > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-red-600 text-white text-[9px] font-bold rounded-full h-[18px] w-[18px] flex items-center justify-center border-2 border-white">
+                  <span className="absolute -top-1.5 -right-2 bg-red-600 text-white text-[9px] font-bold rounded-full h-4.5 w-[18px] flex items-center justify-center border-2 border-white">
                     {wishlist.length}
                   </span>
                 )}
@@ -337,7 +338,7 @@ const Navbar = () => {
           <button onClick={openCart} className="group hidden lg:flex items-center space-x-1.5 hover:text-red-600 transition-colors cursor-pointer py-2">
             <div className="relative">
               <FiShoppingCart size={22} />
-              <span className="absolute -top-1.5 -right-2 bg-red-600 text-white text-[9px] font-bold rounded-full h-[18px] w-[18px] flex items-center justify-center border-2 border-white">
+              <span className="absolute -top-1.5 -right-2 bg-red-600 text-white text-[9px] font-bold rounded-full h-4.5 w-[18px] flex items-center justify-center border-2 border-white">
                 {cart?.reduce((acc, item) => acc + item.qty, 0) || 0}
               </span>
             </div>
@@ -398,9 +399,9 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ================= MEGA MENU (Desktop) ================= */}
-      <div className="hidden lg:block border-t border-b border-gray-100 bg-white">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-8 relative">
+      {/* ================= MEGA MENU (FULL-WIDTH DESKTOP) ================= */}
+      <div className="hidden lg:block border-t border-b border-gray-100 bg-white relative">
+        <div className="max-w-375 mx-auto px-4 md:px-8">
           
           <div className="flex items-center justify-center space-x-8">
             <Link to="/" className="shrink-0 group"><div className={getNavStyle("/")}>Home</div></Link>
@@ -408,7 +409,7 @@ const Navbar = () => {
             <Link to="/new-arrivals" className="shrink-0 group"><div className={getNavStyle("/new-arrivals")}>New Arrivals</div></Link>
 
             {loading ? (
-              <span className="text-[12px] font-bold text-gray-400 py-3 uppercase tracking-wide">LOADING...</span>
+              <span className="text-[12px] font-bold text-gray-400 py-3.5 uppercase tracking-wide">LOADING...</span>
             ) : (
               categories.map((category) => {
                 const catPath = `/category/${category.slug}`;
@@ -416,53 +417,105 @@ const Navbar = () => {
                   const pCatId = typeof p.category === 'object' ? p.category?._id : p.category;
                   const pSubCatId = typeof p.subCategory === 'object' ? p.subCategory?._id : p.subCategory;
                   return pCatId === category._id || pSubCatId === category._id;
-                }).slice(0, 3);
+                }).slice(0, 4);
 
                 const hasMegaMenu = category.subCategories.length > 0 || catProducts.length > 0;
 
                 return (
-                  <div key={category._id} className="relative group shrink-0">
-                    <Link to={catPath}>
+                  <div key={category._id} className="group shrink-0">
+                    <Link to={catPath} className="flex items-center gap-1">
                       <div className={getNavStyle(catPath)}>{category.name}</div>
+                      {hasMegaMenu && (
+                        <FiChevronDown size={14} className="text-gray-400 group-hover:text-red-600 group-hover:rotate-180 transition-transform duration-300" />
+                      )}
                     </Link>
 
+                    {/* FULL-WIDTH WIDE MEGA MENU DROPDOWN */}
                     {hasMegaMenu && (
-                      <div className="absolute top-[100%] left-1/2 -translate-x-1/2 w-[450px] bg-white border border-gray-100 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-sm z-50 p-6 flex gap-6 cursor-default">
-                        
-                        {category.subCategories.length > 0 && (
-                          <div className={`${catProducts.length > 0 ? "w-1/3 border-r border-gray-100 pr-4" : "w-full"}`}>
-                            <h3 className="text-[10px] inter-bold text-gray-400 uppercase tracking-widest mb-4">Categories</h3>
-                            <ul className="space-y-1">
-                              {category.subCategories.map((sub) => {
-                                const subPath = `/category/${sub.slug}`;
-                                return (
-                                  <li key={sub._id}>
-                                    <Link to={subPath} className="block py-1.5 text-[11px] inter-bold uppercase text-gray-700 hover:text-red-600 transition">
-                                      {sub.name}
-                                    </Link>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-
-                        {catProducts.length > 0 && (
-                          <div className={`${category.subCategories.length > 0 ? "w-2/3" : "w-full"}`}>
-                            <h3 className="text-[10px] inter-bold text-gray-400 uppercase tracking-widest mb-4">Featured in {category.name}</h3>
-                            <div className={`grid gap-4 ${catProducts.length > 2 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                              {catProducts.map(prod => (
-                                <Link to={`/product/${prod._id}`} key={prod._id} className="group/item block">
-                                  <div className="relative overflow-hidden bg-gray-100 mb-2 h-24 w-full">
-                                    <img src={prod.images?.[0]?.url || "https://placehold.co/200x200?text=No+Image"} alt={prod.name} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500" />
-                                  </div>
-                                  <h4 className="text-[9px] inter-bold text-gray-900 uppercase tracking-wide truncate group-hover/item:text-red-600">{prod.name}</h4>
-                                  <p className="text-[10px] text-red-600 inter-bold mt-0.5">৳{prod.discountPrice || prod.regularPrice}</p>
+                      <div className="absolute top-full left-0 w-full bg-white border-t border-b border-gray-200 shadow-2xl opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 z-50 cursor-default">
+                        <div className="max-w-375 mx-auto px-8 py-8 grid grid-cols-12 gap-8">
+                          
+                          {/* Left Side: Subcategories List (Larger & Multi-column if many) */}
+                          {category.subCategories.length > 0 && (
+                            <div className={`${catProducts.length > 0 ? "col-span-4 border-r border-gray-100 pr-8" : "col-span-12"}`}>
+                              <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                                <h3 className="text-xs inter-bold text-gray-900 uppercase tracking-widest">
+                                  {category.name} Categories
+                                </h3>
+                                <Link 
+                                  to={catPath} 
+                                  className="text-[11px] inter-bold text-red-600 hover:underline uppercase tracking-wider"
+                                >
+                                  View All →
                                 </Link>
-                              ))}
+                              </div>
+
+                              <ul className={`grid gap-x-6 gap-y-2.5 ${category.subCategories.length > 7 ? "grid-cols-2" : "grid-cols-1"}`}>
+                                {category.subCategories.map((sub) => {
+                                  const subPath = `/category/${sub.slug}`;
+                                  return (
+                                    <li key={sub._id}>
+                                      <Link 
+                                        to={subPath} 
+                                        className="flex items-center gap-2 py-1 text-[13px] inter-bold uppercase tracking-wide text-gray-700 hover:text-red-600 hover:translate-x-1 transition-all"
+                                      >
+                                        <span className="text-red-600 text-xs">›</span>
+                                        <span>{sub.name}</span>
+                                      </Link>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
                             </div>
-                          </div>
-                        )}
+                          )}
+
+                          {/* Right Side: Featured Products (Larger Cards - 4 Columns) */}
+                          {catProducts.length > 0 && (
+                            <div className={`${category.subCategories.length > 0 ? "col-span-8" : "col-span-12"}`}>
+                              <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
+                                <h3 className="text-xs inter-bold text-gray-900 uppercase tracking-widest">
+                                  Featured in {category.name}
+                                </h3>
+                                {category.subCategories.length === 0 && (
+                                  <Link 
+                                    to={catPath} 
+                                    className="text-[11px] inter-bold text-red-600 hover:underline uppercase tracking-wider"
+                                  >
+                                    Explore All {category.name} →
+                                  </Link>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-4 gap-6">
+                                {catProducts.map(prod => (
+                                  <Link to={`/product/${prod._id}`} key={prod._id} className="group/item block">
+                                    <div className="relative overflow-hidden bg-gray-100 mb-3 aspect-[3/4] w-full border border-gray-100">
+                                      <img 
+                                        src={prod.images?.[0]?.url || "https://placehold.co/300x400?text=No+Image"} 
+                                        alt={prod.name} 
+                                        className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
+                                      />
+                                    </div>
+                                    <h4 className="text-xs inter-bold text-gray-900 uppercase tracking-wide truncate group-hover/item:text-red-600 transition-colors">
+                                      {prod.name}
+                                    </h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <p className="text-xs text-red-600 inter-bold">
+                                        ৳{prod.discountPrice || prod.regularPrice}
+                                      </p>
+                                      {prod.discountPrice && (
+                                        <p className="text-[11px] text-gray-400 line-through">
+                                          ৳{prod.regularPrice}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
                       </div>
                     )}
                   </div>
@@ -476,16 +529,16 @@ const Navbar = () => {
 
       {/* ================= MOBILE SIDEBAR MENU ================= */}
       <div 
-        className={`fixed inset-0 bg-black/50 z-[110] transition-opacity duration-300 lg:hidden ${isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+        className={`fixed inset-0 bg-black/50 z-110 transition-opacity duration-300 lg:hidden ${isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
         onClick={() => setIsMobileMenuOpen(false)}
       ></div>
 
       <div 
-        className={`fixed top-0 left-0 h-full w-[80%] max-w-sm bg-white z-[120] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 h-full w-[80%] max-w-sm bg-white z-120 transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1789818500/DressTown_Logo_Png_oilfhm.png" alt="Logo" className="h-8" />
+            <img src={settings.logoUrl} alt="Logo" className="h-8 object-contain" />
           </Link>
           <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500 p-2 bg-gray-50 rounded-full hover:bg-gray-100">
             <FiX size={20} />
@@ -561,8 +614,6 @@ const Navbar = () => {
 
         {/* Footer (Login / Contact / Admin) */}
         <div className="p-4 border-t border-gray-100 bg-gray-50 pb-8">
-          
-          {/* Admin Panel Button (Sudhumatro Admin der jonno) */}
           {user?.role === 'admin' && (
             <Link 
               to="/admin/dashboard" 
@@ -585,7 +636,6 @@ const Navbar = () => {
           
           <div className="flex gap-4 justify-center">
             <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-[10px] inter-bold uppercase text-gray-500 hover:text-red-600 transition-colors">Contact Us</Link>
-           
           </div>
         </div>
       </div>

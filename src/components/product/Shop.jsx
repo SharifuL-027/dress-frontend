@@ -199,11 +199,11 @@ const Shop = () => {
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-6 md:mt-16 mb-24 font-sans">
+    <div className="max-w-375 mx-auto px-4 md:px-8 mt-6 md:mt-16 mb-24 font-sans">
       
       {/* ---------------- PAGE HEADER ---------------- */}
       <div className="mb-6 md:mb-10 text-center mt-4 md:mt-0">
-        <h1 className="text-2xl md:text-4xl font-extrabold text-black uppercase tracking-[0.15em]">
+        <h1 className="text-2xl md:text-4xl inter-bold text-black uppercase tracking-[0.15em]">
           Shop All Products
         </h1>
         <div className="w-16 md:w-24 h-1 bg-red-600 mx-auto mt-3 md:mt-4 mb-2 md:mb-3"></div>
@@ -235,7 +235,7 @@ const Shop = () => {
               <div className="pb-3 border-b border-gray-100 mb-2">
                 <button 
                   onClick={() => { setSelectedCategory("all"); setIsMobileSidebarOpen(false); }}
-                  className={`w-full text-left py-1.5 px-2 rounded-md transition-colors cursor-pointer text-[12px] md:text-[13px] font-extrabold uppercase tracking-wide ${
+                  className={`w-full text-left py-1.5 px-2 rounded-md transition-colors cursor-pointer text-[12px] md:text-[13px] inter-bold uppercase tracking-wide ${
                     selectedCategory === "all" ? 'bg-red-50 text-red-600' : 'text-gray-800 hover:bg-gray-50 hover:text-red-600'
                   }`}
                 >

@@ -273,7 +273,7 @@ const NewArrivalsPage = () => {
                                   {hasSubSub && (
                                     <button 
                                       onClick={() => toggleSubMenu(subCat._id)} 
-                                      className="p-1 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                                      className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                                     >
                                       {isSubOpen ? <FiChevronUp size={12} /> : <FiChevronDown size={12} />}
                                     </button>
@@ -282,7 +282,7 @@ const NewArrivalsPage = () => {
 
                                 {/* Level 3: Sub-Sub Categories */}
                                 {hasSubSub && (
-                                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-[500px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
+                                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-125 opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
                                       <ul className="pl-4 ml-2 space-y-1 border-l border-gray-200">
                                          {subCat.subSubCats.map(subSubCat => {
                                             const isActiveSubSub = selectedCategory === subSubCat.slug;
@@ -320,10 +320,10 @@ const NewArrivalsPage = () => {
           
           {/* Top Title */}
           <div className="mb-5 md:mb-8 text-center md:text-left mt-4 md:mt-0">
-            <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 uppercase tracking-wide">
+            <h1 className="text-2xl md:text-4xl inter-bold text-gray-900 uppercase tracking-wide">
               {currentCategoryName}
             </h1>
-            <p className="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">
+            <p className="text-[11px] md:text-xs inter-bold text-gray-400 uppercase tracking-widest mt-2">
               Showing {filteredProducts.length} New Drops
             </p>
           </div>

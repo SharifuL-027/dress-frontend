@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router"; 
+import { FaWhatsapp } from "react-icons/fa";
 import api from "../../api/axios"; 
 import toast from "react-hot-toast";
 import { useCart } from "../../context/CartContext"; 
+import { useSiteSettings } from "../../hooks/useSiteSettings";
 import ProductCard from "./ProductCard";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart(); 
+  const { settings } = useSiteSettings();
   
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]); 
@@ -92,7 +95,6 @@ const ProductDetails = () => {
     ? (variantLabel ? `${currentVariantStock} In Stock for ${variantLabel}` : `${currentVariantStock} In Stock`)
     : (variantLabel ? `Sorry, ${variantLabel} is Out of Stock` : `Out of Stock`);
 
-
   // Quantity Change Handler
   const handleQtyChange = (type) => {
     if (type === 'increment') {
@@ -123,6 +125,43 @@ const ProductDetails = () => {
 
     addToCart(cartItem);
     if (type === 'buy') navigate('/checkout');
+  };
+
+  // ==========================================
+  // WHATSAPP ORDER HANDLER
+  // ==========================================
+  const handleWhatsAppOrder = () => {
+    if (currentVariantStock === 0) return toast.error(`Sorry, ${variantLabel} is out of stock!`);
+    if (product.sizes?.length > 0 && !selectedSize) return toast.error("Please select a size");
+    if (product.colors?.length > 0 && !selectedColor) return toast.error("Please select a color");
+
+    const unitPrice = product.discountPrice || product.regularPrice || product.price || 0;
+    const totalPrice = unitPrice * qty;
+    const productUrl = window.location.href;
+
+    // অ্যাডমিন সেটিংস থেকে নম্বর নেওয়া (না থাকলে ডিফল্ট নম্বর)
+    const rawNumber = settings.whatsapp || settings.phone || "8801624541181";
+    let cleanNumber = rawNumber.replace(/[^0-9]/g, "");
+    if (cleanNumber.startsWith("01")) {
+      cleanNumber = `88${cleanNumber}`;
+    }
+
+    const message = [
+      `Hello DressTown! I want to order this product:`,
+      ``,
+      `*Product:* ${product.name}`,
+      product.sku ? `*SKU:* ${product.sku}` : null,
+      `*Color:* ${selectedColor || "Default"}`,
+      `*Size:* ${selectedSize || "Standard"}`,
+      `*Quantity:* ${qty}`,
+      `*Total Price:* ৳${totalPrice}`,
+      `*Product Link:* ${productUrl}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   // ==========================================
@@ -227,7 +266,7 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          {/* Thumbnails: Horizontal scroll on mobile, Grid on desktop */}
+          {/* Thumbnails */}
           <div className="flex md:grid md:grid-cols-6 gap-3 overflow-x-auto no-scrollbar snap-x pb-2 md:pb-0">
             {images.map((img, idx) => (
               <button key={idx} onClick={() => setActiveImageIndex(idx)} className={`snap-start shrink-0 w-20 h-20 md:w-auto md:h-auto aspect-square border transition-all ${activeImageIndex === idx ? 'border-gray-900 shadow-sm' : 'border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-400'}`}>
@@ -295,6 +334,7 @@ const ProductDetails = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 mb-8 md:mb-10 w-full">
+            {/* Row 1: Quantity + Add to Cart */}
             <div className="flex gap-3 h-12 md:h-14">
               <div className="flex border border-gray-300 w-28 md:w-32 bg-white shrink-0">
                 <button onClick={() => handleQtyChange('decrement')} className="w-10 h-full text-gray-500 hover:bg-gray-100 hover:text-black cursor-pointer inter-medium">-</button>
@@ -311,13 +351,26 @@ const ProductDetails = () => {
               </button>
             </div>
             
-            <button 
-              onClick={() => handleAction('buy')} 
-              disabled={currentVariantStock === 0} 
-              className={`w-full h-12 md:h-14 text-[11px] md:text-xs inter-bold uppercase tracking-widest transition-all cursor-pointer ${currentVariantStock === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700 shadow-md'}`}
-            >
-              Order Now
-            </button>
+            {/* Row 2: Order Now + Order on WhatsApp Side by Side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button 
+                onClick={() => handleAction('buy')} 
+                disabled={currentVariantStock === 0} 
+                className={`w-full h-12 md:h-14 text-[11px] md:text-xs inter-bold uppercase tracking-widest transition-all cursor-pointer ${currentVariantStock === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700 shadow-md'}`}
+              >
+                Order Now
+              </button>
+
+              <button 
+                type="button"
+                onClick={handleWhatsAppOrder} 
+                disabled={currentVariantStock === 0} 
+                className={`w-full h-12 md:h-14 px-3 flex items-center justify-center gap-2 text-[11px] md:text-xs inter-bold uppercase tracking-wider transition-all cursor-pointer ${currentVariantStock === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#25D366] text-white hover:bg-[#1ebe5d] shadow-md'}`}
+              >
+                <FaWhatsapp size={18} className="shrink-0" />
+                <span>Order on WhatsApp</span>
+              </button>
+            </div>
           </div>
 
           {/* ---------------- STATIC SECTIONS (ALWAYS OPEN) ---------------- */}
@@ -327,7 +380,7 @@ const ProductDetails = () => {
             {product.description && (
               <div className="w-full">
                 <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Description</h3>
-                <div className="text-[13px] md:text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words inter-regular">
                   {product.description}
                 </div>
               </div>
@@ -353,7 +406,7 @@ const ProductDetails = () => {
             {product.keyFeatures && (
               <div className="w-full">
                 <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Key Features</h3>
-                <div className="text-[13px] md:text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words inter-regular">
                   {product.keyFeatures}
                 </div>
               </div>
@@ -373,7 +426,7 @@ const ProductDetails = () => {
             {product.washingInstructions && (
               <div className="w-full">
                 <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Wash & Care</h3>
-                <div className="text-[13px] md:text-sm text-gray-600 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words inter-regular">
                   {product.washingInstructions}
                 </div>
               </div>
