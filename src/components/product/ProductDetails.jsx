@@ -22,17 +22,25 @@ const ProductDetails = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
 
+  // Size Chart Unit State ('in' or 'cm')
+  const [sizeUnit, setSizeUnit] = useState("in");
+
   // Gallery, Video & Modal States
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [zoomStyle, setZoomStyle] = useState({ transform: "scale(1)" });
 
-  useEffect(() => {
+useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    setLoading(true); // এক প্রোডাক্ট থেকে অন্য প্রোডাক্টে গেলে সাথে সাথে লোডিং দেখাবে
+
     const fetchProductData = async () => {
       try {
         const { data } = await api.get(`/products/${id}`);
         setProduct(data);
+        setActiveImageIndex(0);
+        setQty(1);
         
         if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
         if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);
@@ -56,7 +64,6 @@ const ProductDetails = () => {
       }
     };
     
-    window.scrollTo(0, 0);
     fetchProductData();
   }, [id]);
 
@@ -139,7 +146,7 @@ const ProductDetails = () => {
     const totalPrice = unitPrice * qty;
     const productUrl = window.location.href;
 
-    // অ্যাডমিন সেটিংস থেকে নম্বর নেওয়া (না থাকলে ডিফল্ট নম্বর)
+    // অ্যাডমিন সেটিংস থেকে নম্বর নেওয়া (না থাকলে ডিফল্ট নম্বর)
     const rawNumber = settings.whatsapp || settings.phone || "8801624541181";
     let cleanNumber = rawNumber.replace(/[^0-9]/g, "");
     if (cleanNumber.startsWith("01")) {
@@ -165,7 +172,22 @@ const ProductDetails = () => {
   };
 
   // ==========================================
-  // AUTO SIZE CHART TABLE RENDERER (SMART)
+  // INCHES TO CM CONVERTER HELPER
+  // ==========================================
+  const formatMeasurement = (val, colIndex) => {
+    if (colIndex === 0 || sizeUnit === "in") return val;
+
+    // স্ট্রিংয়ের ভেতরের যেকোনো সংখ্যা (যেমন 40, 27.5, বা 30-32) কে CM-এ রূপান্তর করবে
+    return val.replace(/(\d+(\.\d+)?)/g, (match) => {
+      const num = parseFloat(match);
+      if (isNaN(num)) return match;
+      const cm = Math.round(num * 2.54 * 10) / 10;
+      return cm % 1 === 0 ? cm.toString() : cm.toFixed(1);
+    });
+  };
+
+  // ==========================================
+  // AUTO SIZE CHART TABLE RENDERER (SMART + UNIT TOGGLE)
   // ==========================================
   const renderSizeChart = (chartText) => {
     if (!chartText) return null;
@@ -199,32 +221,76 @@ const ProductDetails = () => {
     const dataRows = parsedRows.slice(1);
 
     return (
-      <div className="overflow-x-auto border border-gray-200 mt-2 bg-white shadow-sm w-full">
-        <table className="w-full text-left border-collapse text-[11px] md:text-[12px] min-w-[300px]">
-          <thead>
-            <tr className="bg-gray-100 text-gray-800 inter-bold uppercase tracking-wider">
-              {headers.map((h, i) => (
-                <th key={i} className="p-3 md:p-4 border-b border-gray-200 whitespace-nowrap">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {dataRows.map((row, rIdx) => (
-              <tr key={rIdx} className="hover:bg-gray-50 transition-colors">
-                {row.map((cell, cIdx) => (
-                  <td key={cIdx} className={`p-3 md:p-4 border-b border-gray-100 ${cIdx === 0 ? 'inter-bold text-gray-900' : 'text-gray-600 inter-medium'}`}>
-                    {cell}
-                  </td>
+      <div className="space-y-2.5">
+        <div className="overflow-x-auto border border-gray-200 bg-white shadow-sm w-full rounded-sm">
+          <table className="w-full text-left border-collapse text-[11px] md:text-[12px] min-w-[300px]">
+            <thead>
+              <tr className="bg-gray-100 text-gray-800 inter-bold uppercase tracking-wider">
+                {headers.map((h, i) => (
+                  <th
+                    key={i}
+                    className={`p-3 md:p-3.5 border-b border-gray-200 whitespace-nowrap ${
+                      i === 0 ? "sticky left-0 bg-gray-100 z-10" : ""
+                    }`}
+                  >
+                    {h}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {dataRows.map((row, rIdx) => (
+                <tr key={rIdx} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+                  {row.map((cell, cIdx) => (
+                    <td
+                      key={cIdx}
+                      className={`p-3 md:p-3.5 whitespace-nowrap ${
+                        cIdx === 0
+                          ? "inter-bold text-gray-900 bg-gray-50/70 sticky left-0 z-10"
+                          : "text-gray-600 inter-medium"
+                      }`}
+                    >
+                      {formatMeasurement(cell, cIdx)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[10px] inter-medium text-gray-400">
+          * All measurements are garment measurements in {sizeUnit === "in" ? "Inches (in)" : "Centimeters (cm)"}. Tolerance ±0.5".
+        </p>
       </div>
     );
   };
 
-  if (loading) return <div className="p-8 text-center inter-bold text-gray-500 uppercase tracking-widest mt-20">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 min-h-screen animate-pulse">
+        <div className="h-4 w-48 bg-gray-200 rounded mb-6"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+          <div className="lg:col-span-7 aspect-square bg-gray-200 rounded-sm"></div>
+          <div className="lg:col-span-5 space-y-5">
+            <div className="h-8 w-3/4 bg-gray-200 rounded"></div>
+            <div className="h-7 w-1/3 bg-gray-200 rounded"></div>
+            <div className="h-px bg-gray-200 my-4"></div>
+            <div className="flex gap-2">
+              <div className="h-10 w-16 bg-gray-200 rounded"></div>
+              <div className="h-10 w-16 bg-gray-200 rounded"></div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-12 w-12 bg-gray-200 rounded"></div>
+              <div className="h-12 w-12 bg-gray-200 rounded"></div>
+              <div className="h-12 w-12 bg-gray-200 rounded"></div>
+            </div>
+            <div className="h-12 w-full bg-gray-200 rounded mt-6"></div>
+            <div className="h-12 w-full bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!product) return <div className="p-8 text-center inter-bold text-red-500 uppercase tracking-widest mt-20">Product Not Found!</div>;
 
   const images = product.images?.length > 0 ? product.images : [{ url: "https://via.placeholder.com/600" }];
@@ -380,7 +446,7 @@ const ProductDetails = () => {
             {product.description && (
               <div className="w-full">
                 <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Description</h3>
-                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">
                   {product.description}
                 </div>
               </div>
@@ -406,16 +472,44 @@ const ProductDetails = () => {
             {product.keyFeatures && (
               <div className="w-full">
                 <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Key Features</h3>
-                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">
                   {product.keyFeatures}
                 </div>
               </div>
             )}
 
-            {/* Smart Size Chart */}
+            {/* Smart Size Chart with Inches / CM Toggle */}
             {product.sizeChart && (
               <div className="w-full overflow-hidden">
-                <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Size Chart</h3>
+                <div className="flex items-center justify-between mb-3 md:mb-4 pb-2 border-b border-gray-200">
+                  <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900">
+                    Size Chart
+                  </h3>
+                  <div className="inline-flex border border-gray-300 rounded-sm overflow-hidden bg-gray-50">
+                    <button
+                      type="button"
+                      onClick={() => setSizeUnit("in")}
+                      className={`px-2.5 py-1 text-[10px] inter-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                        sizeUnit === "in"
+                          ? "bg-gray-900 text-white"
+                          : "text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      Inches
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSizeUnit("cm")}
+                      className={`px-2.5 py-1 text-[10px] inter-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                        sizeUnit === "cm"
+                          ? "bg-gray-900 text-white"
+                          : "text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      CM
+                    </button>
+                  </div>
+                </div>
                 <div className="w-full">
                   {renderSizeChart(product.sizeChart)}
                 </div>
@@ -426,7 +520,7 @@ const ProductDetails = () => {
             {product.washingInstructions && (
               <div className="w-full">
                 <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Wash & Care</h3>
-                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words inter-regular">
+                <div className="text-[13px] md:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap wrap-break-word inter-regular">
                   {product.washingInstructions}
                 </div>
               </div>
@@ -436,7 +530,7 @@ const ProductDetails = () => {
             {(product.deliveryInfo || product.returnPolicy) && (
               <div className="w-full">
                 <h3 className="text-xs md:text-sm inter-bold uppercase tracking-widest text-gray-900 mb-3 md:mb-4 pb-2 border-b border-gray-200">Delivery & Returns</h3>
-                <div className="text-[13px] md:text-sm text-gray-600 leading-relaxed space-y-4 break-words inter-regular">
+                <div className="text-[13px] md:text-sm text-gray-600 leading-relaxed space-y-4 wrap-break-word inter-regular">
                   {product.deliveryInfo && <div><p className="inter-bold text-gray-800 mb-1">Delivery Info:</p><p>{product.deliveryInfo}</p></div>}
                   {product.returnPolicy && <div><p className="inter-bold text-gray-800 mb-1">Return Policy:</p><p>{product.returnPolicy}</p></div>}
                 </div>
@@ -467,7 +561,7 @@ const ProductDetails = () => {
 
       {/* ----------------- MODALS ----------------- */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-white p-4 md:p-12">
+        <div className="fixed inset-0 z-999 flex items-center justify-center bg-white p-4 md:p-12">
           <button onClick={closeModal} className="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-black inter-bold text-3xl md:text-4xl z-50 cursor-pointer">&times;</button>
           {images.length > 1 && <button onClick={prevImage} className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black p-2 md:p-4 z-50 text-2xl md:text-3xl cursor-pointer">&larr;</button>}
           <div className="w-full max-w-4xl h-full flex items-center justify-center overflow-hidden relative cursor-crosshair bg-white" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} onClick={closeModal}>
@@ -478,7 +572,7 @@ const ProductDetails = () => {
       )}
 
       {isVideoModalOpen && product.video?.url && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/90 p-4">
+        <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/90 p-4">
           <button onClick={() => setIsVideoModalOpen(false)} className="absolute top-4 right-4 md:top-6 md:right-6 text-white hover:text-red-500 inter-bold text-3xl md:text-4xl z-50 cursor-pointer">&times;</button>
           <div className="w-full max-w-4xl bg-black">
             <video src={product.video.url} controls autoPlay className="w-full h-auto max-h-[80vh] object-contain"></video>

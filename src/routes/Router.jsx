@@ -23,7 +23,6 @@ import AdminBanners from "../components/admin/AdminBanners";
 import Shop from "../components/product/Shop";
 import AdminSettings from "../components/admin/AdminSettings";
 import ContactPage from "../components/contact/ContactPage";
-import StoreLocation from "../components/contact/StoreLocation";
 import OrderDetailsPage from "../components/Cart/OrdersDetailsPage";
 import AdminSiteSettings from "../components/admin/AdminSiteSettings";
 
@@ -87,10 +86,7 @@ const router = createBrowserRouter([
         path: "/contact",
         element: <ContactPage/>
       },
-      {
-        path: "/stores",
-        element: <StoreLocation/>
-      }
+      
     ],
   },
   

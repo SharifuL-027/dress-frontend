@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
+import SizeChartBuilder from "../../components/admin/SizeChartBuilder";
 
 const AdminAddProduct = () => {
   const [loading, setLoading] = useState(false);
@@ -185,10 +186,33 @@ const AdminAddProduct = () => {
       
       toast.success("Product published successfully! 🎉");
       
-      setFormData({ name: "", sku: "", category: "", subCategory: "", subSubCategory: "", gender: "Unisex", brand: "", regularPrice: "", discountPrice: "", fabric: "", gsm: "", fitType: "", sleeveType: "", pattern: "", description: "", keyFeatures: "", sizeChart: "", washingInstructions: "Hand wash preferred. Do not bleach.", origin: "Bangladesh", deliveryInfo: "Inside Dhaka: 2-3 Days | Outside Dhaka: 3-5 Days", returnPolicy: "7 Days Return & Exchange Policy Applicable." }); 
+      setFormData({
+        name: "",
+        sku: "",
+        category: "",
+        subCategory: "",
+        subSubCategory: "",
+        gender: "Unisex",
+        brand: "",
+        regularPrice: "",
+        discountPrice: "",
+        fabric: "",
+        gsm: "",
+        fitType: "",
+        sleeveType: "",
+        pattern: "",
+        description: "",
+        keyFeatures: "",
+        sizeChart: "",
+        washingInstructions: "Hand wash preferred. Do not bleach.",
+        origin: "Bangladesh",
+        deliveryInfo: "Inside Dhaka: 2-3 Days | Outside Dhaka: 3-5 Days",
+        returnPolicy: "7 Days Return & Exchange Policy Applicable."
+      }); 
       setVariants([]);
       setImages([]);
       setImagePreviews([]);
+      setVideo(null);
 
     } catch (error) {
       console.error(error);
@@ -198,7 +222,7 @@ const AdminAddProduct = () => {
     }
   };
 
-  // ================= PREMIUN RESPONSIVE CLASSES =================
+  // ================= PREMIUM RESPONSIVE CLASSES =================
   const inputClass = "w-full border border-gray-300 p-3 text-[13px] md:text-sm inter-medium focus:border-red-500 focus:outline-none transition-colors bg-white rounded-sm";
   const labelClass = "block text-[10px] md:text-[11px] inter-bold text-gray-500 uppercase tracking-widest mb-2";
   const sectionTitleClass = "text-sm md:text-[15px] inter-bold text-gray-900 uppercase tracking-widest mb-4 md:mb-6 border-b border-gray-200 pb-2 md:pb-3";
@@ -352,7 +376,7 @@ const AdminAddProduct = () => {
           </div>
         </div>
 
-        {/* --- 5. Detailed Description --- */}
+        {/* --- 5. Detailed Description & Size Chart --- */}
         <div>
           <h3 className={sectionTitleClass}>5. Details & Policies</h3>
           <div className="space-y-5 md:space-y-6">
@@ -364,8 +388,19 @@ const AdminAddProduct = () => {
               <label className={labelClass}>Key Features (Bullet points)</label>
               <textarea name="keyFeatures" value={formData.keyFeatures} onChange={handleTextChange} rows="3" className={inputClass} placeholder="- 100% Export Quality&#10;- Color Guarantee"></textarea>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-              <div><label className={labelClass}>Size Chart Info</label><textarea name="sizeChart" value={formData.sizeChart} onChange={handleTextChange} rows="2" className={inputClass} placeholder="M: Chest 38, Length 28..."></textarea></div>
+
+            {/* Interactive Size Chart Builder (Full Width) */}
+            <div>
+              <label className={labelClass}>Product Size Chart (Inches)</label>
+              <SizeChartBuilder
+                value={formData.sizeChart}
+                onChange={(newChartString) =>
+                  setFormData((prev) => ({ ...prev, sizeChart: newChartString }))
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
               <div><label className={labelClass}>Washing Instructions</label><textarea name="washingInstructions" value={formData.washingInstructions} onChange={handleTextChange} rows="2" className={inputClass}></textarea></div>
               <div><label className={labelClass}>Delivery Information</label><textarea name="deliveryInfo" value={formData.deliveryInfo} onChange={handleTextChange} rows="2" className={inputClass}></textarea></div>
               <div><label className={labelClass}>Return & Exchange Policy</label><textarea name="returnPolicy" value={formData.returnPolicy} onChange={handleTextChange} rows="2" className={inputClass}></textarea></div>

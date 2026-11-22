@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router";
 import axios from "axios";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
+import SizeChartBuilder from "../../components/admin/SizeChartBuilder";
 
 const AdminEditProduct = () => {
   const { id } = useParams();
@@ -42,7 +43,7 @@ const AdminEditProduct = () => {
   const [variants, setVariants] = useState([]);
   const [newVariant, setNewVariant] = useState({ color: "", size: "", stock: "" });
 
-  // নতুন ভ্যারিয়েন্ট যোগ করলে যদি একই Color + Size আগে থেকেই থাকে, তবে স্টক অটোমেটিক যোগ হবে
+  // নতুন ভ্যারিয়েন্ট যোগ করলে যদি একই Color + Size আগে থেকেই থাকে, তবে স্টক অটোমেটিক যোগ হবে
   const handleAddVariant = () => {
     if (!newVariant.color.trim() || !newVariant.size.trim() || newVariant.stock === "") {
       toast.error("Please fill color, size, and stock to add a variant.");
@@ -94,7 +95,7 @@ const AdminEditProduct = () => {
     setVariants(updatedVariants);
   };
 
-  // + বা - বাটন দিয়ে দ্রুত স্টক বাড়ানো/কমানোর ফাংশন
+  // + বা - বাটন দিয়ে দ্রুত স্টক বাড়ানো/কমানোর ফাংশন
   const handleAdjustStock = (index, delta) => {
     const updatedVariants = [...variants];
     const currentStock = Number(updatedVariants[index].stock) || 0;
@@ -709,7 +710,7 @@ const AdminEditProduct = () => {
           </div>
         </div>
 
-        {/* --- 5. Detailed Description --- */}
+        {/* --- 5. Detailed Description & Size Chart --- */}
         <div>
           <h3 className={sectionTitleClass}>5. Details & Policies</h3>
           <div className="space-y-5 md:space-y-6">
@@ -734,18 +735,19 @@ const AdminEditProduct = () => {
                 placeholder="- 100% Export Quality&#10;- Color Guarantee"
               ></textarea>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-              <div>
-                <label className={labelClass}>Size Chart Info</label>
-                <textarea
-                  name="sizeChart"
-                  value={formData.sizeChart}
-                  onChange={handleTextChange}
-                  rows="2"
-                  className={inputClass}
-                  placeholder="M: Chest 38, Length 28..."
-                ></textarea>
-              </div>
+
+            {/* Interactive Size Chart Builder (Full Width) */}
+            <div>
+              <label className={labelClass}>Product Size Chart (Inches)</label>
+              <SizeChartBuilder
+                value={formData.sizeChart}
+                onChange={(newChartString) =>
+                  setFormData((prev) => ({ ...prev, sizeChart: newChartString }))
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
               <div>
                 <label className={labelClass}>Washing Instructions</label>
                 <textarea

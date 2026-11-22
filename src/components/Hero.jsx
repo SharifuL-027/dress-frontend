@@ -7,7 +7,7 @@ const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // ================= NEW: Dynamic Text Animation Logic =================
+  // ================= Dynamic Fallback Word Animation =================
   const dynamicWords = ["Story", "Occasion", "Moment", "Season", "Journey"];
   const [wordIndex, setWordIndex] = useState(0);
   const [fade, setFade] = useState(true);
@@ -23,7 +23,7 @@ const Hero = () => {
 
     return () => clearInterval(wordInterval);
   }, []);
-  // ====================================================================
+  // ===================================================================
 
   // ব্যাকএন্ড থেকে শুধুমাত্র Hero ব্যানার ফেচ করা
   useEffect(() => {
@@ -77,6 +77,13 @@ const Hero = () => {
     );
   }
 
+  // বর্তমান স্লাইডের ডাইনামিক ডেটা বের করা
+  const activeBanner = banners[currentIndex] || {};
+  const dynamicTitle = activeBanner.title?.trim();
+  const dynamicDescription = (activeBanner.subtitle || activeBanner.description)?.trim();
+  const dynamicButtonText = activeBanner.buttonText?.trim() || "Explore Collection";
+  const dynamicLink = activeBanner.link?.trim() || "/shop";
+
   return (
     <div className="relative w-full aspect-4/3 sm:aspect-video md:h-137.5 lg:h-150 xl:h-[70vh] bg-gray-100 overflow-hidden group">
       
@@ -88,8 +95,8 @@ const Hero = () => {
             index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
-          {/* কালো ওভারলে (মোবাইলে একটু ডার্ক করা হয়েছে যেন টেক্সট ক্লিয়ার বোঝা যায়) */}
-          <div className="absolute inset-0 bg-black/30 md:bg-black/10 z-10 pointer-events-none"></div>
+          {/* কালো ওভারলে (টেক্সট স্পষ্ট দেখানোর জন্য) */}
+          <div className="absolute inset-0 bg-black/35 md:bg-black/25 z-10 pointer-events-none"></div>
 
           {banner.link ? (
             <Link to={banner.link} className="block w-full h-full">
@@ -107,31 +114,40 @@ const Hero = () => {
         </div>
       ))}
 
-      {/* ================= STYLISH TITLE & CTA BUTTON ================= */}
-      <div className="absolute bottom-12 md:bottom-20 left-4 md:left-12 lg:left-20 z-30 flex flex-col items-start w-[85%] sm:max-w-md md:max-w-lg transition-all duration-700 transform translate-y-0 opacity-100">
+      {/* ================= DYNAMIC TITLE, DESCRIPTION & CTA BUTTON ================= */}
+      <div 
+        key={activeBanner._id || currentIndex}
+        className="absolute bottom-12 md:bottom-20 left-4 md:left-12 lg:left-20 z-30 flex flex-col items-start w-[85%] sm:max-w-md md:max-w-xl transition-all duration-700"
+      >
+        {/* Dynamic Title (যদি ব্যানারে title দেওয়া থাকে তবে সেটি দেখাবে, নাহলে অ্যানিমেটেড ডিফল্ট টাইটেল) */}
+        {dynamicTitle ? (
+          <h2 className="text-2xl sm:text-3xl md:text-5xl inter-bold text-white uppercase tracking-tight mb-2 md:mb-3 drop-shadow-lg leading-tight">
+            {dynamicTitle}
+          </h2>
+        ) : (
+          <h2 className="text-2xl sm:text-3xl md:text-5xl inter-bold text-white md:text-red-600 uppercase tracking-tight mb-2 md:mb-3 drop-shadow-md md:drop-shadow-xl leading-tight">
+            Style For <br className="hidden md:block" /> Every{' '}
+            <span 
+              className={`inline-block text-white md:text-gray-900 transition-all duration-500 ease-in-out transform ${
+                fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
+            >
+              {dynamicWords[wordIndex]}
+            </span>
+          </h2>
+        )}
         
-        <h2 className="text-2xl sm:text-3xl md:text-5xl inter-bold text-white md:text-red-600 uppercase tracking-tight mb-2 md:mb-3 drop-shadow-md md:drop-shadow-xl leading-tight">
-          Style For <br className="hidden md:block" /> Every{' '}
-          {/* অ্যানিমেটেড পরিবর্তনশীল শব্দ */}
-          <span 
-            className={`inline-block text-white md:text-gray-900 transition-all duration-500 ease-in-out transform ${
-              fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-          >
-            {dynamicWords[wordIndex]}
-          </span>
-        </h2>
-        
-        <p className="text-white/90 md:text-gray-800 text-[10px] sm:text-[11px] inter-medium md:text-base mb-4 md:mb-8 drop-shadow-md max-w-[250px] sm:max-w-[280px] md:max-w-none">
-          Elevate your everyday look with our exclusive, handpicked collections.
+        {/* Dynamic Description / Subtitle */}
+        <p className="text-white/95 text-[11px] sm:text-xs inter-medium md:text-base mb-4 md:mb-8 drop-shadow-md max-w-[270px] sm:max-w-sm md:max-w-lg leading-relaxed">
+          {dynamicDescription || "Elevate your everyday look with our exclusive, handpicked collections."}
         </p>
         
-        {/* CTA Button */}
+        {/* Dynamic CTA Button */}
         <Link 
-          to="/shop" 
+          to={dynamicLink} 
           className="group bg-white text-gray-900 px-5 py-2.5 md:px-8 md:py-3.5 text-[9px] sm:text-[10px] md:text-sm inter-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors duration-300 shadow-xl flex items-center gap-2 md:gap-3 cursor-pointer"
         >
-          Explore Collection
+          {dynamicButtonText}
           <svg className="w-3 h-3 md:w-4 md:h-4 transition-transform duration-300 transform group-hover:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>

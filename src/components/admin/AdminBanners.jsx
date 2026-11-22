@@ -12,6 +12,8 @@ const AdminBanners = () => {
   // Form States
   const [formData, setFormData] = useState({
     title: "",
+    description: "",
+    buttonText: "",
     type: "Hero",
     category: "",
     link: ""
@@ -89,6 +91,8 @@ const AdminBanners = () => {
       // 2. ডাটাবেসে সেভ করা
       const bannerData = {
         title: formData.title,
+        description: formData.description,
+        buttonText: formData.buttonText,
         type: formData.type,
         category: formData.type === "Category" ? formData.category : null,
         link: formData.link,
@@ -100,7 +104,7 @@ const AdminBanners = () => {
       toast.success("Banner added successfully! 🎉");
       
       // ফর্ম রিসেট করা
-      setFormData({ title: "", type: "Hero", category: "", link: "" });
+      setFormData({ title: "", description: "", buttonText: "", type: "Hero", category: "", link: "" });
       setImage(null);
       setImagePreview(null);
       
@@ -152,11 +156,31 @@ const AdminBanners = () => {
               Add New Banner
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               
               <div>
                 <label className={labelClass}>Banner Title *</label>
-                <input type="text" name="title" value={formData.title} onChange={handleTextChange} required className={inputClass} placeholder="e.g. Eid Mega Sale" />
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleTextChange}
+                  required
+                  className={inputClass}
+                  placeholder="e.g. Eid Mega Sale"
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>Subtitle / Description (Optional)</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleTextChange}
+                  rows="2"
+                  className={inputClass}
+                  placeholder="e.g. Elevate your everyday look with our exclusive collections."
+                ></textarea>
               </div>
 
               <div>
@@ -180,9 +204,29 @@ const AdminBanners = () => {
                 </div>
               )}
 
-              <div>
-                <label className={labelClass}>Target Link (Optional)</label>
-                <input type="text" name="link" value={formData.link} onChange={handleTextChange} className={inputClass} placeholder="e.g. /category/men" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>Button Text (Optional)</label>
+                  <input
+                    type="text"
+                    name="buttonText"
+                    value={formData.buttonText}
+                    onChange={handleTextChange}
+                    className={inputClass}
+                    placeholder="e.g. Shop Now"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Target Link (Optional)</label>
+                  <input
+                    type="text"
+                    name="link"
+                    value={formData.link}
+                    onChange={handleTextChange}
+                    className={inputClass}
+                    placeholder="e.g. /shop"
+                  />
+                </div>
               </div>
 
               <div>
@@ -250,9 +294,14 @@ const AdminBanners = () => {
                     </div>
                     
                     <div className="p-3 md:p-4 flex justify-between items-start gap-3 md:gap-4 bg-white">
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <h4 className="text-xs md:text-sm inter-bold text-gray-900 line-clamp-1 truncate">{banner.title}</h4>
-                        <p className="text-[9px] md:text-[10px] inter-medium text-gray-500 uppercase tracking-wider mt-1 line-clamp-1 truncate">
+                        {banner.description && (
+                          <p className="text-[11px] inter-regular text-gray-600 line-clamp-1 truncate mt-0.5">
+                            {banner.description}
+                          </p>
+                        )}
+                        <p className="text-[9px] md:text-[10px] inter-medium text-gray-400 uppercase tracking-wider mt-1 line-clamp-1 truncate">
                           {banner.type === 'Category' && banner.category ? `Cat: ${banner.category.name}` : `Link: ${banner.link || 'None'}`}
                         </p>
                       </div>
