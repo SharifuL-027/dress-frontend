@@ -88,6 +88,7 @@ const Hero = () => {
     <div className="relative w-full aspect-4/3 sm:aspect-video md:h-137.5 lg:h-150 xl:h-[70vh] bg-gray-100 overflow-hidden group">
       
       {/* ================= BANNERS ================= */}
+   {/* ================= BANNERS ================= */}
       {banners.map((banner, index) => (
         <div 
           key={banner._id}
@@ -95,13 +96,13 @@ const Hero = () => {
             index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
-          {/* কালো ওভারলে (টেক্সট স্পষ্ট দেখানোর জন্য) */}
-          <div className="absolute inset-0 bg-black/35 md:bg-black/25 z-10 pointer-events-none"></div>
+          {/* প্রিমিয়াম বাম-থেকে-ডানে গ্রেডিয়েন্ট ওভারলে (ছবি উজ্জ্বল রেখে টেক্সট ফুটিয়ে তুলবে) */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent md:bg-gradient-to-r md:from-black/80 md:via-black/35 md:to-transparent z-10 pointer-events-none"></div>
 
           {banner.link ? (
             <Link to={banner.link} className="block w-full h-full">
               <div 
-                className="w-full h-full bg-cover bg-center md:bg-top bg-no-repeat transition-transform duration-10000 ease-linear hover:scale-105"
+                className="w-full h-full bg-cover bg-center md:bg-top bg-no-repeat transition-transform duration-10000 ease-linear scale-100 group-hover:scale-105"
                 style={{ backgroundImage: `url('${banner.image.url}')` }}
               ></div>
             </Link>
@@ -114,22 +115,40 @@ const Hero = () => {
         </div>
       ))}
 
-      {/* ================= DYNAMIC TITLE, DESCRIPTION & CTA BUTTON ================= */}
+      {/* ================= STYLISH EDITORIAL TITLE, DESCRIPTION & CTA ================= */}
       <div 
         key={activeBanner._id || currentIndex}
-        className="absolute bottom-12 md:bottom-20 left-4 md:left-12 lg:left-20 z-30 flex flex-col items-start w-[85%] sm:max-w-md md:max-w-xl transition-all duration-700"
+        className="absolute bottom-10 sm:bottom-14 md:bottom-20 left-5 sm:left-8 md:left-14 lg:left-20 z-30 flex flex-col items-start w-[90%] sm:max-w-lg md:max-w-2xl"
       >
-        {/* Dynamic Title (যদি ব্যানারে title দেওয়া থাকে তবে সেটি দেখাবে, নাহলে অ্যানিমেটেড ডিফল্ট টাইটেল) */}
+        {/* Top Luxury Brand Tag / Eyebrow */}
+        <div className="flex items-center gap-2.5 mb-2.5 md:mb-4">
+          <span className="w-6 md:w-10 h-[2px] bg-red-600 inline-block"></span>
+          <span className="text-[9px] sm:text-[10px] md:text-xs inter-bold uppercase tracking-[0.28em] text-red-400 drop-shadow">
+            DressTown Exclusive
+          </span>
+        </div>
+
+        {/* Dynamic Title (শেষ শব্দটি লাল হাইলাইটসহ প্রিমিয়াম লুক) */}
         {dynamicTitle ? (
-          <h2 className="text-2xl sm:text-3xl md:text-5xl inter-bold text-white uppercase tracking-tight mb-2 md:mb-3 drop-shadow-lg leading-tight">
-            {dynamicTitle}
+          <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl inter-bold text-white uppercase tracking-tight mb-3 md:mb-4 leading-[1.08] drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
+            {(() => {
+              const words = dynamicTitle.split(" ");
+              if (words.length <= 1) return dynamicTitle;
+              const lastWord = words.pop();
+              return (
+                <>
+                  {words.join(" ")}{" "}
+                  <span className="text-red-500">{lastWord}</span>
+                </>
+              );
+            })()}
           </h2>
         ) : (
-          <h2 className="text-2xl sm:text-3xl md:text-5xl inter-bold text-white md:text-red-600 uppercase tracking-tight mb-2 md:mb-3 drop-shadow-md md:drop-shadow-xl leading-tight">
-            Style For <br className="hidden md:block" /> Every{' '}
+          <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl inter-bold text-white uppercase tracking-tight mb-3 md:mb-4 leading-[1.08] drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
+            Style For <br className="hidden sm:block" /> Every{" "}
             <span 
-              className={`inline-block text-white md:text-gray-900 transition-all duration-500 ease-in-out transform ${
-                fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              className={`inline-block text-red-500 transition-all duration-500 ease-in-out transform ${
+                fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
               }`}
             >
               {dynamicWords[wordIndex]}
@@ -137,19 +156,22 @@ const Hero = () => {
           </h2>
         )}
         
-        {/* Dynamic Description / Subtitle */}
-        <p className="text-white/95 text-[11px] sm:text-xs inter-medium md:text-base mb-4 md:mb-8 drop-shadow-md max-w-[270px] sm:max-w-sm md:max-w-lg leading-relaxed">
+        {/* Stylish Left-Border Editorial Description */}
+        <p className="border-l-2 border-red-600 pl-3 md:pl-4 text-gray-100 text-[11px] sm:text-xs md:text-base inter-medium mb-5 md:mb-8 max-w-[290px] sm:max-w-md md:max-w-lg leading-relaxed drop-shadow">
           {dynamicDescription || "Elevate your everyday look with our exclusive, handpicked collections."}
         </p>
         
-        {/* Dynamic CTA Button */}
+        {/* Luxury Animated CTA Button */}
         <Link 
           to={dynamicLink} 
-          className="group bg-white text-gray-900 px-5 py-2.5 md:px-8 md:py-3.5 text-[9px] sm:text-[10px] md:text-sm inter-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors duration-300 shadow-xl flex items-center gap-2 md:gap-3 cursor-pointer"
+          className="group relative overflow-hidden bg-white text-gray-950 px-6 py-3 md:px-9 md:py-4 text-[10px] sm:text-[11px] md:text-xs inter-bold uppercase tracking-[0.2em] hover:text-white transition-colors duration-300 shadow-[0_10px_25px_rgba(0,0,0,0.4)] flex items-center gap-3 cursor-pointer"
         >
-          {dynamicButtonText}
-          <svg className="w-3 h-3 md:w-4 md:h-4 transition-transform duration-300 transform group-hover:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          {/* Hover Red Fill Layer */}
+          <span className="absolute inset-0 w-0 bg-red-600 transition-all duration-300 ease-out group-hover:w-full z-0"></span>
+          
+          <span className="relative z-10">{dynamicButtonText}</span>
+          <svg className="relative z-10 w-3.5 h-3.5 md:w-4 md:h-4 transition-transform duration-300 transform group-hover:translate-x-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
         </Link>
       </div>
