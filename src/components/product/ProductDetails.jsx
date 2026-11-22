@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useCart } from "../../context/CartContext"; 
 import { useSiteSettings } from "../../hooks/useSiteSettings";
 import ProductCard from "./ProductCard";
+import SEO from "../Seo/SEO";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -31,7 +32,7 @@ const ProductDetails = () => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [zoomStyle, setZoomStyle] = useState({ transform: "scale(1)" });
 
-useEffect(() => {
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
     setLoading(true); // এক প্রোডাক্ট থেকে অন্য প্রোডাক্টে গেলে সাথে সাথে লোডিং দেখাবে
 
@@ -177,7 +178,7 @@ useEffect(() => {
   const formatMeasurement = (val, colIndex) => {
     if (colIndex === 0 || sizeUnit === "in") return val;
 
-    // স্ট্রিংয়ের ভেতরের যেকোনো সংখ্যা (যেমন 40, 27.5, বা 30-32) কে CM-এ রূপান্তর করবে
+    // স্ট্রিংয়ের ভেতরের যেকোনো সংখ্যা (যেমন 40, 27.5, বা 30-32) কে CM-এ রূপান্তর করবে
     return val.replace(/(\d+(\.\d+)?)/g, (match) => {
       const num = parseFloat(match);
       if (isNaN(num)) return match;
@@ -268,6 +269,7 @@ useEffect(() => {
   if (loading) {
     return (
       <div className="w-full max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 min-h-screen animate-pulse">
+        <SEO title="Loading Product" />
         <div className="h-4 w-48 bg-gray-200 rounded mb-6"></div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
           <div className="lg:col-span-7 aspect-square bg-gray-200 rounded-sm"></div>
@@ -291,7 +293,15 @@ useEffect(() => {
       </div>
     );
   }
-  if (!product) return <div className="p-8 text-center inter-bold text-red-500 uppercase tracking-widest mt-20">Product Not Found!</div>;
+
+  if (!product) {
+    return (
+      <div className="p-8 text-center inter-bold text-red-500 uppercase tracking-widest mt-20 min-h-[60vh]">
+        <SEO title="Product Not Found" noIndex={true} />
+        Product Not Found!
+      </div>
+    );
+  }
 
   const images = product.images?.length > 0 ? product.images : [{ url: "https://via.placeholder.com/600" }];
   const currentPrice = product.discountPrice || product.regularPrice;
@@ -300,6 +310,18 @@ useEffect(() => {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 mb-24 md:mb-32 inter-regular text-gray-800 overflow-hidden">
       
+      {/* Dynamic Product SEO */}
+      <SEO
+        title={product.name}
+        description={
+          product.description
+            ? product.description.slice(0, 155)
+            : `Buy ${product.name} at ৳${currentPrice} from DressTown.`
+        }
+        image={images[0]?.url}
+        type="product"
+      />
+
       {/* ---------------- BREADCRUMB ---------------- */}
       <div className="mb-4 md:mb-6 flex flex-wrap items-center text-[9px] md:text-[10px] inter-bold text-gray-400 uppercase tracking-widest gap-2">
         <Link to="/" className="hover:text-gray-800 transition-colors">Home</Link> 

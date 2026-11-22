@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router";
 import api from "../../api/axios"; 
 import ProductCard from "../product/ProductCard"; 
 import { FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi"; 
+import SEO from "../Seo/SEO";
 
 const CategoryPage = () => {
   const { slug } = useParams(); 
@@ -156,9 +157,17 @@ const CategoryPage = () => {
     setFilteredProducts(result);
   }, [slug, allCategories, allProducts, searchQuery, minPrice, maxPrice, sortOrder]);
 
+  // URL slug থেকে সুন্দর টাইটেল ফরম্যাট (যেমন: "mens-polo" -> "Mens Polo")
+  const formattedSlugTitle = slug
+    ? slug
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "Category";
 
   if (loading) return (
     <div className="h-screen flex justify-center items-center">
+      <SEO title={formattedSlugTitle} />
       <div className="w-10 h-10 border-4 border-gray-200 border-t-red-600 rounded-full animate-spin"></div>
     </div>
   );
@@ -166,6 +175,18 @@ const CategoryPage = () => {
   return (
     <div className="max-w-[1500px] mx-auto px-4 md:px-8 mt-6 md:mt-16 mb-20 font-sans">
       
+      {/* Dynamic Category SEO */}
+      <SEO
+        title={currentCategory ? currentCategory.name : "Category Not Found"}
+        description={
+          currentCategory
+            ? `Shop our exclusive ${currentCategory.name} collection at DressTown. Discover premium quality, latest styles, and fast delivery across Bangladesh.`
+            : "The requested product category was not found on DressTown."
+        }
+        image={currentCategory?.image?.url}
+        noIndex={!currentCategory}
+      />
+
       {/* ---------------- BREADCRUMB ---------------- */}
       <div className="mb-4 md:mb-8 text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest flex flex-wrap items-center gap-2">
         <Link to="/" className="hover:text-gray-900 transition-colors">Home</Link>
