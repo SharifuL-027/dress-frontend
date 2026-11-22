@@ -13,7 +13,6 @@ const SEO = ({
 
   return (
     <Helmet>
-      {/* Standard Meta Tags */}
       <title>{siteTitle}</title>
       <meta name="description" content={description} />
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
